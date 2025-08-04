@@ -39,6 +39,20 @@ copuno-gestion-partes/
 npm install
 ```
 
+### Configuración de Variables de Entorno
+1. Copia el archivo de ejemplo:
+```bash
+cp env.example .env
+```
+
+2. Configura tu token de Notion:
+```bash
+# Edita el archivo .env
+NOTION_TOKEN=tu_token_de_notion_aqui
+```
+
+**Nota**: Obtén tu token de Notion en [https://www.notion.so/my-integrations](https://www.notion.so/my-integrations)
+
 ### Explorar Bases de Datos
 Para explorar y documentar las bases de datos de Notion:
 ```bash
