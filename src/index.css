@@ -1,0 +1,258 @@
+:root {
+	--primary-color: #2563eb;
+	--primary-hover: #1d4ed8;
+	--secondary-color: #64748b;
+	--success-color: #059669;
+	--warning-color: #d97706;
+	--danger-color: #dc2626;
+	--background-color: #f8fafc;
+	--surface-color: #ffffff;
+	--text-primary: #1e293b;
+	--text-secondary: #64748b;
+	--border-color: #e2e8f0;
+	--shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+	--shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+	--shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+	--border-radius: 12px;
+	--font-size-large: 1.25rem;
+	--font-size-xl: 1.5rem;
+	--font-size-2xl: 1.875rem;
+	--font-size-3xl: 2.25rem;
+}
+
+* {
+	margin: 0;
+	padding: 0;
+	box-sizing: border-box;
+}
+
+body {
+	font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+		'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+		sans-serif;
+	-webkit-font-smoothing: antialiased;
+	-moz-osx-font-smoothing: grayscale;
+	background-color: var(--background-color);
+	color: var(--text-primary);
+	line-height: 1.6;
+	font-size: 16px;
+}
+
+/* Botones grandes y accesibles */
+.btn {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	padding: 16px 32px;
+	font-size: var(--font-size-large);
+	font-weight: 600;
+	border-radius: var(--border-radius);
+	border: none;
+	cursor: pointer;
+	transition: all 0.2s ease;
+	text-decoration: none;
+	min-height: 60px;
+	min-width: 200px;
+	box-shadow: var(--shadow-sm);
+}
+
+.btn:hover {
+	transform: translateY(-2px);
+	box-shadow: var(--shadow-md);
+}
+
+.btn:active {
+	transform: translateY(0);
+}
+
+.btn-primary {
+	background-color: var(--primary-color);
+	color: white;
+}
+
+.btn-primary:hover {
+	background-color: var(--primary-hover);
+}
+
+.btn-secondary {
+	background-color: var(--surface-color);
+	color: var(--text-primary);
+	border: 2px solid var(--border-color);
+}
+
+.btn-secondary:hover {
+	background-color: var(--background-color);
+	border-color: var(--primary-color);
+}
+
+.btn-success {
+	background-color: var(--success-color);
+	color: white;
+}
+
+.btn-warning {
+	background-color: var(--warning-color);
+	color: white;
+}
+
+.btn-danger {
+	background-color: var(--danger-color);
+	color: white;
+}
+
+/* Contenedores */
+.container {
+	max-width: 1200px;
+	margin: 0 auto;
+	padding: 0 20px;
+}
+
+.card {
+	background-color: var(--surface-color);
+	border-radius: var(--border-radius);
+	box-shadow: var(--shadow-md);
+	padding: 32px;
+	margin-bottom: 24px;
+}
+
+.card-header {
+	margin-bottom: 24px;
+}
+
+.card-title {
+	font-size: var(--font-size-2xl);
+	font-weight: 700;
+	color: var(--text-primary);
+	margin-bottom: 8px;
+}
+
+.card-subtitle {
+	font-size: var(--font-size-large);
+	color: var(--text-secondary);
+}
+
+/* Grid y Layout */
+.grid {
+	display: grid;
+	gap: 24px;
+}
+
+.grid-2 {
+	grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+}
+
+.grid-3 {
+	grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+}
+
+/* Formularios */
+.form-group {
+	margin-bottom: 24px;
+}
+
+.form-label {
+	display: block;
+	font-size: var(--font-size-large);
+	font-weight: 600;
+	color: var(--text-primary);
+	margin-bottom: 8px;
+}
+
+.form-input {
+	width: 100%;
+	padding: 16px;
+	font-size: var(--font-size-large);
+	border: 2px solid var(--border-color);
+	border-radius: var(--border-radius);
+	background-color: var(--surface-color);
+	transition: border-color 0.2s ease;
+}
+
+.form-input:focus {
+	outline: none;
+	border-color: var(--primary-color);
+	box-shadow: 0 0 0 3px rgb(37 99 235 / 0.1);
+}
+
+.form-select {
+	width: 100%;
+	padding: 16px;
+	font-size: var(--font-size-large);
+	border: 2px solid var(--border-color);
+	border-radius: var(--border-radius);
+	background-color: var(--surface-color);
+	cursor: pointer;
+}
+
+/* Utilidades */
+.text-center {
+	text-align: center;
+}
+
+.text-large {
+	font-size: var(--font-size-large);
+}
+
+.text-xl {
+	font-size: var(--font-size-xl);
+}
+
+.text-2xl {
+	font-size: var(--font-size-2xl);
+}
+
+.text-3xl {
+	font-size: var(--font-size-3xl);
+}
+
+.font-bold {
+	font-weight: 700;
+}
+
+.mb-4 {
+	margin-bottom: 16px;
+}
+
+.mb-8 {
+	margin-bottom: 32px;
+}
+
+.mt-4 {
+	margin-top: 16px;
+}
+
+.mt-8 {
+	margin-top: 32px;
+}
+
+.p-4 {
+	padding: 16px;
+}
+
+.p-8 {
+	padding: 32px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+	.container {
+		padding: 0 16px;
+	}
+	
+	.card {
+		padding: 24px;
+	}
+	
+	.btn {
+		padding: 14px 24px;
+		font-size: 1.125rem;
+		min-height: 56px;
+		min-width: 160px;
+	}
+	
+	.form-input,
+	.form-select {
+		padding: 14px;
+		font-size: 1.125rem;
+	}
+} 
