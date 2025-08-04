@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { Search, Plus, FileText, Calendar, Users, Building, Loader2, Wifi, WifiOff } from 'lucide-react'
+import { Search, Plus, FileText, Calendar, Users, Building, Loader2, Wifi, WifiOff, Home, ArrowLeft } from 'lucide-react'
 import { getDatosCompletos, crearParteTrabajo, checkConnectivity, retryOperation } from './services/notionService'
 import './App.css'
 
@@ -58,31 +58,37 @@ function App() {
 		}
 	}
 
+	const volverInicio = () => {
+		setActiveSection('consulta')
+	}
+
 	return (
 		<div className="app">
 			<header className="header">
 				<div className="container">
 					<div className="header-content">
-						<div className="logo">
-							<Building size={48} />
-							<h1 className="logo-text">Copuno</h1>
-						</div>
+						<button className="logo-button" onClick={volverInicio}>
+							<div className="logo">
+								<Building size={32} />
+								<h1 className="logo-text">Copuno</h1>
+							</div>
+						</button>
 						<div className="header-info">
 							<h2 className="app-title">Gestión de Partes</h2>
 							<div className={`connectivity-status ${connectivity.status}`}>
 								{connectivity.status === 'ok' ? (
 									<>
-										<Wifi size={16} />
+										<Wifi size={14} />
 										<span>{connectivity.message}</span>
 									</>
 								) : connectivity.status === 'error' ? (
 									<>
-										<WifiOff size={16} />
+										<WifiOff size={14} />
 										<span>{connectivity.message}</span>
 									</>
 								) : (
 									<>
-										<Loader2 size={16} className="loading-spinner" />
+										<Loader2 size={14} className="loading-spinner" />
 										<span>{connectivity.message}</span>
 									</>
 								)}
@@ -94,16 +100,9 @@ function App() {
 
 			<main className="main">
 				<div className="container">
-					{/* Debug info */}
-					{!loading && !error && (
-						<div className="debug-info" style={{ 
-							background: '#f0f9ff', 
-							padding: '12px', 
-							borderRadius: '8px', 
-							marginBottom: '16px',
-							fontSize: '14px',
-							color: '#0369a1'
-						}}>
+					{/* Debug info - solo en desarrollo */}
+					{!loading && !error && process.env.NODE_ENV === 'development' && (
+						<div className="debug-info">
 							<strong>Debug:</strong> Obras: {datos.obras.length} | 
 							Empleados: {datos.empleados.length} | 
 							Jefes: {datos.jefesObra.length} | 
@@ -117,14 +116,14 @@ function App() {
 							className={`nav-btn ${activeSection === 'consulta' ? 'active' : ''}`}
 							onClick={() => setActiveSection('consulta')}
 						>
-							<Search size={32} />
+							<Search size={24} />
 							<span>Consultar Partes</span>
 						</button>
 						<button
 							className={`nav-btn ${activeSection === 'crear' ? 'active' : ''}`}
 							onClick={() => setActiveSection('crear')}
 						>
-							<Plus size={32} />
+							<Plus size={24} />
 							<span>Crear Nuevo Parte</span>
 						</button>
 					</div>
@@ -176,6 +175,7 @@ function App() {
 function ConsultaPartes({ datos }) {
 	const [filtroObra, setFiltroObra] = useState('')
 	const [filtroFecha, setFiltroFecha] = useState('')
+	const [parteSeleccionado, setParteSeleccionado] = useState(null)
 
 	// Función para normalizar fechas para comparación
 	const normalizarFecha = (fecha) => {
@@ -219,116 +219,184 @@ function ConsultaPartes({ datos }) {
 	// Obtener fechas únicas para debug
 	const fechasUnicas = [...new Set(datos.partesTrabajo.map(parte => normalizarFecha(parte.fecha)))].filter(fecha => fecha)
 
+	const verDetalles = (parte) => {
+		setParteSeleccionado(parte)
+	}
+
+	const cerrarDetalles = () => {
+		setParteSeleccionado(null)
+	}
+
 	return (
 		<div className="consulta-section">
-			<div className="card">
-				<div className="card-header">
-					<h2 className="card-title">Consultar Partes Existentes</h2>
-					<p className="card-subtitle">Busca y visualiza los partes de trabajo</p>
-				</div>
-
-				{/* Filtros */}
-				<div className="filtros">
-					<div className="grid grid-2">
-						<div className="form-group">
-							<label className="form-label">Filtrar por Obra:</label>
-							<select
-								className="form-select"
-								value={filtroObra}
-								onChange={(e) => setFiltroObra(e.target.value)}
-							>
-								<option value="">Todas las obras</option>
-								{obrasUnicas.map(obra => (
-									<option key={obra} value={obra}>{obra}</option>
-								))}
-							</select>
+			{parteSeleccionado ? (
+				<div className="detalles-modal">
+					<div className="detalles-content">
+						<div className="detalles-header">
+							<button className="btn-close" onClick={cerrarDetalles}>
+								<ArrowLeft size={20} />
+								Volver
+							</button>
+							<h2 className="detalles-title">{parteSeleccionado.nombre}</h2>
 						</div>
-						<div className="form-group">
-							<label className="form-label">Filtrar por Fecha:</label>
-							<input
-								type="date"
-								className="form-input"
-								value={filtroFecha}
-								onChange={(e) => setFiltroFecha(e.target.value)}
-							/>
+						<div className="detalles-info">
+							<div className="info-grid">
+								<div className="info-item">
+									<Building size={20} />
+									<span><strong>Obra:</strong> {parteSeleccionado.obra || 'Sin obra'}</span>
+								</div>
+								<div className="info-item">
+									<Calendar size={20} />
+									<span><strong>Fecha:</strong> {formatearFecha(parteSeleccionado.fecha)}</span>
+								</div>
+								<div className="info-item">
+									<Users size={20} />
+									<span><strong>Horas Oficial 1ª:</strong> {parteSeleccionado.horasOficial1 || 0}h</span>
+								</div>
+								<div className="info-item">
+									<Users size={20} />
+									<span><strong>Horas Oficial 2ª:</strong> {parteSeleccionado.horasOficial2 || 0}h</span>
+								</div>
+								<div className="info-item">
+									<Users size={20} />
+									<span><strong>Horas Capataz:</strong> {parteSeleccionado.horasCapataz || 0}h</span>
+								</div>
+								<div className="info-item">
+									<Users size={20} />
+									<span><strong>Horas Encargado:</strong> {parteSeleccionado.horasEncargado || 0}h</span>
+								</div>
+								<div className="info-item">
+									<FileText size={20} />
+									<span><strong>Importe Total:</strong> {parteSeleccionado.importeTotal || 0}€</span>
+								</div>
+								<div className="info-item">
+									<span><strong>Estado:</strong> {parteSeleccionado.estado || 'Pendiente'}</span>
+								</div>
+							</div>
+							{parteSeleccionado.notas && (
+								<div className="notas-section">
+									<h3>Notas:</h3>
+									<p>{parteSeleccionado.notas}</p>
+								</div>
+							)}
+							{parteSeleccionado.urlPDF && (
+								<div className="pdf-section">
+									<button className="btn btn-primary" onClick={() => window.open(parteSeleccionado.urlPDF, '_blank')}>
+										<FileText size={20} />
+										Descargar PDF
+									</button>
+								</div>
+							)}
 						</div>
 					</div>
 				</div>
-
-				{/* Debug info para filtros */}
-				<div style={{ 
-					background: '#fef3c7', 
-					padding: '8px', 
-					borderRadius: '4px', 
-					marginBottom: '16px',
-					fontSize: '12px',
-					color: '#92400e'
-				}}>
-					<strong>Debug Filtros:</strong> Obras disponibles: {obrasUnicas.length} | 
-					Partes totales: {datos.partesTrabajo.length} | 
-					Partes filtrados: {partesFiltrados.length} | 
-					Fechas disponibles: {fechasUnicas.length}
-					{filtroFecha && (
-						<span> | Fecha filtro: {filtroFecha}</span>
-					)}
-				</div>
-
-				{/* Lista de partes */}
-				<div className="partes-lista">
-					{partesFiltrados.length === 0 ? (
-						<div className="no-partes">
-							<p className="text-large">No se encontraron partes con los filtros seleccionados</p>
-							<p style={{ fontSize: '14px', color: '#6b7280', marginTop: '8px' }}>
-								Obras disponibles: {obrasUnicas.join(', ')}
-							</p>
-							{fechasUnicas.length > 0 && (
-								<p style={{ fontSize: '14px', color: '#6b7280', marginTop: '4px' }}>
-									Fechas disponibles: {fechasUnicas.join(', ')}
-								</p>
-							)}
+			) : (
+				<>
+					<div className="card">
+						<div className="card-header">
+							<h2 className="card-title">Consultar Partes Existentes</h2>
+							<p className="card-subtitle">Busca y visualiza los partes de trabajo</p>
 						</div>
-					) : (
-						partesFiltrados.map((parte) => (
-							<div key={parte.id} className="parte-card">
-								<div className="parte-header">
-									<h3 className="parte-nombre">{parte.nombre}</h3>
-									<span className={`estado-badge ${parte.estado?.toLowerCase() || 'pendiente'}`}>
-										{parte.estado || 'Pendiente'}
-									</span>
+
+						{/* Filtros */}
+						<div className="filtros">
+							<div className="grid grid-2">
+								<div className="form-group">
+									<label className="form-label">Filtrar por Obra:</label>
+									<select
+										className="form-select"
+										value={filtroObra}
+										onChange={(e) => setFiltroObra(e.target.value)}
+									>
+										<option value="">Todas las obras</option>
+										{obrasUnicas.map(obra => (
+											<option key={obra} value={obra}>{obra}</option>
+										))}
+									</select>
 								</div>
-								<div className="parte-info">
-									<div className="info-item">
-										<Building size={20} />
-										<span>Obra: {parte.obra || 'Sin obra'}</span>
-									</div>
-									<div className="info-item">
-										<Calendar size={20} />
-										<span>Fecha: {formatearFecha(parte.fecha)}</span>
-									</div>
-									<div className="info-item">
-										<Users size={20} />
-										<span>Horas: {parte.horasOficial1 + parte.horasOficial2 + parte.horasCapataz + parte.horasEncargado || 0}h</span>
-									</div>
-									<div className="info-item">
-										<FileText size={20} />
-										<span>Importe: {parte.importeTotal || 0}€</span>
-									</div>
-								</div>
-								<div className="parte-acciones">
-									<button className="btn btn-primary">
-										Ver Detalles
-									</button>
-									{parte.urlPDF && (
-										<button className="btn btn-secondary" onClick={() => window.open(parte.urlPDF, '_blank')}>
-											Descargar PDF
-										</button>
-									)}
+								<div className="form-group">
+									<label className="form-label">Filtrar por Fecha:</label>
+									<input
+										type="date"
+										className="form-input"
+										value={filtroFecha}
+										onChange={(e) => setFiltroFecha(e.target.value)}
+									/>
 								</div>
 							</div>
-						))
-					)}
-				</div>
-			</div>
+						</div>
+
+						{/* Debug info para filtros - solo en desarrollo */}
+						{process.env.NODE_ENV === 'development' && (
+							<div className="debug-filtros">
+								<strong>Debug Filtros:</strong> Obras disponibles: {obrasUnicas.length} | 
+								Partes totales: {datos.partesTrabajo.length} | 
+								Partes filtrados: {partesFiltrados.length} | 
+								Fechas disponibles: {fechasUnicas.length}
+								{filtroFecha && (
+									<span> | Fecha filtro: {filtroFecha}</span>
+								)}
+							</div>
+						)}
+
+						{/* Lista de partes */}
+						<div className="partes-lista">
+							{partesFiltrados.length === 0 ? (
+								<div className="no-partes">
+									<p className="text-large">No se encontraron partes con los filtros seleccionados</p>
+									<p className="text-small">
+										Obras disponibles: {obrasUnicas.join(', ')}
+									</p>
+									{fechasUnicas.length > 0 && (
+										<p className="text-small">
+											Fechas disponibles: {fechasUnicas.join(', ')}
+										</p>
+									)}
+								</div>
+							) : (
+								partesFiltrados.map((parte) => (
+									<div key={parte.id} className="parte-card">
+										<div className="parte-header">
+											<h3 className="parte-nombre">{parte.nombre}</h3>
+											<span className={`estado-badge ${parte.estado?.toLowerCase() || 'pendiente'}`}>
+												{parte.estado || 'Pendiente'}
+											</span>
+										</div>
+										<div className="parte-info">
+											<div className="info-item">
+												<Building size={20} />
+												<span>Obra: {parte.obra || 'Sin obra'}</span>
+											</div>
+											<div className="info-item">
+												<Calendar size={20} />
+												<span>Fecha: {formatearFecha(parte.fecha)}</span>
+											</div>
+											<div className="info-item">
+												<Users size={20} />
+												<span>Horas: {parte.horasOficial1 + parte.horasOficial2 + parte.horasCapataz + parte.horasEncargado || 0}h</span>
+											</div>
+											<div className="info-item">
+												<FileText size={20} />
+												<span>Importe: {parte.importeTotal || 0}€</span>
+											</div>
+										</div>
+										<div className="parte-acciones">
+											<button className="btn btn-primary" onClick={() => verDetalles(parte)}>
+												Ver Detalles
+											</button>
+											{parte.urlPDF && (
+												<button className="btn btn-secondary" onClick={() => window.open(parte.urlPDF, '_blank')}>
+													Descargar PDF
+												</button>
+											)}
+										</div>
+									</div>
+								))
+							)}
+						</div>
+					</div>
+				</>
+			)}
 		</div>
 	)
 }
