@@ -3,7 +3,7 @@ const fs = require('fs');
 const path = require('path');
 
 // Configuración
-const NOTION_TOKEN = 'YOUR_NOTION_TOKEN_HERE';
+const NOTION_TOKEN = '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';
 const NOTION_API = 'https://api.notion.com/v1';
 
 // Bases de datos
@@ -194,7 +194,7 @@ function saveResults(results) {
 	let content = `# Esquema Detallado de Bases de Datos - Notion
 
 ## Configuración API
-- **Token**: \`${NOTION_TOKEN}\`
+- **Token**: \`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\`
 - **API**: \`${NOTION_API}\`
 
 ## Bases de Datos

@@ -1,7 +1,7 @@
 const axios = require('axios');
 
 // Configuración
-const NOTION_TOKEN = 'YOUR_NOTION_TOKEN_HERE';
+const NOTION_TOKEN = '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';
 const PROXY_API = 'https://copuno.onrender.com/notion/';
 
 // Bases de datos

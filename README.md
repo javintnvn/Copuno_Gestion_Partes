@@ -15,7 +15,7 @@ Aplicación web para gestión de partes de trabajo con backend en Notion.
 - **CLIENTES**: `23f82593a25780829fba000cc1ea7`
 
 ### Configuración API
-- **TOKEN API**: `YOUR_NOTION_TOKEN_HERE`
+- **TOKEN API**: `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`
 - **PROXY API**: `https://copuno.onrender.com/notion/`
 
 ## Estructura del Proyecto
