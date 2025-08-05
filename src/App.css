@@ -819,4 +819,228 @@ body {
 	.empleado-horas {
 		align-self: flex-end;
 	}
+}
+
+/* Estilos para el formulario de crear parte */
+.empleados-placeholder,
+.empleados-loading,
+.empleados-empty {
+	text-align: center;
+	padding: var(--spacing-lg);
+	color: var(--text-secondary);
+	font-style: italic;
+	border: 2px dashed var(--border-color);
+	border-radius: var(--border-radius);
+	background-color: var(--background-color);
+}
+
+.empleados-loading {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: var(--spacing-sm);
+}
+
+.empleados-lista {
+	display: flex;
+	flex-direction: column;
+	gap: var(--spacing-sm);
+	max-height: 300px;
+	overflow-y: auto;
+	border: 1px solid var(--border-color);
+	border-radius: var(--border-radius);
+	padding: var(--spacing-md);
+	background-color: var(--surface-color);
+}
+
+.empleado-checkbox {
+	display: flex;
+	align-items: flex-start;
+	gap: var(--spacing-sm);
+	padding: var(--spacing-sm);
+	border-radius: var(--border-radius);
+	cursor: pointer;
+	transition: all 0.2s ease;
+}
+
+.empleado-checkbox:hover {
+	background-color: var(--background-color);
+}
+
+.empleado-checkbox input[type="checkbox"] {
+	margin-top: 2px;
+}
+
+.empleado-info {
+	display: flex;
+	flex-direction: column;
+	gap: var(--spacing-xs);
+	flex: 1;
+}
+
+.empleado-nombre-estado {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: var(--spacing-sm);
+}
+
+.estado-empleado {
+	padding: var(--spacing-xs) var(--spacing-sm);
+	border-radius: var(--border-radius);
+	font-size: var(--font-size-small);
+	font-weight: 500;
+	text-transform: uppercase;
+	letter-spacing: 0.5px;
+}
+
+.estado-empleado.on {
+	background-color: var(--success-color);
+	color: white;
+}
+
+.estado-empleado.off {
+	background-color: var(--danger-color);
+	color: white;
+}
+
+.estado-empleado.sin-estado {
+	background-color: var(--secondary-color);
+	color: white;
+}
+
+.categoria {
+	font-size: var(--font-size-small);
+	color: var(--text-secondary);
+}
+
+/* Estilos para empleados con horas */
+.empleado-item {
+	display: flex;
+	flex-direction: column;
+	gap: var(--spacing-sm);
+	padding: var(--spacing-md);
+	border: 1px solid var(--border-color);
+	border-radius: var(--border-radius);
+	background-color: var(--surface-color);
+	transition: all 0.2s ease;
+}
+
+.empleado-item:hover {
+	box-shadow: var(--shadow-sm);
+	border-color: var(--primary-color);
+}
+
+.empleado-horas-input {
+	display: flex;
+	align-items: center;
+	gap: var(--spacing-sm);
+	padding: var(--spacing-sm);
+	background-color: var(--background-color);
+	border-radius: var(--border-radius);
+	margin-top: var(--spacing-sm);
+}
+
+.horas-label {
+	font-size: var(--font-size-small);
+	font-weight: 500;
+	color: var(--text-secondary);
+	min-width: 120px;
+}
+
+.horas-input {
+	width: 80px;
+	padding: var(--spacing-xs) var(--spacing-sm);
+	border: 1px solid var(--border-color);
+	border-radius: var(--border-radius);
+	font-size: var(--font-size-medium);
+	text-align: center;
+}
+
+.horas-input:focus {
+	outline: none;
+	border-color: var(--primary-color);
+	box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.1);
+}
+
+.horas-unidad {
+	font-size: var(--font-size-small);
+	color: var(--text-secondary);
+	font-weight: 500;
+}
+
+/* Responsive para empleados con horas */
+@media (max-width: 768px) {
+	.empleado-horas-input {
+		flex-direction: column;
+		align-items: flex-start;
+		gap: var(--spacing-xs);
+	}
+	
+	.horas-label {
+		min-width: auto;
+	}
+	
+	.horas-input {
+		width: 100%;
+	}
+}
+
+/* Estilos para opciones después de crear parte */
+.parte-creado-opciones {
+	display: flex;
+	flex-direction: column;
+	gap: var(--spacing-lg);
+}
+
+.opciones-container {
+	text-align: center;
+	padding: var(--spacing-xl);
+	background-color: var(--surface-color);
+	border-radius: var(--border-radius);
+	border: 1px solid var(--border-color);
+}
+
+.opciones-container h3 {
+	margin-bottom: var(--spacing-lg);
+	color: var(--text-primary);
+	font-size: var(--font-size-xl);
+}
+
+.opciones-buttons {
+	display: flex;
+	gap: var(--spacing-md);
+	justify-content: center;
+	flex-wrap: wrap;
+	margin-bottom: var(--spacing-lg);
+}
+
+.parte-info-resumen {
+	margin-top: var(--spacing-lg);
+	padding: var(--spacing-md);
+	background-color: var(--background-color);
+	border-radius: var(--border-radius);
+	border: 1px solid var(--border-color);
+}
+
+.parte-info-resumen p {
+	margin: var(--spacing-xs) 0;
+	color: var(--text-secondary);
+}
+
+.parte-info-resumen .error-info {
+	color: var(--danger-color);
+	font-weight: 500;
+}
+
+/* Responsive para opciones */
+@media (max-width: 768px) {
+	.opciones-buttons {
+		flex-direction: column;
+		align-items: center;
+	}
+	
+	.opciones-container {
+		padding: var(--spacing-lg);
+	}
 } 

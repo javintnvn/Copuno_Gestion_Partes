@@ -148,6 +148,16 @@ export const getEmpleados = async () => {
 	}
 }
 
+// Obtener empleados de una obra específica
+export const getEmpleadosObra = async (obraId) => {
+	try {
+		const response = await apiClient.get(`/api/obras/${obraId}/empleados`)
+		return response.data
+	} catch (error) {
+		handleApiError(error, 'obtener empleados de la obra')
+	}
+}
+
 // Obtener todos los partes de trabajo
 export const getPartesTrabajo = async () => {
 	try {
@@ -179,7 +189,14 @@ export const crearParteTrabajo = async (datos) => {
 			throw new Error(`Faltan campos requeridos: ${missingFields.join(', ')}`)
 		}
 
-		const response = await apiClient.post('/api/partes-trabajo', datos)
+		// Preparar datos para enviar
+		const datosEnvio = {
+			...datos,
+			empleados: datos.empleados || [],
+			empleadosHoras: datos.empleadosHoras || {}
+		}
+
+		const response = await apiClient.post('/api/partes-trabajo', datosEnvio)
 		return response.data
 	} catch (error) {
 		handleApiError(error, 'crear parte de trabajo')

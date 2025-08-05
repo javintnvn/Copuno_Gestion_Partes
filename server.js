@@ -136,6 +136,8 @@ const makeNotionRequest = async (method, endpoint, data = null) => {
 			throw new Error('Sin permisos para acceder a la base de datos')
 		} else if (error.response?.status === 404) {
 			throw new Error('Base de datos no encontrada')
+		} else if (error.response?.status === 409) {
+			throw new Error('Conflicto al crear el registro. Puede ser un duplicado o problema de permisos.')
 		} else if (error.response?.status === 429) {
 			throw new Error('Límite de rate limit excedido')
 		} else {
@@ -235,6 +237,54 @@ app.get('/api/empleados', async (req, res) => {
 	}
 })
 
+// Obtener empleados de una obra específica
+app.get('/api/obras/:obraId/empleados', async (req, res) => {
+	try {
+		const { obraId } = req.params
+
+		// Obtener la obra específica para ver sus empleados relacionados
+		const obraData = await makeNotionRequest('GET', `/pages/${obraId}`)
+		
+		// Extraer los IDs de empleados relacionados
+		const empleadosRelacionados = extractPropertyValue(obraData.properties['Empleados'])
+		
+		if (!empleadosRelacionados || empleadosRelacionados.length === 0) {
+			return res.json([])
+		}
+
+		// Obtener los detalles de cada empleado relacionado
+		const empleadosDetalles = []
+		
+		for (const empleadoRef of empleadosRelacionados) {
+			try {
+				const empleadoData = await makeNotionRequest('GET', `/pages/${empleadoRef.id}`)
+				
+				empleadosDetalles.push({
+					id: empleadoData.id,
+					nombre: extractPropertyValue(empleadoData.properties['Nombre Completo']),
+					categoria: extractPropertyValue(empleadoData.properties['Categoría']),
+					provincia: extractPropertyValue(empleadoData.properties['Provincia']),
+					localidad: extractPropertyValue(empleadoData.properties['Localidad']),
+					telefono: extractPropertyValue(empleadoData.properties['Teléfono']),
+					dni: extractPropertyValue(empleadoData.properties['DNI']),
+					estado: extractPropertyValue(empleadoData.properties['Estado']),
+					delegado: extractPropertyValue(empleadoData.properties['Delegado'])
+				})
+			} catch (error) {
+				console.error(`Error al obtener empleado ${empleadoRef.id}:`, error.message)
+			}
+		}
+
+		res.json(empleadosDetalles)
+	} catch (error) {
+		console.error('Error al obtener empleados de la obra:', error.message)
+		res.status(500).json({ 
+			error: 'Error al obtener empleados de la obra',
+			details: error.message 
+		})
+	}
+})
+
 // Obtener todos los partes de trabajo
 app.get('/api/partes-trabajo', async (req, res) => {
 	try {
@@ -277,7 +327,7 @@ app.get('/api/partes-trabajo', async (req, res) => {
 // Crear un nuevo parte de trabajo
 app.post('/api/partes-trabajo', async (req, res) => {
 	try {
-		const { obra, obraId, fecha, jefeObraId, notas } = req.body
+		const { obra, obraId, fecha, jefeObraId, notas, empleados, empleadosHoras } = req.body
 
 		if (!obra || !obraId || !fecha || !jefeObraId) {
 			return res.status(400).json({ 
@@ -286,7 +336,8 @@ app.post('/api/partes-trabajo', async (req, res) => {
 			})
 		}
 
-		const data = await makeNotionRequest('POST', '/pages', {
+		// Crear el parte de trabajo
+		const parteData = await makeNotionRequest('POST', '/pages', {
 			parent: { database_id: DATABASES.PARTES_TRABAJO },
 			properties: {
 				'Nombre': {
@@ -329,7 +380,77 @@ app.post('/api/partes-trabajo', async (req, res) => {
 			}
 		})
 
-		res.json(data)
+		// Crear detalles de horas para cada empleado seleccionado
+		let detallesCreados = []
+		let erroresDetalles = []
+
+		if (empleados && empleados.length > 0) {
+			for (const empleadoId of empleados) {
+				try {
+					const horas = empleadosHoras[empleadoId] || 8
+					
+					const detalleData = await makeNotionRequest('POST', '/pages', {
+						parent: { database_id: DATABASES.DETALLES_HORA },
+						properties: {
+							'Detalle': {
+								title: [
+									{
+										text: {
+											content: `Detalle Horas`
+										}
+									}
+								]
+							},
+							'Partes de trabajo': {
+								relation: [
+									{
+										id: parteData.id
+									}
+								]
+							},
+							'Empleados': {
+								relation: [
+									{
+										id: empleadoId
+									}
+								]
+							},
+							'Cantidad Horas': {
+								number: horas
+							},
+							'Fecha': {
+								date: {
+									start: fecha
+								}
+							}
+						}
+					})
+					
+					detallesCreados.push(detalleData)
+					
+					// Pausa entre requests para evitar rate limiting
+					await new Promise(resolve => setTimeout(resolve, 100))
+					
+				} catch (error) {
+					console.error(`Error al crear detalle para empleado ${empleadoId}:`, error.message)
+					erroresDetalles.push({ empleadoId, error: error.message })
+				}
+			}
+
+			// Log de resultados
+			console.log(`✅ Detalles creados: ${detallesCreados.length}/${empleados.length}`)
+			if (erroresDetalles.length > 0) {
+				console.log(`❌ Errores en detalles:`, erroresDetalles)
+			}
+		}
+
+		res.json({
+			...parteData,
+			empleadosCreados: empleados?.length || 0,
+			detallesCreados: detallesCreados.length,
+			erroresDetalles: erroresDetalles.length,
+			mensaje: `Parte creado exitosamente. ${detallesCreados.length} empleados asignados.`
+		})
 	} catch (error) {
 		console.error('Error al crear parte de trabajo:', error.message)
 		res.status(500).json({ 

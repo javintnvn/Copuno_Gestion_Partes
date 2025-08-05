@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { Search, Plus, FileText, Calendar, Users, Building, Loader2, Wifi, WifiOff, Home, ArrowLeft, Clock, User } from 'lucide-react'
-import { getDatosCompletos, crearParteTrabajo, checkConnectivity, retryOperation, getDetallesEmpleados } from './services/notionService'
+import { getDatosCompletos, crearParteTrabajo, checkConnectivity, retryOperation, getDetallesEmpleados, getEmpleadosObra } from './services/notionService'
 import './App.css'
 
 function App() {
@@ -457,17 +457,63 @@ function ConsultaPartes({ datos }) {
 
 // Componente para crear nuevo parte
 function CrearParte({ datos, onParteCreado }) {
+	// Función para obtener fecha y hora actual en formato YYYY-MM-DDTHH:MM
+	const getCurrentDateTime = () => {
+		const now = new Date()
+		const year = now.getFullYear()
+		const month = String(now.getMonth() + 1).padStart(2, '0')
+		const day = String(now.getDate()).padStart(2, '0')
+		const hours = String(now.getHours()).padStart(2, '0')
+		const minutes = String(now.getMinutes()).padStart(2, '0')
+		return `${year}-${month}-${day}T${hours}:${minutes}`
+	}
+
 	const [formData, setFormData] = useState({
 		obraId: '',
 		obra: '',
-		fecha: '',
+		fecha: getCurrentDateTime(),
 		jefeObraId: '',
 		jefeObra: '',
 		empleados: [],
+		empleadosHoras: {}, // Nuevo objeto para almacenar horas por empleado
 		notas: ''
 	})
 	const [loading, setLoading] = useState(false)
 	const [message, setMessage] = useState('')
+	const [empleadosObra, setEmpleadosObra] = useState([])
+	const [loadingEmpleados, setLoadingEmpleados] = useState(false)
+	const [parteCreado, setParteCreado] = useState(null)
+	const [showOpciones, setShowOpciones] = useState(false)
+
+	// Función para cargar empleados de una obra
+	const cargarEmpleadosObra = async (obraId) => {
+		if (!obraId) {
+			setEmpleadosObra([])
+			return
+		}
+
+		setLoadingEmpleados(true)
+		try {
+			const empleados = await getEmpleadosObra(obraId)
+			setEmpleadosObra(empleados)
+		} catch (error) {
+			console.error('Error al cargar empleados de la obra:', error)
+			setEmpleadosObra([])
+		} finally {
+			setLoadingEmpleados(false)
+		}
+	}
+
+	// Función para manejar el cambio de obra
+	const handleObraChange = (obraId) => {
+		setFormData({
+			...formData,
+			obraId,
+			empleados: [], // Limpiar empleados seleccionados al cambiar obra
+			empleadosHoras: {} // Limpiar horas al cambiar obra
+		})
+		cargarEmpleadosObra(obraId)
+	}
 
 	const handleSubmit = async (e) => {
 		e.preventDefault()
@@ -483,24 +529,19 @@ function CrearParte({ datos, onParteCreado }) {
 				throw new Error('Por favor, selecciona una obra y un jefe de obra válidos')
 			}
 
-			await crearParteTrabajo({
+			const parteCreado = await crearParteTrabajo({
 				obra: obraSeleccionada.nombre,
 				obraId: formData.obraId,
 				fecha: formData.fecha,
 				jefeObraId: formData.jefeObraId,
-				notas: formData.notas
+				notas: formData.notas,
+				empleados: formData.empleados,
+				empleadosHoras: formData.empleadosHoras
 			})
 
-			setMessage('Parte creado exitosamente')
-			setFormData({
-				obraId: '',
-				obra: '',
-				fecha: '',
-				jefeObraId: '',
-				jefeObra: '',
-				empleados: [],
-				notas: ''
-			})
+			setParteCreado(parteCreado)
+			setShowOpciones(true)
+			setMessage(parteCreado.mensaje || 'Parte creado exitosamente')
 
 			// Recargar datos
 			if (onParteCreado) {
@@ -514,6 +555,32 @@ function CrearParte({ datos, onParteCreado }) {
 		}
 	}
 
+	// Función para volver al formulario
+	const volverAFormulario = () => {
+		setFormData({
+			obraId: '',
+			obra: '',
+			fecha: getCurrentDateTime(),
+			jefeObraId: '',
+			jefeObra: '',
+			empleados: [],
+			empleadosHoras: {},
+			notas: ''
+		})
+		setEmpleadosObra([])
+		setParteCreado(null)
+		setShowOpciones(false)
+		setMessage('')
+	}
+
+	// Función para ver detalles del parte creado
+	const verDetallesParte = () => {
+		// Cambiar a la sección de consulta y mostrar detalles
+		// Esto requeriría pasar el parte creado a la sección de consulta
+		// Por ahora, simplemente volvemos al formulario
+		volverAFormulario()
+	}
+
 	return (
 		<div className="crear-section">
 			<div className="card">
@@ -522,12 +589,52 @@ function CrearParte({ datos, onParteCreado }) {
 					<p className="card-subtitle">Completa la información para crear un nuevo parte de trabajo</p>
 				</div>
 
-				<form onSubmit={handleSubmit} className="formulario-parte">
-					{message && (
-						<div className={`message ${message.includes('Error') ? 'error' : 'success'}`}>
+				{showOpciones ? (
+					<div className="parte-creado-opciones">
+						<div className="message success">
 							{message}
 						</div>
-					)}
+						<div className="opciones-container">
+							<h3>¿Qué quieres hacer ahora?</h3>
+							<div className="opciones-buttons">
+								<button 
+									type="button" 
+									className="btn btn-primary" 
+									onClick={volverAFormulario}
+								>
+									<Plus size={20} />
+									Crear Otro Parte
+								</button>
+								<button 
+									type="button" 
+									className="btn btn-secondary" 
+									onClick={verDetallesParte}
+								>
+									<FileText size={20} />
+									Ver Detalles del Parte
+								</button>
+							</div>
+							{parteCreado && (
+								<div className="parte-info-resumen">
+									<p><strong>Parte creado:</strong> {parteCreado.properties?.Nombre?.title?.[0]?.plain_text || 'Sin nombre'}</p>
+									<p><strong>Empleados asignados:</strong> {parteCreado.empleadosCreados || 0}</p>
+									{parteCreado.detallesCreados > 0 && (
+										<p><strong>Detalles de horas creados:</strong> {parteCreado.detallesCreados}</p>
+									)}
+									{parteCreado.erroresDetalles > 0 && (
+										<p className="error-info"><strong>Errores en detalles:</strong> {parteCreado.erroresDetalles}</p>
+									)}
+								</div>
+							)}
+						</div>
+					</div>
+				) : (
+					<form onSubmit={handleSubmit} className="formulario-parte">
+						{message && (
+							<div className={`message ${message.includes('Error') ? 'error' : 'success'}`}>
+								{message}
+							</div>
+						)}
 					
 					<div className="grid grid-2">
 						<div className="form-group">
@@ -535,7 +642,7 @@ function CrearParte({ datos, onParteCreado }) {
 							<select
 								className="form-select"
 								value={formData.obraId}
-								onChange={(e) => setFormData({...formData, obraId: e.target.value})}
+								onChange={(e) => handleObraChange(e.target.value)}
 								required
 							>
 								<option value="">Selecciona una obra</option>
@@ -548,9 +655,9 @@ function CrearParte({ datos, onParteCreado }) {
 						</div>
 
 						<div className="form-group">
-							<label className="form-label">Fecha del Parte:</label>
+							<label className="form-label">Fecha y Hora del Parte:</label>
 							<input
-								type="date"
+								type="datetime-local"
 								className="form-input"
 								value={formData.fecha}
 								onChange={(e) => setFormData({...formData, fecha: e.target.value})}
@@ -577,34 +684,87 @@ function CrearParte({ datos, onParteCreado }) {
 					</div>
 
 					<div className="form-group">
-						<label className="form-label">Empleados que trabajaron:</label>
-						<div className="empleados-lista">
-							{datos.empleados.map(empleado => (
-								<label key={empleado.id} className="empleado-checkbox">
-									<input
-										type="checkbox"
-										checked={formData.empleados.includes(empleado.id)}
-										onChange={(e) => {
-											if (e.target.checked) {
-												setFormData({
-													...formData,
-													empleados: [...formData.empleados, empleado.id]
-												})
-											} else {
-												setFormData({
-													...formData,
-													empleados: formData.empleados.filter(id => id !== empleado.id)
-												})
-											}
-										}}
-									/>
-									<span className="empleado-info">
-										<strong>{empleado.nombre}</strong>
-										<span className="categoria">{empleado.categoria} - {empleado.localidad}</span>
-									</span>
-								</label>
-							))}
-						</div>
+						<label className="form-label">Empleados asignados a la obra:</label>
+						{!formData.obraId ? (
+							<div className="empleados-placeholder">
+								<p>Selecciona una obra para ver los empleados asignados</p>
+							</div>
+						) : loadingEmpleados ? (
+							<div className="empleados-loading">
+								<Loader2 size={20} className="loading-spinner" />
+								<p>Cargando empleados de la obra...</p>
+							</div>
+						) : empleadosObra.length === 0 ? (
+							<div className="empleados-empty">
+								<p>No hay empleados asignados a esta obra</p>
+							</div>
+						) : (
+							<div className="empleados-lista">
+								{empleadosObra.map(empleado => (
+									<div key={empleado.id} className="empleado-item">
+										<label className="empleado-checkbox">
+											<input
+												type="checkbox"
+												checked={formData.empleados.includes(empleado.id)}
+												onChange={(e) => {
+													if (e.target.checked) {
+														setFormData({
+															...formData,
+															empleados: [...formData.empleados, empleado.id],
+															empleadosHoras: {
+																...formData.empleadosHoras,
+																[empleado.id]: 8 // Horas por defecto
+															}
+														})
+													} else {
+														const newEmpleadosHoras = { ...formData.empleadosHoras }
+														delete newEmpleadosHoras[empleado.id]
+														setFormData({
+															...formData,
+															empleados: formData.empleados.filter(id => id !== empleado.id),
+															empleadosHoras: newEmpleadosHoras
+														})
+													}
+												}}
+											/>
+											<span className="empleado-info">
+												<div className="empleado-nombre-estado">
+													<strong>{empleado.nombre}</strong>
+													<span className={`estado-empleado ${empleado.estado?.toLowerCase() || 'sin-estado'}`}>
+														{empleado.estado || 'Sin estado'}
+													</span>
+												</div>
+												<span className="categoria">{empleado.categoria} - {empleado.localidad}</span>
+											</span>
+										</label>
+										{formData.empleados.includes(empleado.id) && (
+											<div className="empleado-horas-input">
+												<label className="horas-label">Horas trabajadas:</label>
+												<input
+													type="number"
+													className="horas-input"
+													min="0"
+													max="24"
+													step="0.5"
+													value={formData.empleadosHoras[empleado.id] || 8}
+													onChange={(e) => {
+														const horas = parseFloat(e.target.value) || 0
+														setFormData({
+															...formData,
+															empleadosHoras: {
+																...formData.empleadosHoras,
+																[empleado.id]: horas
+															}
+														})
+													}}
+												/>
+												<span className="horas-unidad">h</span>
+											</div>
+										)}
+									</div>
+								))}
+							</div>
+						)}
 					</div>
 
 					<div className="form-group">
@@ -637,6 +797,7 @@ function CrearParte({ datos, onParteCreado }) {
 						</button>
 					</div>
 				</form>
+				)}
 			</div>
 		</div>
 	)
