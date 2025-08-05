@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
-import { Search, Plus, FileText, Calendar, Users, Building, Loader2, Wifi, WifiOff, Home, ArrowLeft } from 'lucide-react'
-import { getDatosCompletos, crearParteTrabajo, checkConnectivity, retryOperation } from './services/notionService'
+import { Search, Plus, FileText, Calendar, Users, Building, Loader2, Wifi, WifiOff, Home, ArrowLeft, Clock, User } from 'lucide-react'
+import { getDatosCompletos, crearParteTrabajo, checkConnectivity, retryOperation, getDetallesEmpleados } from './services/notionService'
 import './App.css'
 
 function App() {
@@ -176,6 +176,8 @@ function ConsultaPartes({ datos }) {
 	const [filtroObra, setFiltroObra] = useState('')
 	const [filtroFecha, setFiltroFecha] = useState('')
 	const [parteSeleccionado, setParteSeleccionado] = useState(null)
+	const [detallesEmpleados, setDetallesEmpleados] = useState([])
+	const [loadingDetalles, setLoadingDetalles] = useState(false)
 
 	// Función para normalizar fechas para comparación
 	const normalizarFecha = (fecha) => {
@@ -219,12 +221,24 @@ function ConsultaPartes({ datos }) {
 	// Obtener fechas únicas para debug
 	const fechasUnicas = [...new Set(datos.partesTrabajo.map(parte => normalizarFecha(parte.fecha)))].filter(fecha => fecha)
 
-	const verDetalles = (parte) => {
+	const verDetalles = async (parte) => {
 		setParteSeleccionado(parte)
+		setLoadingDetalles(true)
+		setDetallesEmpleados([])
+
+		try {
+			const detalles = await getDetallesEmpleados(parte.id)
+			setDetallesEmpleados(detalles)
+		} catch (error) {
+			console.error('Error al cargar detalles de empleados:', error)
+		} finally {
+			setLoadingDetalles(false)
+		}
 	}
 
 	const cerrarDetalles = () => {
 		setParteSeleccionado(null)
+		setDetallesEmpleados([])
 	}
 
 	return (
@@ -273,6 +287,46 @@ function ConsultaPartes({ datos }) {
 									<span><strong>Estado:</strong> {parteSeleccionado.estado || 'Pendiente'}</span>
 								</div>
 							</div>
+							{/* Sección de empleados asignados */}
+							<div className="empleados-section">
+								<h3>Empleados Asignados</h3>
+								{loadingDetalles ? (
+									<div className="loading-detalles">
+										<Loader2 size={24} className="loading-spinner" />
+										<p>Cargando detalles de empleados...</p>
+									</div>
+								) : detallesEmpleados.length > 0 ? (
+									<div className="empleados-lista-detalles">
+										{detallesEmpleados.map((detalle, index) => (
+											<div key={detalle.id || index} className="empleado-detalle">
+												<div className="empleado-info-detalle">
+													<div className="empleado-nombre">
+														<User size={16} />
+														<span>{detalle.empleadoNombre || 'Empleado sin nombre'}</span>
+													</div>
+													<div className="empleado-categoria">
+														<span className="categoria-badge">{detalle.categoria || 'Sin categoría'}</span>
+													</div>
+													<div className="empleado-horas">
+														<Clock size={16} />
+														<span>{detalle.horas || 0} horas</span>
+													</div>
+												</div>
+												{detalle.detalle && (
+													<div className="empleado-notas">
+														<p>{detalle.detalle}</p>
+													</div>
+												)}
+											</div>
+										))}
+									</div>
+								) : (
+									<div className="no-empleados">
+										<p>No hay empleados asignados a este parte</p>
+									</div>
+								)}
+							</div>
+
 							{parteSeleccionado.notas && (
 								<div className="notas-section">
 									<h3>Notas:</h3>

@@ -75,7 +75,25 @@ const extractPropertyValue = (property) => {
 		case 'relation':
 			return property.relation || []
 		case 'rollup':
-			return property.rollup || ''
+			// Manejar rollups de diferentes tipos
+			if (property.rollup?.type === 'array') {
+				const array = property.rollup.array
+				if (array && array.length > 0) {
+					const firstItem = array[0]
+					if (firstItem.type === 'title') {
+						return firstItem.title?.[0]?.plain_text || ''
+					} else if (firstItem.type === 'rich_text') {
+						return firstItem.rich_text?.[0]?.plain_text || ''
+					} else if (firstItem.type === 'date') {
+						return firstItem.date?.start || ''
+					} else if (firstItem.type === 'select') {
+						return firstItem.select?.name || ''
+					} else if (firstItem.type === 'number') {
+						return firstItem.number || 0
+					}
+				}
+			}
+			return ''
 		case 'formula':
 			return property.formula?.string || property.formula?.number || property.formula?.boolean || ''
 		case 'status':
@@ -316,6 +334,42 @@ app.post('/api/partes-trabajo', async (req, res) => {
 		console.error('Error al crear parte de trabajo:', error.message)
 		res.status(500).json({ 
 			error: 'Error al crear parte de trabajo',
+			details: error.message 
+		})
+	}
+})
+
+// Obtener detalles de empleados de un parte específico
+app.get('/api/partes-trabajo/:parteId/empleados', async (req, res) => {
+	try {
+		const { parteId } = req.params
+
+		// Obtener detalles de horas para este parte
+		const data = await makeNotionRequest('POST', `/databases/${DATABASES.DETALLES_HORA}/query`, {
+			filter: {
+				property: 'Partes de trabajo',
+				relation: {
+					contains: parteId
+				}
+			},
+			page_size: 100
+		})
+
+		const detallesEmpleados = data.results.map(detalle => ({
+			id: detalle.id,
+			empleadoId: extractPropertyValue(detalle.properties['Empleados']),
+			empleadoNombre: extractPropertyValue(detalle.properties['Aux Empleado']),
+			categoria: extractPropertyValue(detalle.properties['AUX_Categoria']),
+			horas: extractPropertyValue(detalle.properties['Cantidad Horas']),
+			fecha: extractPropertyValue(detalle.properties['Fecha']),
+			detalle: extractPropertyValue(detalle.properties['Detalle'])
+		}))
+
+		res.json(detallesEmpleados)
+	} catch (error) {
+		console.error('Error al obtener detalles de empleados del parte:', error.message)
+		res.status(500).json({ 
+			error: 'Error al obtener detalles de empleados del parte',
 			details: error.message 
 		})
 	}

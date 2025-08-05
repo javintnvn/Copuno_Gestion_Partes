@@ -158,6 +158,16 @@ export const getPartesTrabajo = async () => {
 	}
 }
 
+// Obtener detalles de empleados de un parte específico
+export const getDetallesEmpleados = async (parteId) => {
+	try {
+		const response = await apiClient.get(`/api/partes-trabajo/${parteId}/empleados`)
+		return response.data
+	} catch (error) {
+		handleApiError(error, 'obtener detalles de empleados del parte')
+	}
+}
+
 // Crear un nuevo parte de trabajo
 export const crearParteTrabajo = async (datos) => {
 	try {
