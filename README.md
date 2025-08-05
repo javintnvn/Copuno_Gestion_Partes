@@ -23,10 +23,12 @@ Aplicación web moderna para la gestión de partes de trabajo con backend en Not
 - ✅ **Pantalla de bienvenida** con navegación clara
 - ✅ **Consultar partes existentes** con filtros avanzados
 - ✅ **Crear nuevos partes** con formulario intuitivo
+- ✅ **Editar partes existentes** con validación de estados
 - ✅ **Modal de detalles** con información completa
 - ✅ **Filtros por obra y fecha** funcionales
 - ✅ **Formato de fechas español** (DD-MM-YYYY HH:MM)
 - ✅ **Gestión avanzada de empleados** por obra
+- ✅ **Control de estados** y permisos de edición
 
 ### 🔧 Características Técnicas
 - ✅ **Frontend:** React + Vite
@@ -123,6 +125,7 @@ node scripts/test-notion-direct.js  # Test de conectividad
 - **Vista de detalles:** Modal con información completa
 - **Formato español:** Fechas en DD-MM-YYYY HH:MM
 - **Estados visuales:** Badges de estado con colores
+- **Botones de edición:** Acceso directo a modificar partes
 
 ### Crear Partes
 - **Formulario intuitivo:** Selección de obra y jefe
@@ -130,6 +133,25 @@ node scripts/test-notion-direct.js  # Test de conectividad
 - **Control de horas:** Asignación individual por empleado
 - **Validación en tiempo real:** Campos requeridos
 - **Integración con Notion:** Creación directa en la BD
+
+### ✏️ Editar Partes (NUEVO)
+- **Edición inteligente:** Verificación de estados editables
+- **Estados protegidos:** Partes firmados/enviados no editables
+- **Validación de permisos:** Control de qué partes se pueden editar
+- **Mensajes informativos:** Feedback claro sobre estados no editables
+- **Interfaz de edición:** Formulario completo para modificar partes
+
+### 👥 Gestión Avanzada de Empleados
+- **Empleados por obra:** Carga específica según obra seleccionada
+- **Empleados por parte:** Lista detallada de empleados asignados
+- **Control de horas:** Asignación individual por empleado
+- **Estados de carga:** Loading states para todas las operaciones
+
+### 🔍 Detalles Completos de Partes
+- **Información integral:** Datos del parte + empleados + persona autorizada
+- **Empleados asignados:** Lista detallada con horas individuales
+- **Estados de carga:** Feedback visual durante consultas
+- **Datos estructurados:** Información organizada y accesible
 
 ### Conectividad
 - **Health check:** `/api/health`
@@ -139,7 +161,10 @@ node scripts/test-notion-direct.js  # Test de conectividad
   - `GET /api/jefes-obra` - Lista de jefes
   - `GET /api/partes-trabajo` - Lista de partes
   - `POST /api/partes-trabajo` - Crear parte
+  - `PUT /api/partes-trabajo/:id` - Editar parte
   - `GET /api/obras/:obraId/empleados` - Empleados de obra específica
+  - `GET /api/partes-trabajo/:parteId/detalles` - Detalles completos de parte
+  - `GET /api/partes-trabajo/:parteId/empleados` - Empleados de parte específico
 
 ## 🎨 Diseño y UX
 
@@ -154,6 +179,12 @@ node scripts/test-notion-direct.js  # Test de conectividad
 - **Navegación clara:** Botones de acción prominentes
 - **Diseño centrado:** Layout optimizado para primera impresión
 - **Feedback visual:** Estados hover y focus mejorados
+
+### Gestión de Estados
+- **Estados no editables:** firmado, datos enviados, enviado
+- **Validación automática:** Verificación antes de permitir edición
+- **Mensajes contextuales:** Información específica por estado
+- **Prevención de errores:** Evita modificaciones no permitidas
 
 ### Paleta de Colores
 - **Primario:** Azul profesional (#2563eb)
@@ -203,6 +234,14 @@ NODE_ENV=production
 5. Abrir un Pull Request
 
 ## 📝 Changelog
+
+### v1.3.0 - Funcionalidad de Edición y Gestión Avanzada
+- ✅ Funcionalidad de edición de partes
+- ✅ Validación de estados editables
+- ✅ Gestión avanzada de empleados
+- ✅ Detalles completos de partes
+- ✅ Control granular de permisos
+- ✅ Interfaz profesional y moderna
 
 ### v1.2.0 - Pantalla Principal y Navegación Mejorada
 - ✅ Pantalla de bienvenida elegante
