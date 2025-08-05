@@ -12,6 +12,7 @@ Aplicación web moderna para la gestión de partes de trabajo con backend en Not
 - ✅ **Logging detallado** para debugging
 
 ### 🎨 Interfaz Moderna
+- ✅ **Pantalla principal elegante** con navegación intuitiva
 - ✅ **Diseño minimalista** con mejores prácticas de UI/UX
 - ✅ **Sistema de variables CSS** para consistencia visual
 - ✅ **Responsive design** para todos los dispositivos
@@ -19,11 +20,13 @@ Aplicación web moderna para la gestión de partes de trabajo con backend en Not
 - ✅ **Accesibilidad mejorada** con focus states
 
 ### 📊 Funcionalidades Principales
+- ✅ **Pantalla de bienvenida** con navegación clara
 - ✅ **Consultar partes existentes** con filtros avanzados
 - ✅ **Crear nuevos partes** con formulario intuitivo
 - ✅ **Modal de detalles** con información completa
 - ✅ **Filtros por obra y fecha** funcionales
 - ✅ **Formato de fechas español** (DD-MM-YYYY HH:MM)
+- ✅ **Gestión avanzada de empleados** por obra
 
 ### 🔧 Características Técnicas
 - ✅ **Frontend:** React + Vite
@@ -109,6 +112,12 @@ node scripts/test-notion-direct.js  # Test de conectividad
 
 ## 🎯 Funcionalidades Detalladas
 
+### 🏠 Pantalla Principal
+- **Pantalla de bienvenida:** Interfaz elegante y acogedora
+- **Navegación intuitiva:** Botones grandes y accesibles
+- **Diseño centrado:** Layout optimizado para usuarios
+- **Mensaje descriptivo:** Información clara sobre el proyecto
+
 ### Consultar Partes
 - **Filtros avanzados:** Por obra y fecha
 - **Vista de detalles:** Modal con información completa
@@ -117,6 +126,8 @@ node scripts/test-notion-direct.js  # Test de conectividad
 
 ### Crear Partes
 - **Formulario intuitivo:** Selección de obra y jefe
+- **Gestión de empleados:** Asignación por obra específica
+- **Control de horas:** Asignación individual por empleado
 - **Validación en tiempo real:** Campos requeridos
 - **Integración con Notion:** Creación directa en la BD
 
@@ -128,6 +139,7 @@ node scripts/test-notion-direct.js  # Test de conectividad
   - `GET /api/jefes-obra` - Lista de jefes
   - `GET /api/partes-trabajo` - Lista de partes
   - `POST /api/partes-trabajo` - Crear parte
+  - `GET /api/obras/:obraId/empleados` - Empleados de obra específica
 
 ## 🎨 Diseño y UX
 
@@ -136,6 +148,12 @@ node scripts/test-notion-direct.js  # Test de conectividad
 - **Consistencia:** Sistema de variables CSS
 - **Accesibilidad:** Contraste adecuado y focus states
 - **Responsive:** Adaptable a todos los dispositivos
+
+### Pantalla Principal
+- **Bienvenida elegante:** Mensaje descriptivo del proyecto
+- **Navegación clara:** Botones de acción prominentes
+- **Diseño centrado:** Layout optimizado para primera impresión
+- **Feedback visual:** Estados hover y focus mejorados
 
 ### Paleta de Colores
 - **Primario:** Azul profesional (#2563eb)
@@ -185,6 +203,13 @@ NODE_ENV=production
 5. Abrir un Pull Request
 
 ## 📝 Changelog
+
+### v1.2.0 - Pantalla Principal y Navegación Mejorada
+- ✅ Pantalla de bienvenida elegante
+- ✅ Navegación intuitiva y clara
+- ✅ Diseño centrado y profesional
+- ✅ Mejor experiencia de usuario
+- ✅ Accesibilidad mejorada
 
 ### v1.1.0 - Mejoras de Interfaz
 - ✅ Interfaz minimalista y elegante
