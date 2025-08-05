@@ -4,7 +4,7 @@ import { getDatosCompletos, crearParteTrabajo, checkConnectivity, retryOperation
 import './App.css'
 
 function App() {
-	const [activeSection, setActiveSection] = useState('consulta')
+	const [activeSection, setActiveSection] = useState('main') // Cambiado de 'consulta' a 'main'
 	const [datos, setDatos] = useState({
 		obras: [],
 		jefesObra: [],
@@ -59,7 +59,7 @@ function App() {
 	}
 
 	const volverInicio = () => {
-		setActiveSection('consulta')
+		setActiveSection('main')
 	}
 
 	return (
@@ -110,24 +110,6 @@ function App() {
 						</div>
 					)}
 
-					{/* Navegación principal */}
-					<div className="navigation">
-						<button
-							className={`nav-btn ${activeSection === 'consulta' ? 'active' : ''}`}
-							onClick={() => setActiveSection('consulta')}
-						>
-							<Search size={24} />
-							<span>Consultar Partes</span>
-						</button>
-						<button
-							className={`nav-btn ${activeSection === 'crear' ? 'active' : ''}`}
-							onClick={() => setActiveSection('crear')}
-						>
-							<Plus size={24} />
-							<span>Crear Nuevo Parte</span>
-						</button>
-					</div>
-
 					{/* Contenido principal */}
 					<div className="content">
 						{loading ? (
@@ -157,11 +139,13 @@ function App() {
 							</div>
 						) : (
 							<>
-								{activeSection === 'consulta' ? (
-									<ConsultaPartes datos={datos} />
-								) : (
-									<CrearParte datos={datos} onParteCreado={cargarDatos} />
-								)}
+								{activeSection === 'main' ? (
+									<PantallaPrincipal onNavigate={setActiveSection} />
+								) : activeSection === 'consulta' ? (
+									<ConsultaPartes datos={datos} onVolver={() => setActiveSection('main')} />
+								) : activeSection === 'crear' ? (
+									<CrearParte datos={datos} onParteCreado={cargarDatos} onVolver={() => setActiveSection('main')} />
+								) : null}
 							</>
 						)}
 					</div>
@@ -171,8 +155,47 @@ function App() {
 	)
 }
 
+// Componente para la pantalla principal
+function PantallaPrincipal({ onNavigate }) {
+	return (
+		<div className="pantalla-principal">
+			<div className="welcome-section">
+				<div className="welcome-content">
+					<h1 className="welcome-title">Bienvenido a Copuno</h1>
+					<p className="welcome-subtitle">Sistema de Gestión de Partes de Trabajo</p>
+					<p className="welcome-description">
+						Selecciona una opción para comenzar a gestionar los partes de trabajo
+					</p>
+				</div>
+			</div>
+
+			<div className="main-actions">
+				<div className="action-card" onClick={() => onNavigate('crear')}>
+					<div className="action-icon">
+						<Plus size={48} />
+					</div>
+					<h3 className="action-title">Crear Nuevo Parte</h3>
+					<p className="action-description">
+						Crea un nuevo parte de trabajo con empleados, horas y detalles
+					</p>
+				</div>
+
+				<div className="action-card" onClick={() => onNavigate('consulta')}>
+					<div className="action-icon">
+						<Search size={48} />
+					</div>
+					<h3 className="action-title">Consultar Partes</h3>
+					<p className="action-description">
+						Busca y visualiza los partes de trabajo existentes
+					</p>
+				</div>
+			</div>
+		</div>
+	)
+}
+
 // Componente para consultar partes existentes
-function ConsultaPartes({ datos }) {
+function ConsultaPartes({ datos, onVolver }) {
 	const [filtroObra, setFiltroObra] = useState('')
 	const [filtroFecha, setFiltroFecha] = useState('')
 	const [parteSeleccionado, setParteSeleccionado] = useState(null)
@@ -346,6 +369,14 @@ function ConsultaPartes({ datos }) {
 				</div>
 			) : (
 				<>
+					<div className="section-header">
+						<button className="btn-back" onClick={onVolver}>
+							<ArrowLeft size={20} />
+							Volver al Inicio
+						</button>
+						<h2 className="section-title">Consultar Partes Existentes</h2>
+					</div>
+
 					<div className="card">
 						<div className="card-header">
 							<h2 className="card-title">Consultar Partes Existentes</h2>
@@ -456,7 +487,7 @@ function ConsultaPartes({ datos }) {
 }
 
 // Componente para crear nuevo parte
-function CrearParte({ datos, onParteCreado }) {
+function CrearParte({ datos, onParteCreado, onVolver }) {
 	// Función para obtener fecha y hora actual en formato YYYY-MM-DDTHH:MM
 	const getCurrentDateTime = () => {
 		const now = new Date()
@@ -583,6 +614,14 @@ function CrearParte({ datos, onParteCreado }) {
 
 	return (
 		<div className="crear-section">
+			<div className="section-header">
+				<button className="btn-back" onClick={onVolver}>
+					<ArrowLeft size={20} />
+					Volver al Inicio
+				</button>
+				<h2 className="section-title">Crear Nuevo Parte</h2>
+			</div>
+
 			<div className="card">
 				<div className="card-header">
 					<h2 className="card-title">Crear Nuevo Parte</h2>
