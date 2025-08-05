@@ -486,6 +486,31 @@ body {
 	color: white;
 }
 
+.estado-badge.firmado {
+	background-color: #7c3aed;
+	color: white;
+}
+
+.estado-badge.revisado {
+	background-color: #059669;
+	color: white;
+}
+
+.estado-badge.cancelado {
+	background-color: var(--danger-color);
+	color: white;
+}
+
+.estado-badge.borrador {
+	background-color: var(--secondary-color);
+	color: white;
+}
+
+.estado-badge.datos-enviados {
+	background-color: #0891b2;
+	color: white;
+}
+
 .parte-info {
 	display: grid;
 	grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -1208,5 +1233,393 @@ body {
 	
 	.opciones-container {
 		padding: var(--spacing-lg);
+	}
+} 
+
+/* Estilos para alertas de partes no editables */
+.alerta-no-editable {
+	display: flex;
+	align-items: flex-start;
+	gap: var(--spacing-md);
+	padding: var(--spacing-lg);
+	background-color: #fef3c7;
+	border: 1px solid #fde68a;
+	border-radius: var(--border-radius);
+	margin-bottom: var(--spacing-lg);
+	border-left: 4px solid var(--warning-color);
+}
+
+.alerta-icon {
+	color: var(--warning-color);
+	flex-shrink: 0;
+	margin-top: 2px;
+}
+
+.alerta-content {
+	flex: 1;
+}
+
+.alerta-title {
+	font-size: var(--font-size-large);
+	font-weight: 600;
+	color: var(--text-primary);
+	margin: 0 0 var(--spacing-xs) 0;
+}
+
+.alerta-message {
+	font-size: var(--font-size-medium);
+	color: var(--text-secondary);
+	margin: 0;
+	line-height: 1.5;
+}
+
+/* Indicador visual para partes no editables en la lista */
+.parte-no-editable-indicator {
+	display: flex;
+	align-items: center;
+	gap: var(--spacing-xs);
+	padding: var(--spacing-xs) var(--spacing-sm);
+	background-color: #fef3c7;
+	border: 1px solid #fde68a;
+	border-radius: var(--border-radius);
+	margin-bottom: var(--spacing-md);
+	font-size: var(--font-size-small);
+	color: var(--warning-color);
+	font-weight: 500;
+}
+
+/* Acciones del parte en detalles */
+.parte-acciones-detalles {
+	display: flex;
+	flex-direction: column;
+	gap: var(--spacing-md);
+	padding-top: var(--spacing-lg);
+	border-top: 1px solid var(--border-color);
+}
+
+.acciones-edicion {
+	display: flex;
+	gap: var(--spacing-sm);
+	flex-wrap: wrap;
+}
+
+.mensaje-no-editable {
+	padding: var(--spacing-md);
+	background-color: var(--background-color);
+	border: 1px solid var(--border-color);
+	border-radius: var(--border-radius);
+	text-align: center;
+	color: var(--text-secondary);
+	font-style: italic;
+}
+
+/* Responsive para alertas */
+@media (max-width: 768px) {
+	.alerta-no-editable {
+		flex-direction: column;
+		align-items: flex-start;
+		gap: var(--spacing-sm);
+	}
+	
+	.acciones-edicion {
+		flex-direction: column;
+	}
+	
+	.parte-acciones-detalles {
+		gap: var(--spacing-sm);
+	}
+} 
+
+/* Modal de edición */
+.edicion-modal {
+	position: fixed;
+	top: 0;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	background-color: rgba(0, 0, 0, 0.5);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	z-index: 1000;
+	padding: var(--spacing-md);
+}
+
+.edicion-content {
+	background-color: var(--surface-color);
+	border-radius: var(--border-radius-lg);
+	padding: var(--spacing-xl);
+	max-width: 800px;
+	width: 100%;
+	max-height: 90vh;
+	overflow-y: auto;
+	box-shadow: var(--shadow-lg);
+}
+
+.edicion-header {
+	display: flex;
+	align-items: center;
+	gap: var(--spacing-md);
+	margin-bottom: var(--spacing-lg);
+	padding-bottom: var(--spacing-lg);
+	border-bottom: 1px solid var(--border-color);
+}
+
+.edicion-title {
+	font-size: var(--font-size-2xl);
+	font-weight: 700;
+	color: var(--text-primary);
+	margin: 0;
+}
+
+.edicion-form {
+	display: flex;
+	flex-direction: column;
+	gap: var(--spacing-lg);
+}
+
+/* Sección de empleados en edición */
+.empleados-edicion-section {
+	border: 1px solid var(--border-color);
+	border-radius: var(--border-radius);
+	padding: var(--spacing-lg);
+	background-color: var(--background-color);
+}
+
+.empleados-header {
+	display: flex;
+	justify-content: space-between;
+	align-items: flex-start;
+	margin-bottom: var(--spacing-lg);
+	gap: var(--spacing-md);
+}
+
+.empleados-info {
+	flex: 1;
+}
+
+.empleados-header h3 {
+	margin: 0 0 var(--spacing-sm) 0;
+	color: var(--text-primary);
+	font-size: var(--font-size-xl);
+}
+
+.empleados-stats {
+	display: flex;
+	gap: var(--spacing-md);
+	font-size: var(--font-size-small);
+}
+
+.stat-asignados {
+	color: var(--success-color);
+	font-weight: 500;
+}
+
+.stat-disponibles {
+	color: var(--primary-color);
+	font-weight: 500;
+}
+
+.empleados-actuales {
+	margin-bottom: var(--spacing-lg);
+}
+
+.empleados-actuales h4 {
+	margin-bottom: var(--spacing-md);
+	color: var(--text-primary);
+	font-size: var(--font-size-large);
+}
+
+.empleados-lista-edicion {
+	display: flex;
+	flex-direction: column;
+	gap: var(--spacing-sm);
+}
+
+.empleado-edicion-item {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	padding: var(--spacing-md);
+	background-color: var(--surface-color);
+	border: 1px solid var(--border-color);
+	border-radius: var(--border-radius);
+	transition: all 0.2s ease;
+}
+
+.empleado-edicion-item:hover {
+	box-shadow: var(--shadow-sm);
+	border-color: var(--primary-color);
+}
+
+.empleado-info-edicion {
+	display: flex;
+	align-items: center;
+	gap: var(--spacing-sm);
+	flex: 1;
+}
+
+.empleado-checkbox-edicion {
+	display: flex;
+	align-items: center;
+	gap: var(--spacing-sm);
+	cursor: pointer;
+}
+
+.empleado-nombre-edicion {
+	display: flex;
+	flex-direction: column;
+	gap: var(--spacing-xs);
+}
+
+.categoria-empleado {
+	font-size: var(--font-size-small);
+	color: var(--text-secondary);
+}
+
+.empleado-horas-edicion {
+	display: flex;
+	align-items: center;
+	gap: var(--spacing-sm);
+	flex-shrink: 0;
+}
+
+.horas-input-edicion {
+	width: 80px;
+	padding: var(--spacing-xs) var(--spacing-sm);
+	border: 1px solid var(--border-color);
+	border-radius: var(--border-radius);
+	font-size: var(--font-size-medium);
+	text-align: center;
+}
+
+.horas-input-edicion:focus {
+	outline: none;
+	border-color: var(--primary-color);
+	box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.1);
+}
+
+/* Empleados disponibles */
+.empleados-obra-disponibles {
+	margin-top: var(--spacing-lg);
+	padding-top: var(--spacing-lg);
+	border-top: 1px solid var(--border-color);
+}
+
+.empleados-obra-disponibles h4 {
+	margin-bottom: var(--spacing-md);
+	color: var(--text-primary);
+	font-size: var(--font-size-large);
+}
+
+.empleados-lista-disponibles {
+	display: flex;
+	flex-direction: column;
+	gap: var(--spacing-sm);
+	max-height: 300px;
+	overflow-y: auto;
+}
+
+.empleado-disponible-item {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	padding: var(--spacing-md);
+	background-color: var(--surface-color);
+	border: 1px solid var(--border-color);
+	border-radius: var(--border-radius);
+	transition: all 0.2s ease;
+}
+
+.empleado-disponible-item:hover {
+	box-shadow: var(--shadow-sm);
+	border-color: var(--primary-color);
+}
+
+.empleado-info-disponible {
+	display: flex;
+	align-items: center;
+	gap: var(--spacing-sm);
+	flex: 1;
+}
+
+.empleado-checkbox-disponible {
+	display: flex;
+	align-items: center;
+	gap: var(--spacing-sm);
+	cursor: pointer;
+}
+
+.empleado-nombre-disponible {
+	display: flex;
+	flex-direction: column;
+	gap: var(--spacing-xs);
+}
+
+.empleado-horas-disponible {
+	display: flex;
+	align-items: center;
+	gap: var(--spacing-sm);
+	flex-shrink: 0;
+}
+
+.horas-input-disponible {
+	width: 80px;
+	padding: var(--spacing-xs) var(--spacing-sm);
+	border: 1px solid var(--border-color);
+	border-radius: var(--border-radius);
+	font-size: var(--font-size-medium);
+	text-align: center;
+}
+
+.horas-input-disponible:focus {
+	outline: none;
+	border-color: var(--primary-color);
+	box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.1);
+}
+
+/* Acciones de edición */
+.edicion-acciones {
+	display: flex;
+	gap: var(--spacing-md);
+	justify-content: flex-end;
+	padding-top: var(--spacing-lg);
+	border-top: 1px solid var(--border-color);
+}
+
+/* Responsive para edición */
+@media (max-width: 768px) {
+	.edicion-content {
+		margin: var(--spacing-md);
+		padding: var(--spacing-lg);
+		max-height: 95vh;
+	}
+	
+	.empleados-header {
+		flex-direction: column;
+		align-items: flex-start;
+		gap: var(--spacing-md);
+	}
+	
+	.empleado-edicion-item,
+	.empleado-disponible-item {
+		flex-direction: column;
+		align-items: flex-start;
+		gap: var(--spacing-sm);
+	}
+	
+	.empleado-horas-edicion,
+	.empleado-horas-disponible {
+		align-self: flex-end;
+	}
+	
+	.edicion-acciones {
+		flex-direction: column;
+		align-items: stretch;
+	}
+	
+	.horas-input-edicion,
+	.horas-input-disponible {
+		width: 100%;
 	}
 } 

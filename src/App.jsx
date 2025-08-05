@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { Search, Plus, FileText, Calendar, Users, Building, Loader2, Wifi, WifiOff, Home, ArrowLeft, Clock, User } from 'lucide-react'
-import { getDatosCompletos, crearParteTrabajo, checkConnectivity, retryOperation, getDetallesEmpleados, getEmpleadosObra } from './services/notionService'
+import { getDatosCompletos, crearParteTrabajo, checkConnectivity, retryOperation, getDetallesEmpleados, getEmpleadosObra, getDetallesCompletosParte } from './services/notionService'
 import './App.css'
 
 function App() {
@@ -201,6 +201,30 @@ function ConsultaPartes({ datos, onVolver }) {
 	const [parteSeleccionado, setParteSeleccionado] = useState(null)
 	const [detallesEmpleados, setDetallesEmpleados] = useState([])
 	const [loadingDetalles, setLoadingDetalles] = useState(false)
+	const [editandoParte, setEditandoParte] = useState(null)
+	const [empleadosObra, setEmpleadosObra] = useState([])
+	const [loadingEmpleados, setLoadingEmpleados] = useState(false)
+	const [mostrarEmpleadosObra, setMostrarEmpleadosObra] = useState(false)
+	const [loadingEmpleadosParte, setLoadingEmpleadosParte] = useState(false)
+
+	// Función para verificar si un parte puede ser editado
+	const puedeEditarParte = (estado) => {
+		const estadosNoEditables = ['firmado', 'datos enviados', 'enviado']
+		return !estadosNoEditables.includes(estado?.toLowerCase())
+	}
+
+	// Función para obtener el mensaje de estado no editable
+	const getMensajeEstadoNoEditable = (estado) => {
+		const estadoLower = estado?.toLowerCase()
+		if (estadoLower === 'firmado') {
+			return 'Este parte está firmado y no puede ser modificado'
+		} else if (estadoLower === 'datos enviados') {
+			return 'Este parte tiene los datos enviados y no puede ser modificado'
+		} else if (estadoLower === 'enviado') {
+			return 'Este parte ha sido enviado y no puede ser modificado'
+		}
+		return 'Este parte no puede ser modificado'
+	}
 
 	// Función para normalizar fechas para comparación
 	const normalizarFecha = (fecha) => {
@@ -229,6 +253,242 @@ function ConsultaPartes({ datos, onVolver }) {
 		} catch (error) {
 			return fecha
 		}
+	}
+
+	// Función para obtener fecha y hora actual en formato YYYY-MM-DDTHH:MM
+	const getCurrentDateTime = () => {
+		const now = new Date()
+		const year = now.getFullYear()
+		const month = String(now.getMonth() + 1).padStart(2, '0')
+		const day = String(now.getDate()).padStart(2, '0')
+		const hours = String(now.getHours()).padStart(2, '0')
+		const minutes = String(now.getMinutes()).padStart(2, '0')
+		return `${year}-${month}-${day}T${hours}:${minutes}`
+	}
+
+	// Función para cargar empleados de una obra
+	const cargarEmpleadosObra = async (obraId) => {
+		if (!obraId) {
+			setEmpleadosObra([])
+			return
+		}
+
+		setLoadingEmpleados(true)
+		try {
+			const empleados = await getEmpleadosObra(obraId)
+			setEmpleadosObra(empleados)
+		} catch (error) {
+			console.error('Error al cargar empleados de la obra:', error)
+			setEmpleadosObra([])
+		} finally {
+			setLoadingEmpleados(false)
+		}
+	}
+
+	// Función para iniciar edición de un parte
+	const iniciarEdicion = async (parte) => {
+		// Encontrar la obra correspondiente
+		const obraEncontrada = datos.obras.find(obra => obra.nombre === parte.obra)
+		const obraId = obraEncontrada?.id || ''
+
+		// Obtener detalles completos del parte
+		try {
+			setLoadingEmpleadosParte(true)
+			const detallesCompletos = await getDetallesCompletosParte(parte.id)
+			console.log('Detalles completos del parte:', detallesCompletos)
+			
+			// Extraer la Persona Autorizada
+			let personaAutorizadaId = ''
+			if (detallesCompletos.parte.personaAutorizada) {
+				// Si es un array de objetos con id
+				if (Array.isArray(detallesCompletos.parte.personaAutorizada) && detallesCompletos.parte.personaAutorizada.length > 0) {
+					personaAutorizadaId = detallesCompletos.parte.personaAutorizada[0].id
+				}
+				// Si es un objeto con id
+				else if (typeof detallesCompletos.parte.personaAutorizada === 'object' && detallesCompletos.parte.personaAutorizada.id) {
+					personaAutorizadaId = detallesCompletos.parte.personaAutorizada.id
+				}
+				// Si es un string directo
+				else if (typeof detallesCompletos.parte.personaAutorizada === 'string') {
+					personaAutorizadaId = detallesCompletos.parte.personaAutorizada
+				}
+			}
+
+			// Extraer empleados y horas
+			const empleadosActuales = []
+			const horasActuales = {}
+			
+			detallesCompletos.empleados.forEach(detalle => {
+				console.log('Procesando detalle:', detalle)
+				
+				// Extraer empleadoId del formato que devuelve la API
+				let empleadoId = null
+				
+				if (detalle.empleadoId) {
+					// Si es un array de objetos con id
+					if (Array.isArray(detalle.empleadoId) && detalle.empleadoId.length > 0) {
+						empleadoId = detalle.empleadoId[0].id
+					}
+					// Si es un objeto con id
+					else if (typeof detalle.empleadoId === 'object' && detalle.empleadoId.id) {
+						empleadoId = detalle.empleadoId.id
+					}
+					// Si es un string directo
+					else if (typeof detalle.empleadoId === 'string') {
+						empleadoId = detalle.empleadoId
+					}
+				}
+				
+				console.log('EmpleadoId procesado:', empleadoId)
+				
+				if (empleadoId) {
+					empleadosActuales.push(empleadoId)
+					horasActuales[empleadoId] = detalle.horas || 8
+				}
+			})
+
+			console.log('Debug cargar empleados:', {
+				empleadosActuales: empleadosActuales,
+				horasActuales: horasActuales,
+				personaAutorizadaId: personaAutorizadaId
+			})
+
+			setEditandoParte({
+				id: parte.id,
+				nombre: parte.nombre,
+				fecha: parte.fecha ? new Date(parte.fecha).toISOString().slice(0, 16) : getCurrentDateTime(),
+				obraId: obraId,
+				obra: parte.obra,
+				personaAutorizadaId: personaAutorizadaId,
+				notas: detallesCompletos.parte.notas || '',
+				empleados: empleadosActuales,
+				empleadosHoras: horasActuales
+			})
+
+			// Cargar empleados de la obra
+			if (obraId) {
+				await cargarEmpleadosObra(obraId)
+			}
+		} catch (error) {
+			console.error('Error al cargar detalles completos del parte:', error)
+			
+			// Fallback: usar datos básicos del parte
+			setEditandoParte({
+				id: parte.id,
+				nombre: parte.nombre,
+				fecha: parte.fecha ? new Date(parte.fecha).toISOString().slice(0, 16) : getCurrentDateTime(),
+				obraId: obraId,
+				obra: parte.obra,
+				personaAutorizadaId: '',
+				notas: parte.notas || '',
+				empleados: [],
+				empleadosHoras: {}
+			})
+
+			// Cargar empleados de la obra
+			if (obraId) {
+				await cargarEmpleadosObra(obraId)
+			}
+		} finally {
+			setLoadingEmpleadosParte(false)
+		}
+	}
+
+	// Función para obtener empleados no asignados al parte
+	const getEmpleadosNoAsignados = () => {
+		if (!editandoParte || !empleadosObra.length) return []
+		
+		const empleadosAsignados = editandoParte.empleados || []
+		return empleadosObra.filter(empleado => !empleadosAsignados.includes(empleado.id))
+	}
+
+	// Función para obtener empleados asignados al parte
+	const getEmpleadosAsignados = () => {
+		if (!editandoParte || !empleadosObra.length) return []
+		
+		const empleadosAsignados = editandoParte.empleados || []
+		const empleadosFiltrados = empleadosObra.filter(empleado => empleadosAsignados.includes(empleado.id))
+		
+		console.log('Debug empleados:', {
+			empleadosObra: empleadosObra.length,
+			empleadosAsignados: empleadosAsignados,
+			empleadosFiltrados: empleadosFiltrados.length
+		})
+		
+		return empleadosFiltrados
+	}
+
+	// Función para cancelar edición
+	const cancelarEdicion = () => {
+		setEditandoParte(null)
+		setEmpleadosObra([])
+		setMostrarEmpleadosObra(false)
+	}
+
+	// Función para guardar cambios
+	const guardarCambios = async () => {
+		// Aquí implementaríamos la lógica para guardar los cambios
+		console.log('Guardando cambios:', editandoParte)
+		// TODO: Implementar llamada a API para actualizar el parte
+		cancelarEdicion()
+	}
+
+	// Función para manejar cambios en el formulario de edición
+	const handleEdicionChange = (campo, valor) => {
+		setEditandoParte(prev => ({
+			...prev,
+			[campo]: valor
+		}))
+	}
+
+	// Función para manejar cambio de obra en edición
+	const handleObraChange = async (obraId) => {
+		handleEdicionChange('obraId', obraId)
+		handleEdicionChange('empleados', [])
+		handleEdicionChange('empleadosHoras', {})
+		await cargarEmpleadosObra(obraId)
+	}
+
+	// Función para agregar/quitar empleado del parte
+	const toggleEmpleado = (empleadoId) => {
+		setEditandoParte(prev => {
+			const empleadosActuales = prev.empleados || []
+			const horasActuales = prev.empleadosHoras || {}
+			
+			if (empleadosActuales.includes(empleadoId)) {
+				// Quitar empleado
+				const newEmpleados = empleadosActuales.filter(id => id !== empleadoId)
+				const newHoras = { ...horasActuales }
+				delete newHoras[empleadoId]
+				
+				return {
+					...prev,
+					empleados: newEmpleados,
+					empleadosHoras: newHoras
+				}
+			} else {
+				// Agregar empleado con horas por defecto
+				return {
+					...prev,
+					empleados: [...empleadosActuales, empleadoId],
+					empleadosHoras: {
+						...horasActuales,
+						[empleadoId]: 8 // Horas por defecto
+					}
+				}
+			}
+		})
+	}
+
+	// Función para cambiar horas de un empleado
+	const cambiarHorasEmpleado = (empleadoId, horas) => {
+		setEditandoParte(prev => ({
+			...prev,
+			empleadosHoras: {
+				...prev.empleadosHoras,
+				[empleadoId]: parseFloat(horas) || 0
+			}
+		}))
 	}
 
 	// Filtrar partes según los criterios
@@ -266,7 +526,199 @@ function ConsultaPartes({ datos, onVolver }) {
 
 	return (
 		<div className="consulta-section">
-			{parteSeleccionado ? (
+			{editandoParte ? (
+				<div className="edicion-modal">
+					<div className="edicion-content">
+						<div className="edicion-header">
+							<button className="btn-close" onClick={cancelarEdicion}>
+								<ArrowLeft size={20} />
+								Cancelar Edición
+							</button>
+							<h2 className="edicion-title">Editar Parte: {editandoParte.nombre}</h2>
+						</div>
+						
+						<div className="edicion-form">
+							<div className="grid grid-2">
+								<div className="form-group">
+									<label className="form-label">Fecha y Hora:</label>
+									<input
+										type="datetime-local"
+										className="form-input"
+										value={editandoParte.fecha}
+										onChange={(e) => handleEdicionChange('fecha', e.target.value)}
+									/>
+								</div>
+								
+								<div className="form-group">
+									<label className="form-label">Obra:</label>
+									<select
+										className="form-select"
+										value={editandoParte.obraId}
+										onChange={(e) => handleObraChange(e.target.value)}
+									>
+										<option value="">Selecciona una obra</option>
+										{datos.obras.map(obra => (
+											<option key={obra.id} value={obra.id}>
+												{obra.nombre} - {obra.provincia}
+											</option>
+										))}
+									</select>
+								</div>
+							</div>
+
+							<div className="form-group">
+								<label className="form-label">Persona Autorizada:</label>
+								<select
+									className="form-select"
+									value={editandoParte.personaAutorizadaId}
+									onChange={(e) => handleEdicionChange('personaAutorizadaId', e.target.value)}
+								>
+									<option value="">Selecciona una Persona Autorizada</option>
+									{datos.jefesObra.map(jefe => (
+										<option key={jefe.id} value={jefe.id}>
+											{jefe.nombre} ({jefe.email})
+										</option>
+									))}
+								</select>
+							</div>
+
+							<div className="form-group">
+								<label className="form-label">Notas:</label>
+								<textarea
+									className="form-input"
+									rows="4"
+									value={editandoParte.notas}
+									onChange={(e) => handleEdicionChange('notas', e.target.value)}
+									placeholder="Añade cualquier nota o comentario sobre el trabajo realizado..."
+								/>
+							</div>
+
+							{/* Sección de empleados */}
+							<div className="empleados-edicion-section">
+								<div className="empleados-header">
+									<div className="empleados-info">
+										<h3>Empleados del Parte</h3>
+										<div className="empleados-stats">
+											<span className="stat-asignados">
+												Asignados: {editandoParte.empleados.length}
+											</span>
+											{mostrarEmpleadosObra && (
+												<span className="stat-disponibles">
+													Disponibles: {getEmpleadosNoAsignados().length}
+												</span>
+											)}
+										</div>
+									</div>
+									<button 
+										className="btn btn-primary" 
+										onClick={() => setMostrarEmpleadosObra(!mostrarEmpleadosObra)}
+									>
+										<Users size={20} />
+										{mostrarEmpleadosObra ? 'Ocultar' : 'Ver'} empleados de esta obra
+									</button>
+								</div>
+
+								{/* Empleados actuales del parte */}
+								<div className="empleados-actuales">
+									<h4>Empleados asignados al parte ({editandoParte.empleados.length}):</h4>
+									{loadingEmpleadosParte ? (
+										<div className="empleados-loading">
+											<Loader2 size={20} className="loading-spinner" />
+											<p>Cargando empleados del parte...</p>
+										</div>
+									) : editandoParte.empleados.length === 0 ? (
+										<div className="empleados-empty">
+											<p>No hay empleados asignados a este parte</p>
+										</div>
+									) : (
+										<div className="empleados-lista-edicion">
+											{getEmpleadosAsignados().map(empleado => (
+												<div key={empleado.id} className="empleado-edicion-item">
+													<div className="empleado-info-edicion">
+														<label className="empleado-checkbox-edicion">
+															<input
+																type="checkbox"
+																checked={true}
+																onChange={() => toggleEmpleado(empleado.id)}
+															/>
+															<span className="empleado-nombre-edicion">
+																<strong>{empleado.nombre}</strong>
+																<span className="categoria-empleado">{empleado.categoria} - {empleado.localidad}</span>
+															</span>
+														</label>
+													</div>
+													<div className="empleado-horas-edicion">
+														<label className="horas-label">Horas:</label>
+														<input
+															type="number"
+															className="horas-input-edicion"
+															min="0"
+															max="24"
+															step="0.5"
+															value={editandoParte.empleadosHoras[empleado.id] || 8}
+															onChange={(e) => cambiarHorasEmpleado(empleado.id, e.target.value)}
+														/>
+														<span className="horas-unidad">h</span>
+													</div>
+												</div>
+											))}
+										</div>
+									)}
+								</div>
+
+								{/* Lista de empleados de la obra */}
+								{mostrarEmpleadosObra && (
+									<div className="empleados-obra-disponibles">
+										<h4>Empleados disponibles en la obra (no asignados al parte):</h4>
+										{loadingEmpleados ? (
+											<div className="empleados-loading">
+												<Loader2 size={20} className="loading-spinner" />
+												<p>Cargando empleados de la obra...</p>
+											</div>
+										) : getEmpleadosNoAsignados().length === 0 ? (
+											<div className="empleados-empty">
+												<p>Todos los empleados de la obra ya están asignados al parte</p>
+											</div>
+										) : (
+											<div className="empleados-lista-disponibles">
+												{getEmpleadosNoAsignados().map(empleado => (
+													<div key={empleado.id} className="empleado-disponible-item">
+														<div className="empleado-info-disponible">
+															<label className="empleado-checkbox-disponible">
+																<input
+																	type="checkbox"
+																	checked={false}
+																	onChange={() => toggleEmpleado(empleado.id)}
+																/>
+																<span className="empleado-nombre-disponible">
+																	<strong>{empleado.nombre}</strong>
+																	<span className="categoria-empleado">{empleado.categoria} - {empleado.localidad}</span>
+																</span>
+															</label>
+														</div>
+														{/* No mostrar campo de horas aquí ya que no está asignado */}
+													</div>
+												))}
+											</div>
+										)}
+									</div>
+								)}
+							</div>
+
+							{/* Acciones de edición */}
+							<div className="edicion-acciones">
+								<button className="btn btn-success" onClick={guardarCambios}>
+									<FileText size={20} />
+									Guardar Cambios
+								</button>
+								<button className="btn btn-secondary" onClick={cancelarEdicion}>
+									Cancelar
+								</button>
+							</div>
+						</div>
+					</div>
+				</div>
+			) : parteSeleccionado ? (
 				<div className="detalles-modal">
 					<div className="detalles-content">
 						<div className="detalles-header">
@@ -277,6 +729,21 @@ function ConsultaPartes({ datos, onVolver }) {
 							<h2 className="detalles-title">{parteSeleccionado.nombre}</h2>
 						</div>
 						<div className="detalles-info">
+							{/* Alerta si el parte no es editable */}
+							{!puedeEditarParte(parteSeleccionado.estado) && (
+								<div className="alerta-no-editable">
+									<div className="alerta-icon">
+										<FileText size={20} />
+									</div>
+									<div className="alerta-content">
+										<h4 className="alerta-title">Parte No Editable</h4>
+										<p className="alerta-message">
+											{getMensajeEstadoNoEditable(parteSeleccionado.estado)}
+										</p>
+									</div>
+								</div>
+							)}
+							
 							<div className="info-grid">
 								<div className="info-item">
 									<Building size={20} />
@@ -356,14 +823,30 @@ function ConsultaPartes({ datos, onVolver }) {
 									<p>{parteSeleccionado.notas}</p>
 								</div>
 							)}
-							{parteSeleccionado.urlPDF && (
-								<div className="pdf-section">
+							
+							{/* Acciones del parte */}
+							<div className="parte-acciones-detalles">
+								{parteSeleccionado.urlPDF && (
 									<button className="btn btn-primary" onClick={() => window.open(parteSeleccionado.urlPDF, '_blank')}>
 										<FileText size={20} />
 										Descargar PDF
 									</button>
-								</div>
-							)}
+								)}
+								
+								{/* Botones de edición solo si el parte es editable */}
+								{puedeEditarParte(parteSeleccionado.estado) ? (
+									<div className="acciones-edicion">
+										<button className="btn btn-secondary" onClick={() => iniciarEdicion(parteSeleccionado)}>
+											<FileText size={20} />
+											Editar Parte
+										</button>
+									</div>
+								) : (
+									<div className="mensaje-no-editable">
+										<p>Este parte no puede ser modificado debido a su estado actual</p>
+									</div>
+								)}
+							</div>
 						</div>
 					</div>
 				</div>
@@ -465,6 +948,15 @@ function ConsultaPartes({ datos, onVolver }) {
 												<span>Importe: {parte.importeTotal || 0}€</span>
 											</div>
 										</div>
+										
+										{/* Indicador visual si el parte no es editable */}
+										{!puedeEditarParte(parte.estado) && (
+											<div className="parte-no-editable-indicator">
+												<FileText size={16} />
+												<span>No editable - {parte.estado}</span>
+											</div>
+										)}
+										
 										<div className="parte-acciones">
 											<button className="btn btn-primary" onClick={() => verDetalles(parte)}>
 												Ver Detalles
@@ -472,6 +964,14 @@ function ConsultaPartes({ datos, onVolver }) {
 											{parte.urlPDF && (
 												<button className="btn btn-secondary" onClick={() => window.open(parte.urlPDF, '_blank')}>
 													Descargar PDF
+												</button>
+											)}
+											
+											{/* Botones de edición solo si el parte es editable */}
+											{puedeEditarParte(parte.estado) && (
+												<button className="btn btn-success" onClick={() => iniciarEdicion(parte)}>
+													<FileText size={20} />
+													Editar
 												</button>
 											)}
 										</div>
@@ -503,8 +1003,8 @@ function CrearParte({ datos, onParteCreado, onVolver }) {
 		obraId: '',
 		obra: '',
 		fecha: getCurrentDateTime(),
-		jefeObraId: '',
-		jefeObra: '',
+		personaAutorizadaId: '',
+		personaAutorizada: '',
 		empleados: [],
 		empleadosHoras: {}, // Nuevo objeto para almacenar horas por empleado
 		notas: ''
@@ -554,17 +1054,17 @@ function CrearParte({ datos, onParteCreado, onVolver }) {
 		try {
 			// Encontrar la obra seleccionada
 			const obraSeleccionada = datos.obras.find(obra => obra.id === formData.obraId)
-			const jefeSeleccionado = datos.jefesObra.find(jefe => jefe.id === formData.jefeObraId)
+			const personaAutorizadaSeleccionada = datos.jefesObra.find(jefe => jefe.id === formData.personaAutorizadaId)
 
-			if (!obraSeleccionada || !jefeSeleccionado) {
-				throw new Error('Por favor, selecciona una obra y un jefe de obra válidos')
+			if (!obraSeleccionada || !personaAutorizadaSeleccionada) {
+				throw new Error('Por favor, selecciona una obra y una Persona Autorizada válidos')
 			}
 
 			const parteCreado = await crearParteTrabajo({
 				obra: obraSeleccionada.nombre,
 				obraId: formData.obraId,
 				fecha: formData.fecha,
-				jefeObraId: formData.jefeObraId,
+				personaAutorizadaId: formData.personaAutorizadaId,
 				notas: formData.notas,
 				empleados: formData.empleados,
 				empleadosHoras: formData.empleadosHoras
@@ -592,8 +1092,8 @@ function CrearParte({ datos, onParteCreado, onVolver }) {
 			obraId: '',
 			obra: '',
 			fecha: getCurrentDateTime(),
-			jefeObraId: '',
-			jefeObra: '',
+			personaAutorizadaId: '',
+			personaAutorizada: '',
 			empleados: [],
 			empleadosHoras: {},
 			notas: ''
@@ -706,14 +1206,14 @@ function CrearParte({ datos, onParteCreado, onVolver }) {
 					</div>
 
 					<div className="form-group">
-						<label className="form-label">Jefe de Obra:</label>
+						<label className="form-label">Persona Autorizada:</label>
 						<select
 							className="form-select"
-							value={formData.jefeObraId}
-							onChange={(e) => setFormData({...formData, jefeObraId: e.target.value})}
+							value={formData.personaAutorizadaId}
+							onChange={(e) => setFormData({...formData, personaAutorizadaId: e.target.value})}
 							required
 						>
-							<option value="">Selecciona un jefe de obra</option>
+							<option value="">Selecciona una Persona Autorizada</option>
 							{datos.jefesObra.map(jefe => (
 								<option key={jefe.id} value={jefe.id}>
 									{jefe.nombre} ({jefe.email})

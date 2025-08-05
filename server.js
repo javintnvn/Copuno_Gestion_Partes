@@ -496,6 +496,59 @@ app.get('/api/partes-trabajo/:parteId/empleados', async (req, res) => {
 	}
 })
 
+// Obtener detalles completos de un parte específico
+app.get('/api/partes-trabajo/:parteId/detalles', async (req, res) => {
+	try {
+		const { parteId } = req.params
+
+		// Obtener el parte específico
+		const parteData = await makeNotionRequest('GET', `/pages/${parteId}`)
+		
+		// Extraer la Persona Autorizada
+		const personaAutorizada = extractPropertyValue(parteData.properties['Persona Autorizada'])
+		
+		// Obtener detalles de empleados
+		const detallesData = await makeNotionRequest('POST', `/databases/${DATABASES.DETALLES_HORA}/query`, {
+			filter: {
+				property: 'Partes de trabajo',
+				relation: {
+					contains: parteId
+				}
+			},
+			page_size: 100
+		})
+
+		const detallesEmpleados = detallesData.results.map(detalle => ({
+			id: detalle.id,
+			empleadoId: extractPropertyValue(detalle.properties['Empleados']),
+			empleadoNombre: extractPropertyValue(detalle.properties['Aux Empleado']),
+			categoria: extractPropertyValue(detalle.properties['AUX_Categoria']),
+			horas: extractPropertyValue(detalle.properties['Cantidad Horas']),
+			fecha: extractPropertyValue(detalle.properties['Fecha']),
+			detalle: extractPropertyValue(detalle.properties['Detalle'])
+		}))
+
+		res.json({
+			parte: {
+				id: parteData.id,
+				nombre: extractPropertyValue(parteData.properties['Nombre']),
+				fecha: extractPropertyValue(parteData.properties['Fecha']),
+				obra: extractPropertyValue(parteData.properties['AUX Obra']),
+				estado: extractPropertyValue(parteData.properties['Estado']),
+				notas: extractPropertyValue(parteData.properties['Notas']),
+				personaAutorizada: personaAutorizada
+			},
+			empleados: detallesEmpleados
+		})
+	} catch (error) {
+		console.error('Error al obtener detalles completos del parte:', error.message)
+		res.status(500).json({ 
+			error: 'Error al obtener detalles completos del parte',
+			details: error.message 
+		})
+	}
+})
+
 // Obtener datos completos
 app.get('/api/datos-completos', async (req, res) => {
 	try {
