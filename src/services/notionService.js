@@ -213,6 +213,31 @@ export const crearParteTrabajo = async (datos) => {
 	}
 }
 
+// Actualizar un parte de trabajo existente
+export const actualizarParteTrabajo = async (parteId, datos) => {
+	try {
+		// Validar datos requeridos
+		const requiredFields = ['obraId', 'fecha', 'personaAutorizadaId']
+		const missingFields = requiredFields.filter(field => !datos[field])
+		
+		if (missingFields.length > 0) {
+			throw new Error(`Faltan campos requeridos: ${missingFields.join(', ')}`)
+		}
+
+		// Preparar datos para enviar
+		const datosEnvio = {
+			...datos,
+			empleados: datos.empleados || [],
+			empleadosHoras: datos.empleadosHoras || {}
+		}
+
+		const response = await apiClient.put(`/api/partes-trabajo/${parteId}`, datosEnvio)
+		return response.data
+	} catch (error) {
+		handleApiError(error, 'actualizar parte de trabajo')
+	}
+}
+
 // Obtener datos completos para la aplicación
 export const getDatosCompletos = async () => {
 	try {

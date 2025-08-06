@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react'
 import { Search, Plus, FileText, Calendar, Users, Building, Loader2, Wifi, WifiOff, Home, ArrowLeft, Clock, User } from 'lucide-react'
-import { getDatosCompletos, crearParteTrabajo, checkConnectivity, retryOperation, getDetallesEmpleados, getEmpleadosObra, getDetallesCompletosParte } from './services/notionService'
+import { getDatosCompletos, crearParteTrabajo, actualizarParteTrabajo, checkConnectivity, retryOperation, getDetallesEmpleados, getEmpleadosObra, getDetallesCompletosParte } from './services/notionService'
 import './App.css'
 
 function App() {
-	const [activeSection, setActiveSection] = useState('main') // Cambiado de 'consulta' a 'main'
+	const [activeSection, setActiveSection] = useState('main') // Forzar pantalla principal
 	const [datos, setDatos] = useState({
 		obras: [],
 		jefesObra: [],
@@ -206,6 +206,7 @@ function ConsultaPartes({ datos, onVolver }) {
 	const [loadingEmpleados, setLoadingEmpleados] = useState(false)
 	const [mostrarEmpleadosObra, setMostrarEmpleadosObra] = useState(false)
 	const [loadingEmpleadosParte, setLoadingEmpleadosParte] = useState(false)
+	const [guardandoCambios, setGuardandoCambios] = useState(false)
 
 	// Función para verificar si un parte puede ser editado
 	const puedeEditarParte = (estado) => {
@@ -427,10 +428,59 @@ function ConsultaPartes({ datos, onVolver }) {
 
 	// Función para guardar cambios
 	const guardarCambios = async () => {
-		// Aquí implementaríamos la lógica para guardar los cambios
-		console.log('Guardando cambios:', editandoParte)
-		// TODO: Implementar llamada a API para actualizar el parte
-		cancelarEdicion()
+		if (!editandoParte) return
+
+		setGuardandoCambios(true)
+
+		try {
+			// Validar datos requeridos
+			if (!editandoParte.obraId || !editandoParte.fecha || !editandoParte.personaAutorizadaId) {
+				alert('Por favor, completa todos los campos requeridos (obra, fecha y persona autorizada)')
+				return
+			}
+
+			// Encontrar la obra seleccionada
+			const obraSeleccionada = datos.obras.find(obra => obra.id === editandoParte.obraId)
+			if (!obraSeleccionada) {
+				alert('La obra seleccionada no es válida')
+				return
+			}
+
+			// Preparar datos para actualizar
+			const datosActualizacion = {
+				obraId: editandoParte.obraId,
+				fecha: editandoParte.fecha,
+				personaAutorizadaId: editandoParte.personaAutorizadaId,
+				notas: editandoParte.notas || '',
+				empleados: editandoParte.empleados || [],
+				empleadosHoras: editandoParte.empleadosHoras || {}
+			}
+
+			console.log('Actualizando parte:', editandoParte.id, datosActualizacion)
+
+			// Llamar a la API para actualizar
+			const resultado = await actualizarParteTrabajo(editandoParte.id, datosActualizacion)
+			
+			console.log('Parte actualizado:', resultado)
+			
+			// Mostrar mensaje de éxito
+			alert(`Parte actualizado exitosamente. ${resultado.detallesCreados} empleados asignados.`)
+			
+			// Recargar datos para reflejar los cambios
+			if (onVolver) {
+				// Recargar datos en el componente padre
+				window.location.reload()
+			}
+			
+			// Cerrar modal de edición
+			cancelarEdicion()
+			
+		} catch (error) {
+			console.error('Error al actualizar parte:', error)
+			alert(`Error al actualizar el parte: ${error.message}`)
+		} finally {
+			setGuardandoCambios(false)
+		}
 	}
 
 	// Función para manejar cambios en el formulario de edición
@@ -707,11 +757,28 @@ function ConsultaPartes({ datos, onVolver }) {
 
 							{/* Acciones de edición */}
 							<div className="edicion-acciones">
-								<button className="btn btn-success" onClick={guardarCambios}>
-									<FileText size={20} />
-									Guardar Cambios
+								<button 
+									className="btn btn-success" 
+									onClick={guardarCambios}
+									disabled={guardandoCambios}
+								>
+									{guardandoCambios ? (
+										<>
+											<Loader2 size={20} className="loading-spinner" />
+											Guardando...
+										</>
+									) : (
+										<>
+											<FileText size={20} />
+											Guardar Cambios
+										</>
+									)}
 								</button>
-								<button className="btn btn-secondary" onClick={cancelarEdicion}>
+								<button 
+									className="btn btn-secondary" 
+									onClick={cancelarEdicion}
+									disabled={guardandoCambios}
+								>
 									Cancelar
 								</button>
 							</div>
@@ -1064,7 +1131,7 @@ function CrearParte({ datos, onParteCreado, onVolver }) {
 				obra: obraSeleccionada.nombre,
 				obraId: formData.obraId,
 				fecha: formData.fecha,
-				personaAutorizadaId: formData.personaAutorizadaId,
+				jefeObraId: formData.personaAutorizadaId,
 				notas: formData.notas,
 				empleados: formData.empleados,
 				empleadosHoras: formData.empleadosHoras

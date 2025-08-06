@@ -417,11 +417,6 @@ app.post('/api/partes-trabajo', async (req, res) => {
 							},
 							'Cantidad Horas': {
 								number: horas
-							},
-							'Fecha': {
-								date: {
-									start: fecha
-								}
 							}
 						}
 					})
@@ -549,6 +544,156 @@ app.get('/api/partes-trabajo/:parteId/detalles', async (req, res) => {
 	}
 })
 
+// Actualizar un parte de trabajo existente
+app.put('/api/partes-trabajo/:parteId', async (req, res) => {
+	try {
+		const { parteId } = req.params
+		const { obraId, fecha, personaAutorizadaId, notas, empleados, empleadosHoras } = req.body
+
+		if (!obraId || !fecha || !personaAutorizadaId) {
+			return res.status(400).json({ 
+				error: 'Faltan campos requeridos',
+				required: ['obraId', 'fecha', 'personaAutorizadaId']
+			})
+		}
+
+		// Obtener la obra para el nombre
+		const obraData = await makeNotionRequest('GET', `/pages/${obraId}`)
+		const nombreObra = extractPropertyValue(obraData.properties['Obra'])
+
+		// Actualizar el parte de trabajo
+		const parteActualizado = await makeNotionRequest('PATCH', `/pages/${parteId}`, {
+			properties: {
+				'Fecha': {
+					date: {
+						start: fecha
+					}
+				},
+				'Obras': {
+					relation: [
+						{
+							id: obraId
+						}
+					]
+				},
+				'Persona Autorizada': {
+					relation: [
+						{
+							id: personaAutorizadaId
+						}
+					]
+				},
+				'Notas': {
+					rich_text: [
+						{
+							text: {
+								content: notas || ''
+							}
+						}
+					]
+				}
+			}
+		})
+
+		// Obtener detalles existentes para este parte
+		const detallesExistentes = await makeNotionRequest('POST', `/databases/${DATABASES.DETALLES_HORA}/query`, {
+			filter: {
+				property: 'Partes de trabajo',
+				relation: {
+					contains: parteId
+				}
+			},
+			page_size: 100
+		})
+
+		// Archivar detalles existentes (en lugar de eliminarlos)
+		for (const detalle of detallesExistentes.results) {
+			try {
+				await makeNotionRequest('PATCH', `/pages/${detalle.id}`, {
+					archived: true
+				})
+				// Pausa entre requests para evitar rate limiting
+				await new Promise(resolve => setTimeout(resolve, 100))
+			} catch (error) {
+				console.error(`Error al archivar detalle ${detalle.id}:`, error.message)
+			}
+		}
+
+		// Crear nuevos detalles de horas para cada empleado seleccionado
+		let detallesCreados = []
+		let erroresDetalles = []
+
+		if (empleados && empleados.length > 0) {
+			for (const empleadoId of empleados) {
+				try {
+					const horas = empleadosHoras[empleadoId] || 8
+					
+					const detalleData = await makeNotionRequest('POST', '/pages', {
+						parent: { database_id: DATABASES.DETALLES_HORA },
+						properties: {
+							'Detalle': {
+								title: [
+									{
+										text: {
+											content: `Detalle Horas`
+										}
+									}
+								]
+							},
+							'Partes de trabajo': {
+								relation: [
+									{
+										id: parteId
+									}
+								]
+							},
+							'Empleados': {
+								relation: [
+									{
+										id: empleadoId
+									}
+								]
+							},
+							'Cantidad Horas': {
+								number: horas
+							}
+						}
+					})
+					
+					detallesCreados.push(detalleData)
+					
+					// Pausa entre requests para evitar rate limiting
+					await new Promise(resolve => setTimeout(resolve, 100))
+					
+				} catch (error) {
+					console.error(`Error al crear detalle para empleado ${empleadoId}:`, error.message)
+					erroresDetalles.push({ empleadoId, error: error.message })
+				}
+			}
+
+			// Log de resultados
+			console.log(`✅ Detalles actualizados: ${detallesCreados.length}/${empleados.length}`)
+			if (erroresDetalles.length > 0) {
+				console.log(`❌ Errores en detalles:`, erroresDetalles)
+			}
+		}
+
+		res.json({
+			...parteActualizado,
+			empleadosActualizados: empleados?.length || 0,
+			detallesCreados: detallesCreados.length,
+			erroresDetalles: erroresDetalles.length,
+			mensaje: `Parte actualizado exitosamente. ${detallesCreados.length} empleados asignados.`
+		})
+	} catch (error) {
+		console.error('Error al actualizar parte de trabajo:', error.message)
+		res.status(500).json({ 
+			error: 'Error al actualizar parte de trabajo',
+			details: error.message 
+		})
+	}
+})
+
 // Obtener datos completos
 app.get('/api/datos-completos', async (req, res) => {
 	try {
@@ -574,8 +719,12 @@ app.get('/api/datos-completos', async (req, res) => {
 	}
 })
 
-// Ruta para servir la aplicación React
+// Ruta para servir la aplicación React (solo para rutas que no sean API)
 app.get('*', (req, res) => {
+	// No servir la aplicación React para rutas de la API
+	if (req.path.startsWith('/api/')) {
+		return res.status(404).json({ error: 'API endpoint not found' })
+	}
 	res.sendFile(path.join(__dirname, 'dist', 'index.html'))
 })
 
