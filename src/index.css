@@ -1,6 +1,6 @@
 :root {
-	--primary-color: #2563eb;
-	--primary-hover: #1d4ed8;
+    --primary-color: #0a3d91;
+    --primary-hover: #082f73;
 	--secondary-color: #64748b;
 	--success-color: #059669;
 	--warning-color: #d97706;
@@ -171,7 +171,7 @@ body {
 .form-input:focus {
 	outline: none;
 	border-color: var(--primary-color);
-	box-shadow: 0 0 0 3px rgb(37 99 235 / 0.1);
+	box-shadow: 0 0 0 3px rgba(11, 59, 140, 0.15);
 }
 
 .form-select {

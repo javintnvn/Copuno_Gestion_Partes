@@ -1,21 +1,21 @@
 /* Variables CSS */
 :root {
 	/* Colores principales */
-	--primary-color: #2563eb;
-	--primary-hover: #1d4ed8;
+	--primary-color: #0a3d91;
+	--primary-hover: #082f73;
 	--secondary-color: #64748b;
 	--success-color: #059669;
 	--warning-color: #d97706;
 	--danger-color: #dc2626;
 	
 	/* Colores de fondo */
-	--background-color: #f8fafc;
+	--background-color: #f6f8fc;
 	--surface-color: #ffffff;
 	--border-color: #e2e8f0;
 	
 	/* Colores de texto */
-	--text-primary: #1e293b;
-	--text-secondary: #64748b;
+	--text-primary: #12223b;
+	--text-secondary: #5b6b82;
 	--text-tertiary: #94a3b8;
 	
 	/* Espaciado */
@@ -28,15 +28,15 @@
 	
 	/* Tipografía */
 	--font-size-small: 12px;
-	--font-size-medium: 14px;
+	--font-size-medium: 16px;
 	--font-size-large: 16px;
-	--font-size-xl: 18px;
+	--font-size-xl: 20px;
 	--font-size-2xl: 24px;
 	--font-size-3xl: 32px;
 	
 	/* Bordes */
-	--border-radius: 8px;
-	--border-radius-lg: 12px;
+	--border-radius: 10px;
+	--border-radius-lg: 14px;
 	
 	/* Sombras */
 	--shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
@@ -55,6 +55,9 @@ body {
 	font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
 		'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
 	background-color: var(--background-color);
+	background-image:
+		radial-gradient(1200px 400px at 110% -10%, rgba(11, 59, 140, 0.06), transparent 60%),
+		radial-gradient(800px 300px at -10% 0%, rgba(11, 106, 166, 0.05), transparent 60%);
 	color: var(--text-primary);
 	line-height: 1.6;
 }
@@ -73,10 +76,12 @@ body {
 
 /* Header */
 .header {
-	background-color: var(--surface-color);
+	background-color: rgba(255, 255, 255, 0.85);
+	-webkit-backdrop-filter: saturate(160%) blur(6px);
+	backdrop-filter: saturate(160%) blur(6px);
 	box-shadow: var(--shadow-sm);
 	padding: var(--spacing-lg) 0;
-	border-bottom: 1px solid var(--border-color);
+	border-bottom: 1px solid rgba(11, 59, 140, 0.08);
 	position: sticky;
 	top: 0;
 	z-index: 100;
@@ -165,8 +170,8 @@ body {
 	flex-direction: column;
 	align-items: center;
 	justify-content: center;
-	min-height: 70vh;
-	padding: var(--spacing-2xl) 0;
+	min-height: 64vh;
+	padding: var(--spacing-xl) 0;
 }
 
 .welcome-section {
@@ -181,7 +186,10 @@ body {
 .welcome-title {
 	font-size: var(--font-size-3xl);
 	font-weight: 700;
-	color: var(--text-primary);
+    background: linear-gradient(135deg, #0b3b8c 0%, #0b6aa6 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
 	margin-bottom: var(--spacing-md);
 }
 
@@ -201,16 +209,17 @@ body {
 .main-actions {
 	display: grid;
 	grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-	gap: var(--spacing-xl);
+	gap: var(--spacing-lg);
 	max-width: 800px;
 	width: 100%;
 }
 
 .action-card {
-	background-color: var(--surface-color);
-	border: 2px solid var(--border-color);
+	background: linear-gradient(#ffffff, #ffffff) padding-box,
+		linear-gradient(135deg, rgba(11,59,140,0.2), rgba(11,106,166,0.15)) border-box;
+	border: 2px solid transparent;
 	border-radius: var(--border-radius-lg);
-	padding: var(--spacing-2xl);
+	padding: var(--spacing-xl);
 	cursor: pointer;
 	transition: all 0.3s ease;
 	text-align: center;
@@ -218,14 +227,14 @@ body {
 	display: flex;
 	flex-direction: column;
 	align-items: center;
-	gap: var(--spacing-lg);
+	gap: var(--spacing-md);
 }
 
 .action-card:hover {
 	transform: translateY(-4px);
 	box-shadow: var(--shadow-lg);
-	border-color: var(--primary-color);
-	background-color: #f8fafc;
+	background: linear-gradient(#fdfefe, #f8fbff) padding-box,
+		linear-gradient(135deg, rgba(11,59,140,0.3), rgba(11,106,166,0.25)) border-box;
 }
 
 .action-card:active {
@@ -234,7 +243,7 @@ body {
 
 .action-icon {
 	color: var(--primary-color);
-	transition: all 0.3s ease;
+	transition: transform 220ms ease, box-shadow 220ms ease, background 220ms ease;
 }
 
 .action-card:hover .action-icon {
@@ -364,11 +373,11 @@ body {
 
 /* Cards */
 .card {
-	background-color: var(--surface-color);
+	background: linear-gradient(180deg, #ffffff 0%, #fcfdff 100%);
 	border-radius: var(--border-radius-lg);
 	padding: var(--spacing-xl);
-	border: 1px solid var(--border-color);
-	box-shadow: var(--shadow-sm);
+	border: 1px solid rgba(11, 59, 140, 0.08);
+	box-shadow: 0 6px 20px -8px rgba(2, 18, 46, 0.25), var(--shadow-sm);
 	animation: fadeIn 0.3s ease-out;
 }
 
@@ -381,6 +390,17 @@ body {
 	font-weight: 700;
 	color: var(--text-primary);
 	margin-bottom: var(--spacing-xs);
+}
+
+.card-title::after,
+.section-title::after {
+	content: "";
+	display: block;
+	width: 56px;
+	height: 3px;
+	margin-top: 8px;
+	background: linear-gradient(135deg, #0b3b8c, #0b6aa6);
+	border-radius: 2px;
 }
 
 .card-subtitle {
@@ -421,18 +441,18 @@ body {
 .form-input,
 .form-select {
 	padding: var(--spacing-sm) var(--spacing-md);
-	border: 1px solid var(--border-color);
+	border: 1px solid rgba(11, 59, 140, 0.12);
 	border-radius: var(--border-radius);
 	font-size: var(--font-size-medium);
 	transition: all 0.2s ease;
-	background-color: var(--surface-color);
+	background-color: #fcfdff;
 }
 
 .form-input:focus,
 .form-select:focus {
 	outline: none;
 	border-color: var(--primary-color);
-	box-shadow: 0 0 0 3px rgb(37 99 235 / 0.1);
+	box-shadow: 0 0 0 3px rgba(11, 59, 140, 0.15);
 }
 
 /* Lista de partes */
@@ -447,7 +467,7 @@ body {
 	padding: var(--spacing-lg);
 	border: 1px solid var(--border-color);
 	box-shadow: var(--shadow-sm);
-	transition: all 0.2s ease;
+	transition: transform 180ms ease, box-shadow 180ms ease;
 }
 
 .parte-card:hover {
@@ -507,7 +527,7 @@ body {
 }
 
 .estado-badge.datos-enviados {
-	background-color: #0891b2;
+	background-color: #0b6aa6;
 	color: white;
 }
 
@@ -534,10 +554,10 @@ body {
 
 /* Botones */
 .btn {
-	padding: var(--spacing-sm) var(--spacing-md);
+	padding: var(--spacing-md) var(--spacing-lg);
 	border: none;
 	border-radius: var(--border-radius);
-	font-size: var(--font-size-medium);
+	font-size: var(--font-size-large);
 	font-weight: 600;
 	cursor: pointer;
 	transition: all 0.2s ease;
@@ -545,6 +565,8 @@ body {
 	align-items: center;
 	gap: var(--spacing-xs);
 	text-decoration: none;
+	min-height: 48px;
+	box-shadow: var(--shadow-sm);
 }
 
 .btn:hover {
@@ -554,16 +576,16 @@ body {
 
 .btn:focus {
 	outline: none;
-	box-shadow: 0 0 0 3px rgb(37 99 235 / 0.1);
+	box-shadow: 0 0 0 3px rgba(11, 59, 140, 0.15);
 }
 
 .btn-primary {
-	background-color: var(--primary-color);
+	background-image: linear-gradient(135deg, #0b3b8c 0%, #0b6aa6 100%);
 	color: white;
 }
 
 .btn-primary:hover {
-	background-color: var(--primary-hover);
+	filter: brightness(1.03);
 }
 
 .btn-secondary {
@@ -572,7 +594,7 @@ body {
 }
 
 .btn-success {
-	background-color: var(--success-color);
+	background-image: linear-gradient(135deg, #059669 0%, #047857 100%);
 	color: white;
 }
 
@@ -620,7 +642,7 @@ body {
 	align-items: center;
 	gap: var(--spacing-xs);
 	font-size: var(--font-size-medium);
-	transition: all 0.2s ease;
+	transition: transform 160ms ease, box-shadow 160ms ease, filter 160ms ease;
 }
 
 .btn-close:hover {
@@ -775,6 +797,21 @@ body {
 	}
 }
 
+@keyframes floatInUp {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Microanimaciones de entrada para cards y botones principales */
+.card, .action-card, .parte-card {
+    animation: floatInUp 320ms ease-out;
+}
+
+/* Respeto a reduced motion */
+@media (prefers-reduced-motion: reduce) {
+    * { animation: none !important; transition: none !important; }
+}
+
 /* Responsive */
 @media (max-width: 768px) {
 	.header-content {
@@ -925,12 +962,13 @@ body {
 	border: 1px solid var(--border-color);
 	border-radius: var(--border-radius);
 	padding: var(--spacing-md);
-	transition: all 0.2s ease;
+	transition: border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
 }
 
 .empleado-detalle:hover {
 	box-shadow: var(--shadow-sm);
 	border-color: var(--primary-color);
+    transform: translateY(-1px);
 }
 
 .empleado-info-detalle {
@@ -964,6 +1002,14 @@ body {
 	font-weight: 500;
 	text-transform: uppercase;
 	letter-spacing: 0.5px;
+}
+
+/* Badges de color para opciones de Notion */
+.badge-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 9999px;
+    display: inline-block;
 }
 
 .empleado-horas {
@@ -1083,6 +1129,9 @@ body {
 	font-weight: 500;
 	text-transform: uppercase;
 	letter-spacing: 0.5px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
 }
 
 .estado-empleado.on {
@@ -1114,12 +1163,13 @@ body {
 	border: 1px solid var(--border-color);
 	border-radius: var(--border-radius);
 	background-color: var(--surface-color);
-	transition: all 0.2s ease;
+	transition: border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
 }
 
 .empleado-item:hover {
 	box-shadow: var(--shadow-sm);
 	border-color: var(--primary-color);
+    transform: translateY(-1px);
 }
 
 .empleado-horas-input {
@@ -1151,7 +1201,7 @@ body {
 .horas-input:focus {
 	outline: none;
 	border-color: var(--primary-color);
-	box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.1);
+	box-shadow: 0 0 0 2px rgba(11, 59, 140, 0.15);
 }
 
 .horas-unidad {
@@ -1235,6 +1285,27 @@ body {
 		padding: var(--spacing-lg);
 	}
 } 
+
+/* Compactación de controles de estado de empleado */
+.empleado-estado-edicion {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  flex-wrap: wrap;
+}
+
+.empleado-estado-edicion .form-select {
+  min-width: 220px;
+  max-width: 100%;
+}
+
+/* Punto de color para estado */
+.badge-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 9999px;
+  display: inline-block;
+}
 
 /* Estilos para alertas de partes no editables */
 .alerta-no-editable {
@@ -1496,7 +1567,7 @@ body {
 .horas-input-edicion:focus {
 	outline: none;
 	border-color: var(--primary-color);
-	box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.1);
+	box-shadow: 0 0 0 2px rgba(11, 59, 140, 0.15);
 }
 
 /* Empleados disponibles */
@@ -1528,12 +1599,13 @@ body {
 	background-color: var(--surface-color);
 	border: 1px solid var(--border-color);
 	border-radius: var(--border-radius);
-	transition: all 0.2s ease;
+	transition: border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
 }
 
 .empleado-disponible-item:hover {
 	box-shadow: var(--shadow-sm);
 	border-color: var(--primary-color);
+    transform: translateY(-1px);
 }
 
 .empleado-info-disponible {
@@ -1575,7 +1647,13 @@ body {
 .horas-input-disponible:focus {
 	outline: none;
 	border-color: var(--primary-color);
-	box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.1);
+	box-shadow: 0 0 0 2px rgba(11, 59, 140, 0.15);
+}
+
+/* Mejora táctil para checkbox en tablet */
+input[type="checkbox"] {
+	width: 22px;
+	height: 22px;
 }
 
 /* Acciones de edición */

@@ -237,6 +237,76 @@ app.get('/api/empleados', async (req, res) => {
 	}
 })
 
+// Obtener opciones válidas de la propiedad Estado de empleados (dinámico desde Notion)
+app.get('/api/empleados/estado-opciones', async (req, res) => {
+    try {
+        const db = await makeNotionRequest('GET', `/databases/${DATABASES.EMPLEADOS}`)
+        const prop = db.properties?.['Estado']
+        if (!prop) {
+            return res.json({ type: 'unknown', options: [] })
+        }
+
+        let options = []
+        let type = prop.type
+        if (prop.type === 'status') {
+            options = (prop.status?.options || []).map(o => ({ name: o.name, color: o.color }))
+        } else if (prop.type === 'select') {
+            options = (prop.select?.options || []).map(o => ({ name: o.name, color: o.color }))
+        } else if (prop.type === 'checkbox') {
+            options = [
+                { name: 'true', color: 'green' },
+                { name: 'false', color: 'red' }
+            ]
+        }
+
+        res.json({ type, options })
+    } catch (error) {
+        console.error('Error al obtener opciones de Estado:', error.message)
+        res.status(500).json({ error: 'Error al obtener opciones de Estado', details: error.message })
+    }
+})
+
+// Actualizar estado de un empleado
+app.put('/api/empleados/:empleadoId/estado', async (req, res) => {
+    try {
+        const { empleadoId } = req.params
+        const { estado } = req.body
+
+        if (!estado || typeof estado !== 'string') {
+            return res.status(400).json({ error: 'Parámetro "estado" requerido' })
+        }
+
+        // Obtener la página del empleado para detectar el tipo de la propiedad Estado
+        const empleadoPage = await makeNotionRequest('GET', `/pages/${empleadoId}`)
+        const propEstado = empleadoPage.properties?.['Estado']
+        if (!propEstado) {
+            return res.status(400).json({ error: 'La propiedad "Estado" no existe en el empleado' })
+        }
+
+        // Preparar payload según el tipo de la propiedad
+        let estadoPayload
+        if (propEstado.type === 'status') {
+            estadoPayload = { status: { name: estado } }
+        } else if (propEstado.type === 'select') {
+            estadoPayload = { select: { name: estado } }
+        } else if (propEstado.type === 'checkbox') {
+            const value = /^(on|activo|true|sí|si)$/i.test(estado)
+            estadoPayload = { checkbox: value }
+        } else {
+            return res.status(400).json({ error: `Tipo de propiedad Estado no soportado: ${propEstado.type}` })
+        }
+
+        const updated = await makeNotionRequest('PATCH', `/pages/${empleadoId}`, {
+            properties: { 'Estado': estadoPayload }
+        })
+
+        res.json({ ok: true, empleadoId, estado })
+    } catch (error) {
+        console.error('Error al actualizar estado del empleado:', error.message)
+        res.status(500).json({ error: 'Error al actualizar estado del empleado', details: error.message })
+    }
+})
+
 // Obtener empleados de una obra específica
 app.get('/api/obras/:obraId/empleados', async (req, res) => {
 	try {
@@ -720,12 +790,9 @@ app.get('/api/datos-completos', async (req, res) => {
 })
 
 // Ruta para servir la aplicación React (solo para rutas que no sean API)
-app.get('*', (req, res) => {
-	// No servir la aplicación React para rutas de la API
-	if (req.path.startsWith('/api/')) {
-		return res.status(404).json({ error: 'API endpoint not found' })
-	}
-	res.sendFile(path.join(__dirname, 'dist', 'index.html'))
+// Mantener rutas de API por encima y servir SPA para el resto
+app.get(/^(?!\/api\/).*/, (req, res) => {
+    res.sendFile(path.join(__dirname, 'dist', 'index.html'))
 })
 
 app.listen(PORT, () => {

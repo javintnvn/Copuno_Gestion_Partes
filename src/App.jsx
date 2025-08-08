@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { Search, Plus, FileText, Calendar, Users, Building, Loader2, Wifi, WifiOff, Home, ArrowLeft, Clock, User } from 'lucide-react'
-import { getDatosCompletos, crearParteTrabajo, actualizarParteTrabajo, checkConnectivity, retryOperation, getDetallesEmpleados, getEmpleadosObra, getDetallesCompletosParte } from './services/notionService'
+import { getDatosCompletos, crearParteTrabajo, actualizarParteTrabajo, checkConnectivity, retryOperation, getDetallesEmpleados, getEmpleadosObra, getDetallesCompletosParte, actualizarEstadoEmpleado, getOpcionesEstadoEmpleados } from './services/notionService'
 import './App.css'
 
 function App() {
@@ -14,11 +14,25 @@ function App() {
 	const [loading, setLoading] = useState(true)
 	const [error, setError] = useState(null)
 	const [connectivity, setConnectivity] = useState({ status: 'checking', message: '' })
+	const [estadoOptions, setEstadoOptions] = useState({ type: 'status', options: [] })
 
 	// Cargar datos de Notion al iniciar la aplicación
 	useEffect(() => {
 		cargarDatos()
+		cargarOpcionesEstado()
+		// Actualización periódica de opciones de Estado (pseudo tiempo real)
+		const id = setInterval(() => cargarOpcionesEstado(), 60000)
+		return () => clearInterval(id)
 	}, [])
+
+	const cargarOpcionesEstado = async () => {
+		try {
+			const opts = await getOpcionesEstadoEmpleados()
+			setEstadoOptions(opts || { type: 'status', options: [] })
+		} catch (e) {
+			setEstadoOptions({ type: 'status', options: [] })
+		}
+	}
 
 	const cargarDatos = async () => {
 		try {
@@ -100,13 +114,14 @@ function App() {
 
 			<main className="main">
 				<div className="container">
-					{/* Debug info - solo en desarrollo */}
-					{!loading && !error && process.env.NODE_ENV === 'development' && (
+					{/* Debug info - solo en desarrollo (Vite) */}
+					{!loading && !error && import.meta.env.MODE === 'development' && (
 						<div className="debug-info">
 							<strong>Debug:</strong> Obras: {datos.obras.length} | 
 							Empleados: {datos.empleados.length} | 
 							Jefes: {datos.jefesObra.length} | 
-							Partes: {datos.partesTrabajo.length}
+							Partes: {datos.partesTrabajo.length} | 
+							Estado opts: {estadoOptions.options?.length || 0}
 						</div>
 					)}
 
@@ -142,9 +157,9 @@ function App() {
 								{activeSection === 'main' ? (
 									<PantallaPrincipal onNavigate={setActiveSection} />
 								) : activeSection === 'consulta' ? (
-									<ConsultaPartes datos={datos} onVolver={() => setActiveSection('main')} />
+									<ConsultaPartes datos={datos} onVolver={() => setActiveSection('main')} estadoOptions={estadoOptions} />
 								) : activeSection === 'crear' ? (
-									<CrearParte datos={datos} onParteCreado={cargarDatos} onVolver={() => setActiveSection('main')} />
+									<CrearParte datos={datos} estadoOptions={estadoOptions} onParteCreado={cargarDatos} onVolver={() => setActiveSection('main')} />
 								) : null}
 							</>
 						)}
@@ -171,8 +186,8 @@ function PantallaPrincipal({ onNavigate }) {
 
 			<div className="main-actions">
 				<div className="action-card" onClick={() => onNavigate('crear')}>
-					<div className="action-icon">
-						<Plus size={48} />
+                    <div className="action-icon">
+                        <Plus size={40} />
 					</div>
 					<h3 className="action-title">Crear Nuevo Parte</h3>
 					<p className="action-description">
@@ -181,8 +196,8 @@ function PantallaPrincipal({ onNavigate }) {
 				</div>
 
 				<div className="action-card" onClick={() => onNavigate('consulta')}>
-					<div className="action-icon">
-						<Search size={48} />
+                    <div className="action-icon">
+                        <Search size={40} />
 					</div>
 					<h3 className="action-title">Consultar Partes</h3>
 					<p className="action-description">
@@ -195,7 +210,7 @@ function PantallaPrincipal({ onNavigate }) {
 }
 
 // Componente para consultar partes existentes
-function ConsultaPartes({ datos, onVolver }) {
+function ConsultaPartes({ datos, onVolver, estadoOptions }) {
 	const [filtroObra, setFiltroObra] = useState('')
 	const [filtroFecha, setFiltroFecha] = useState('')
 	const [parteSeleccionado, setParteSeleccionado] = useState(null)
@@ -207,6 +222,37 @@ function ConsultaPartes({ datos, onVolver }) {
 	const [mostrarEmpleadosObra, setMostrarEmpleadosObra] = useState(false)
 	const [loadingEmpleadosParte, setLoadingEmpleadosParte] = useState(false)
 	const [guardandoCambios, setGuardandoCambios] = useState(false)
+	// Estado local para reflejar selección de estado inmediatamente en UI
+	const [estadoLocal, setEstadoLocal] = useState({})
+
+	// Mapea color de Notion a un color CSS visible
+	const mapNotionColorToHex = (color) => {
+		switch ((color || '').toLowerCase()) {
+			case 'gray': return '#6b7280'
+			case 'brown': return '#92400e'
+			case 'orange': return '#f97316'
+			case 'yellow': return '#eab308'
+			case 'green': return '#16a34a'
+			case 'blue': return '#2563eb'
+			case 'purple': return '#7c3aed'
+			case 'pink': return '#db2777'
+			case 'red': return '#dc2626'
+			default: return '#64748b'
+		}
+	}
+
+	const getEstadoOptionByName = (name) => {
+		return (estadoOptions.options || []).find(opt => opt.name === name)
+	}
+
+	const normalizeEstadoForApi = (valor) => {
+		if (estadoOptions.type === 'checkbox') {
+			if (typeof valor === 'boolean') return valor
+			const v = String(valor).toLowerCase()
+			return v === 'on' || v === 'true' || v === 'sí' || v === 'si'
+		}
+		return valor
+	}
 
 	// Función para verificar si un parte puede ser editado
 	const puedeEditarParte = (estado) => {
@@ -265,6 +311,15 @@ function ConsultaPartes({ datos, onVolver }) {
 		const hours = String(now.getHours()).padStart(2, '0')
 		const minutes = String(now.getMinutes()).padStart(2, '0')
 		return `${year}-${month}-${day}T${hours}:${minutes}`
+	}
+
+	// Helper para extraer un id de relación Notion en diferentes formatos
+	const extractRelacionId = (valor) => {
+		if (!valor) return ''
+		if (Array.isArray(valor) && valor.length > 0) return valor[0]?.id || ''
+		if (typeof valor === 'object' && valor.id) return valor.id
+		if (typeof valor === 'string') return valor
+		return ''
 	}
 
 	// Función para cargar empleados de una obra
@@ -568,6 +623,27 @@ function ConsultaPartes({ datos, onVolver }) {
 			setLoadingDetalles(false)
 		}
 	}
+    // Cambiar estado de un empleado (permitido siempre excepto partes firmados)
+    const cambiarEstadoEmpleado = async (empleadoId, nuevoEstado) => {
+        // Reflecta instantáneamente en UI
+        setEstadoLocal(prev => ({ ...prev, [empleadoId]: nuevoEstado }))
+        try {
+            if (parteSeleccionado && !puedeEditarParte(parteSeleccionado.estado)) {
+                alert('No es posible modificar el estado de empleados en un parte firmado/enviado')
+                return
+            }
+            await actualizarEstadoEmpleado(empleadoId, normalizeEstadoForApi(nuevoEstado))
+            // Si estamos viendo detalles, refrescar la lista de detalles para ver el estado actualizado
+            if (parteSeleccionado) {
+                await verDetalles(parteSeleccionado)
+            }
+        } catch (error) {
+            // Revertir si falla
+            setEstadoLocal(prev => ({ ...prev, [empleadoId]: undefined }))
+            alert(error.message)
+        }
+    }
+
 
 	const cerrarDetalles = () => {
 		setParteSeleccionado(null)
@@ -668,7 +744,7 @@ function ConsultaPartes({ datos, onVolver }) {
 									</button>
 								</div>
 
-								{/* Empleados actuales del parte */}
+							{/* Empleados actuales del parte */}
 								<div className="empleados-actuales">
 									<h4>Empleados asignados al parte ({editandoParte.empleados.length}):</h4>
 									{loadingEmpleadosParte ? (
@@ -693,7 +769,7 @@ function ConsultaPartes({ datos, onVolver }) {
 															/>
 															<span className="empleado-nombre-edicion">
 																<strong>{empleado.nombre}</strong>
-																<span className="categoria-empleado">{empleado.categoria} - {empleado.localidad}</span>
+                                                                <span className="categoria-empleado">{empleado.categoria}</span>
 															</span>
 														</label>
 													</div>
@@ -709,7 +785,34 @@ function ConsultaPartes({ datos, onVolver }) {
 															onChange={(e) => cambiarHorasEmpleado(empleado.id, e.target.value)}
 														/>
 														<span className="horas-unidad">h</span>
-													</div>
+												</div>
+												<div className="empleado-estado-edicion">
+													<label className="horas-label">Estado:</label>
+                                            <select
+														className="form-select"
+														onChange={(e) => cambiarEstadoEmpleado(empleado.id, e.target.value)}
+													defaultValue={empleado.estado || ''}
+													>
+                                                    <option value="">{empleado.estado ? `Estado actual: ${empleado.estado}` : 'Sin estado'}</option>
+                                                {(estadoOptions.options || []).map(opt => (
+                                                    <option key={opt.name} value={opt.name}>
+                                                        {opt.name}
+                                                    </option>
+                                                ))}
+													</select>
+                                            {/* Indicador del color del estado seleccionado */}
+                                            {(() => {
+                                                const seleccionado = estadoLocal[empleado.id] || empleado.estado
+                                                const opt = getEstadoOptionByName(seleccionado)
+                                                if (!opt) return null
+                                                const color = mapNotionColorToHex(opt.color)
+                                                return (
+                                                    <span className="estado-empleado" title={seleccionado}>
+                                                        <span className="badge-dot" style={{ backgroundColor: color }} /> {seleccionado}
+                                                    </span>
+                                                )
+                                            })()}
+												</div>
 												</div>
 											))}
 										</div>
@@ -731,24 +834,49 @@ function ConsultaPartes({ datos, onVolver }) {
 											</div>
 										) : (
 											<div className="empleados-lista-disponibles">
-												{getEmpleadosNoAsignados().map(empleado => (
-													<div key={empleado.id} className="empleado-disponible-item">
-														<div className="empleado-info-disponible">
-															<label className="empleado-checkbox-disponible">
-																<input
-																	type="checkbox"
-																	checked={false}
-																	onChange={() => toggleEmpleado(empleado.id)}
-																/>
-																<span className="empleado-nombre-disponible">
-																	<strong>{empleado.nombre}</strong>
-																	<span className="categoria-empleado">{empleado.categoria} - {empleado.localidad}</span>
-																</span>
-															</label>
-														</div>
-														{/* No mostrar campo de horas aquí ya que no está asignado */}
-													</div>
-												))}
+                                                {getEmpleadosNoAsignados().map(empleado => (
+                                                    <div key={empleado.id} className="empleado-disponible-item">
+                                                        <div className="empleado-info-disponible">
+                                                            <label className="empleado-checkbox-disponible">
+                                                                <input
+                                                                    type="checkbox"
+                                                                    checked={false}
+                                                                    onChange={() => toggleEmpleado(empleado.id)}
+                                                                />
+                                                                <span className="empleado-nombre-disponible">
+                                                                    <strong>{empleado.nombre}</strong>
+                                                                    <span className="categoria-empleado">{empleado.categoria}</span>
+                                                                </span>
+                                                            </label>
+                                                        </div>
+                                                        <div className="empleado-estado-edicion">
+                                                            <label className="horas-label">Estado:</label>
+                                                            <select
+                                                                className="form-select"
+                                                                onChange={(e) => cambiarEstadoEmpleado(empleado.id, e.target.value)}
+                                                                defaultValue={estadoLocal[empleado.id] || empleado.estado || ''}
+                                                            >
+                                                                <option value="">{empleado.estado ? `Estado actual: ${empleado.estado}` : 'Sin estado'}</option>
+                                                                {(estadoOptions.options || []).map(opt => (
+                                                                    <option key={opt.name} value={opt.name}>
+                                                                        {opt.name}
+                                                                    </option>
+                                                                ))}
+                                                            </select>
+                                                            {(() => {
+                                                                const seleccionado = estadoLocal[empleado.id] || empleado.estado
+                                                                const opt = getEstadoOptionByName(seleccionado)
+                                                                if (!opt) return null
+                                                                const color = mapNotionColorToHex(opt.color)
+                                                                return (
+                                                                    <span className="estado-empleado" title={seleccionado}>
+                                                                        <span className="badge-dot" style={{ backgroundColor: color }} /> {seleccionado}
+                                                                    </span>
+                                                                )
+                                                            })()}
+                                                        </div>
+                                                    </div>
+                                                ))}
 											</div>
 										)}
 									</div>
@@ -854,7 +982,7 @@ function ConsultaPartes({ datos, onVolver }) {
 									</div>
 								) : detallesEmpleados.length > 0 ? (
 									<div className="empleados-lista-detalles">
-										{detallesEmpleados.map((detalle, index) => (
+								{detallesEmpleados.map((detalle, index) => (
 											<div key={detalle.id || index} className="empleado-detalle">
 												<div className="empleado-info-detalle">
 													<div className="empleado-nombre">
@@ -868,7 +996,37 @@ function ConsultaPartes({ datos, onVolver }) {
 														<Clock size={16} />
 														<span>{detalle.horas || 0} horas</span>
 													</div>
-												</div>
+										</div>
+										{puedeEditarParte(parteSeleccionado.estado) && (
+											<div className="empleado-estado-edicion" style={{ marginTop: 8 }}>
+												<label className="horas-label">Estado:</label>
+                                            <select
+													className="form-select"
+													onChange={(e) => cambiarEstadoEmpleado(extractRelacionId(detalle.empleadoId), e.target.value)}
+													defaultValue={detalle.estado || ''}
+												>
+                                                    <option value="">{detalle.estado ? `Estado actual: ${detalle.estado}` : 'Sin estado'}</option>
+                                                {(estadoOptions.options || []).map(opt => (
+                                                    <option key={opt.name} value={opt.name}>
+                                                        {opt.name}
+                                                    </option>
+                                                ))}
+												</select>
+                                            {/* Indicador del color del estado seleccionado */}
+                                            {(() => {
+                                                const currentId = extractRelacionId(detalle.empleadoId)
+                                                const seleccionado = estadoLocal[currentId] || detalle.estado
+                                                const opt = getEstadoOptionByName(seleccionado)
+                                                if (!opt) return null
+                                                const color = mapNotionColorToHex(opt.color)
+                                                return (
+                                                    <span className="estado-empleado" title={seleccionado}>
+                                                        <span className="badge-dot" style={{ backgroundColor: color }} /> {seleccionado}
+                                                    </span>
+                                                )
+                                            })()}
+											</div>
+										)}
 												{detalle.detalle && (
 													<div className="empleado-notas">
 														<p>{detalle.detalle}</p>
@@ -961,8 +1119,8 @@ function ConsultaPartes({ datos, onVolver }) {
 							</div>
 						</div>
 
-						{/* Debug info para filtros - solo en desarrollo */}
-						{process.env.NODE_ENV === 'development' && (
+					{/* Debug info para filtros - solo en desarrollo (Vite) */}
+					{import.meta.env.MODE === 'development' && (
 							<div className="debug-filtros">
 								<strong>Debug Filtros:</strong> Obras disponibles: {obrasUnicas.length} | 
 								Partes totales: {datos.partesTrabajo.length} | 
@@ -1066,7 +1224,7 @@ function CrearParte({ datos, onParteCreado, onVolver }) {
 		return `${year}-${month}-${day}T${hours}:${minutes}`
 	}
 
-	const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState({
 		obraId: '',
 		obra: '',
 		fecha: getCurrentDateTime(),
@@ -1078,13 +1236,14 @@ function CrearParte({ datos, onParteCreado, onVolver }) {
 	})
 	const [loading, setLoading] = useState(false)
 	const [message, setMessage] = useState('')
-	const [empleadosObra, setEmpleadosObra] = useState([])
+  const [empleadosObra, setEmpleadosObra] = useState([])
+  const [estadoLocal, setEstadoLocal] = useState({})
 	const [loadingEmpleados, setLoadingEmpleados] = useState(false)
 	const [parteCreado, setParteCreado] = useState(null)
 	const [showOpciones, setShowOpciones] = useState(false)
 
 	// Función para cargar empleados de una obra
-	const cargarEmpleadosObra = async (obraId) => {
+  const cargarEmpleadosObra = async (obraId) => {
 		if (!obraId) {
 			setEmpleadosObra([])
 			return
@@ -1092,14 +1251,24 @@ function CrearParte({ datos, onParteCreado, onVolver }) {
 
 		setLoadingEmpleados(true)
 		try {
-			const empleados = await getEmpleadosObra(obraId)
-			setEmpleadosObra(empleados)
+      const empleados = await getEmpleadosObra(obraId)
+      setEmpleadosObra(empleados)
 		} catch (error) {
 			console.error('Error al cargar empleados de la obra:', error)
 			setEmpleadosObra([])
 		} finally {
 			setLoadingEmpleados(false)
-		}
+  }
+
+  const cambiarEstadoEmpleadoObra = async (empleadoId, nuevoEstado) => {
+    setEstadoLocal(prev => ({ ...prev, [empleadoId]: nuevoEstado }))
+    try {
+      await actualizarEstadoEmpleado(empleadoId, normalizeEstadoForApi(nuevoEstado))
+    } catch (e) {
+      setEstadoLocal(prev => ({ ...prev, [empleadoId]: undefined }))
+      alert(e.message)
+    }
+  }
 	}
 
 	// Función para manejar el cambio de obra
@@ -1340,11 +1509,12 @@ function CrearParte({ datos, onParteCreado, onVolver }) {
 														{empleado.estado || 'Sin estado'}
 													</span>
 												</div>
-												<span className="categoria">{empleado.categoria} - {empleado.localidad}</span>
+                                                <span className="categoria">{empleado.categoria}</span>
 											</span>
 										</label>
-										{formData.empleados.includes(empleado.id) && (
-											<div className="empleado-horas-input">
+                                        {formData.empleados.includes(empleado.id) && (
+                                                <>
+                                                <div className="empleado-horas-input">
 												<label className="horas-label">Horas trabajadas:</label>
 												<input
 													type="number"
@@ -1366,6 +1536,33 @@ function CrearParte({ datos, onParteCreado, onVolver }) {
 												/>
 												<span className="horas-unidad">h</span>
 											</div>
+                                                <div className="empleado-estado-edicion">
+                                                    <label className="horas-label">Estado:</label>
+                                                    <select
+                                                        className="form-select"
+                                                        onChange={(e) => cambiarEstadoEmpleadoObra(empleado.id, e.target.value)}
+                                                        defaultValue={estadoLocal[empleado.id] || empleado.estado || ''}
+                                                    >
+                                                        <option value="">{empleado.estado ? `Estado actual: ${empleado.estado}` : 'Sin estado'}</option>
+                                                        {(estadoOptions.options || []).map(opt => (
+                                                            <option key={opt.name} value={opt.name}>
+                                                                {opt.name}
+                                                            </option>
+                                                        ))}
+                                                    </select>
+                                                    {(() => {
+                                                        const seleccionado = estadoLocal[empleado.id] || empleado.estado
+                                                        const opt = getEstadoOptionByName(seleccionado)
+                                                        if (!opt) return null
+                                                        const color = mapNotionColorToHex(opt.color)
+                                                        return (
+                                                            <span className="estado-empleado" title={seleccionado}>
+                                                                <span className="badge-dot" style={{ backgroundColor: color }} /> {seleccionado}
+                                                            </span>
+                                                        )
+                                                    })()}
+                                                </div>
+                                                </>
 										)}
 									</div>
 								))}

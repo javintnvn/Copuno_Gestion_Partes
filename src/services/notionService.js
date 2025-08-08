@@ -1,9 +1,8 @@
 import axios from 'axios'
 
-// Configuración de la API
-const API_BASE_URL = process.env.NODE_ENV === 'production' 
-	? window.location.origin 
-	: 'http://localhost:3001'
+// Configuración de la API: usar proxy de Vite en dev y same-origin en prod
+// Mantener baseURL vacía y usar rutas absolutas '/api/...'
+const API_BASE_URL = ''
 
 // Configuración de axios con interceptores
 const apiClient = axios.create({
@@ -156,6 +155,26 @@ export const getEmpleadosObra = async (obraId) => {
 	} catch (error) {
 		handleApiError(error, 'obtener empleados de la obra')
 	}
+}
+
+// Obtener opciones de la propiedad Estado de empleados (dinámico)
+export const getOpcionesEstadoEmpleados = async () => {
+  try {
+    const response = await apiClient.get('/api/empleados/estado-opciones')
+    return response.data
+  } catch (error) {
+    handleApiError(error, 'obtener opciones de estado de empleados')
+  }
+}
+
+// Actualizar estado de un empleado
+export const actualizarEstadoEmpleado = async (empleadoId, nuevoEstado) => {
+  try {
+    const response = await apiClient.put(`/api/empleados/${empleadoId}/estado`, { estado: nuevoEstado })
+    return response.data
+  } catch (error) {
+    handleApiError(error, 'actualizar estado del empleado')
+  }
 }
 
 // Obtener todos los partes de trabajo
