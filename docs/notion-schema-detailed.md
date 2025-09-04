@@ -11,30 +11,44 @@
 - **Descripción**: Obras
 
 #### Propiedades:
+- **Fecha de creación**: created_time (tiempo creado)
+- **Encargado**: select (selección - 4 opciones)
 - **Responsables PRL **: relation (relación con otra BD)
+- **Última edición**: last_edited_time (última edición)
 - **Precio Encargado**: number (número - euro)
-- **Provincia**: select (selección - 2 opciones)
+- **Precio Peón **: number (número - euro)
+- **Provincia**: select (selección - 15 opciones)
 - **Estado**: status (status)
 - **Precio Capataz**: number (número - euro)
+- **Creado por**: created_by (creado por)
 - **Empleados**: relation (relación con otra BD)
+- **Última edición por**: last_edited_by (editado por)
 - **Precio Oficial 2ª**: number (número - euro)
 - **Partes de trabajo**: relation (relación con otra BD)
 - **Precio Oficial 1ª**: number (número - euro)
 - **Clientes**: relation (relación con otra BD)
-- **Obra**: title (título)
+- **AUX Fechas del parte**: rollup (rollup)
+- **Obra - Codigo**: title (título)
 
 #### Ejemplo de Registro:
-- **Responsables PRL **: [1 relaciones]
-- **Precio Encargado**: 36
-- **Provincia**: CADIZ
+- **Fecha de creación**: 2025-08-22T22:30:00.000Z
+- **Encargado**: Pedro Garcia Acacio
+- **Responsables PRL **: [0 relaciones]
+- **Última edición**: 2025-08-22T22:33:00.000Z
+- **Precio Encargado**: 
+- **Precio Peón **: 
+- **Provincia**: MADRID
 - **Estado**: [status]
-- **Precio Capataz**: 54
-- **Empleados**: [8 relaciones]
-- **Precio Oficial 2ª**: 12
-- **Partes de trabajo**: [1 relaciones]
-- **Precio Oficial 1ª**: 14
+- **Precio Capataz**: 
+- **Creado por**: Efrén
+- **Empleados**: [0 relaciones]
+- **Última edición por**: Efrén
+- **Precio Oficial 2ª**: 
+- **Partes de trabajo**: [0 relaciones]
+- **Precio Oficial 1ª**: 
 - **Clientes**: [1 relaciones]
-- **Obra**: Sabinillas
+- **AUX Fechas del parte**: [rollup]
+- **Obra - Codigo**: Saucedilla
 
 ---
 
@@ -48,9 +62,9 @@
 - **Persona Autorizada**: title (título)
 
 #### Ejemplo de Registro:
-- **Partes de trabajo**: [1 relaciones]
-- ** Email**: p@ntnvn.com
-- **Persona Autorizada**: Paco Pérez
+- **Partes de trabajo**: [2 relaciones]
+- ** Email**: rfayos@copuno.com
+- **Persona Autorizada**: Raul Fayos Martinez
 
 ---
 
@@ -61,32 +75,34 @@
 #### Propiedades:
 - **AUX_Categoria**: formula (fórmula)
 - **Empleados**: relation (relación con otra BD)
-- **Fecha**: rollup (rollup)
+- **Fecha Parte**: rollup (rollup)
 - **Aux Empleado**: rollup (rollup)
 - **Categoría-roll-aux**: rollup (rollup)
 - **Partes de trabajo**: relation (relación con otra BD)
 - **Estado Parte**: rollup (rollup)
 - **Cantidad Horas**: number (número - number)
+- **Hoy - 0 horas**: formula (fórmula)
 - **Fecha PArte de Trabajo**: rollup (rollup)
 - **ID Parte Trabajo**: rollup (rollup)
 - **AUX_Categoría**: formula (fórmula)
-- **Rollup Estado**: rollup (rollup)
+- **AUX Estado**: rollup (rollup)
 - **ID**: unique_id (unique_id)
 - **Detalle**: title (título)
 
 #### Ejemplo de Registro:
-- **AUX_Categoria**: 04- ENCARGADO
+- **AUX_Categoria**: 08- OF. 2ª ALBAÑIL
 - **Empleados**: [1 relaciones]
-- **Fecha**: [rollup]
+- **Fecha Parte**: [rollup]
 - **Aux Empleado**: [rollup]
 - **Categoría-roll-aux**: [rollup]
 - **Partes de trabajo**: [1 relaciones]
 - **Estado Parte**: [rollup]
-- **Cantidad Horas**: 8
+- **Cantidad Horas**: 7.5
+- **Hoy - 0 horas**: 
 - **Fecha PArte de Trabajo**: [rollup]
 - **ID Parte Trabajo**: [rollup]
-- **AUX_Categoría**: [04- ENCARGADO]
-- **Rollup Estado**: [rollup]
+- **AUX_Categoría**: [08- OF. 2ª ALBAÑIL]
+- **AUX Estado**: [rollup]
 - **ID**: [unique_id]
 - **Detalle**:  
 
@@ -105,7 +121,7 @@
 - **Detalle Horas**: relation (relación con otra BD)
 - **Provincia**: select (selección - 62 opciones)
 - **Caduca**: date (fecha)
-- **Estado**: select (selección - 12 opciones)
+- **Estado**: select (selección - 13 opciones)
 - **R. Medica**: date (fecha)
 - **ID Trabajador**: unique_id (unique_id)
 - **Teléfono**: phone_number (teléfono)
@@ -117,6 +133,7 @@
 - **Fecha Alta**: date (fecha)
 - **AUX **: formula (fórmula)
 - **DNI**: rich_text (texto)
+- **Adjunto**: files (files)
 - **NAF**: number (número - number)
 - **Nombre Completo**: title (título)
 
@@ -141,6 +158,7 @@
 - **Fecha Alta**: 
 - **AUX **: LUIS MIGUEL HERNANDEZ RODRIGUEZ HERNANDEZ RODRIGUEZ
 - **DNI**: 76013537D
+- **Adjunto**: [files]
 - **NAF**: 100044040610
 - **Nombre Completo**: LUIS MIGUEL HERNANDEZ RODRIGUEZ
 
@@ -156,26 +174,31 @@
 - **AUX Pr OF2**: rollup (rollup)
 - **Detalle Horas**: relation (relación con otra BD)
 - **AUX Obra en Texto**: formula (fórmula)
-- **Report Horas Encargado**: formula (fórmula)
+- **RP Horas Encargado**: formula (fórmula)
 - **Enviar Datos**: button (button)
+- **AUX Pr Peón**: rollup (rollup)
 - **AUX Obra**: formula (fórmula)
+- **Imp Horas Peon**: formula (fórmula)
 - **Fecha**: date (fecha)
-- **Report Horas Oficial 1ª**: formula (fórmula)
+- **RP Horas Oficial 1ª**: formula (fórmula)
 - **Enviado a cliente**: checkbox (checkbox)
+- **Horas Peon**: formula (fórmula)
 - **Horas Oficial 1ª**: formula (fórmula)
 - **TOCAR URL PARA FIRMAR**: rich_text (texto)
 - **AUX Jefe de Obra**: formula (fórmula)
 - **Email Jefe Obra**: rollup (rollup)
 - **Horas Capataz**: formula (fórmula)
+- **RP Horas Oficial **: formula (fórmula)
+- **RP Horas Peon**: formula (fórmula)
 - **URL PDF**: url (URL)
 - **Firmar**: formula (fórmula)
-- **Report Horas Capataz **: formula (fórmula)
+- **RP Horas Capataz **: formula (fórmula)
 - **Horas Encargado **: formula (fórmula)
-- **Report Horas Oficial 2ª**: formula (fórmula)
+- **RP Horas Oficial 2ª**: formula (fórmula)
 - **Imp Horas Of 1ª**: formula (fórmula)
 - **AUX Pr Capataz**: rollup (rollup)
 - **Importe total**: formula (fórmula)
-- **Report Importe Parte**: formula (fórmula)
+- **RP Importe Parte**: formula (fórmula)
 - **Última edición**: last_edited_time (última edición)
 - **AUX Pr Encargado**: rollup (rollup)
 - **Notas**: rich_text (texto)
@@ -186,6 +209,7 @@
 - **Documento Firmado**: files (files)
 - **Obras**: relation (relación con otra BD)
 - **ID**: unique_id (unique_id)
+- **RP Horas totales**: formula (fórmula)
 - **Horas totales**: rollup (rollup)
 - **Imp Horas Encargado**: formula (fórmula)
 - **Estado**: status (status)
@@ -200,47 +224,53 @@
 - **AUX Pr OF1**: [rollup]
 - **Última edición por**: Make
 - **AUX Pr OF2**: [rollup]
-- **Detalle Horas**: [6 relaciones]
-- **AUX Obra en Texto**: Sabinillas
-- **Report Horas Encargado**: 8 Horas de encargado con un importe de 288€
+- **Detalle Horas**: [3 relaciones]
+- **AUX Obra en Texto**: Pelayo
+- **RP Horas Encargado**: 16 Horas de encargado con un importe de 368€
 - **Enviar Datos**: [button]
-- **AUX Obra**: Sabinillas
-- **Fecha**: 2025-08-04T10:00:00.000+02:00
-- **Report Horas Oficial 1ª**: 79 Horas de encargado con un importe de 1106€
+- **AUX Pr Peón**: [rollup]
+- **AUX Obra**: Pelayo
+- **Imp Horas Peon**: 
+- **Fecha**: 2025-08-25T00:00:00.000+02:00
+- **RP Horas Oficial 1ª**: 0 Horas de oficial de 1ª con un importe de 0€
 - **Enviado a cliente**: No
-- **Horas Oficial 1ª**: 79
+- **Horas Peon**: 
+- **Horas Oficial 1ª**: 
 - **TOCAR URL PARA FIRMAR**: TOCAR ESTA URL PARA FIRMAR ⬇️
-- **AUX Jefe de Obra**: Paco Pérez
+- **AUX Jefe de Obra**: Adolfo Montes
 - **Email Jefe Obra**: [rollup]
-- **Horas Capataz**: 4
-- **URL PDF**: https://copuno-my.sharepoint.com/:b:/p/notionvan/EWZ2__CIP55KmB-JJ4jFgswByoNyoFaGZSe05Gi6KkC4nA
-- **Firmar**: https://www.copuno.com/es/notion/?parteId=76&obra=Sabinillas
-- **Report Horas Capataz **: 4 Horas de capataz con un importe de 216€
-- **Horas Encargado **: 8
-- **Report Horas Oficial 2ª**: 7 Horas de encargado con un importe de 84€
-- **Imp Horas Of 1ª**: 1106
+- **Horas Capataz**: 
+- **RP Horas Oficial **: 0 Horas de oficial con un importe de 0 €
+- **RP Horas Peon**: 0 Horas de peón con un importe de 0€
+- **URL PDF**: 
+- **Firmar**: https://www.copuno.com/es/notion/?parteId=97&obra=Pelayo
+- **RP Horas Capataz **: 0 Horas de capataz con un importe de 0€
+- **Horas Encargado **: 16
+- **RP Horas Oficial 2ª**: 0 Horas de oficial de 2ª con un importe de 0€
+- **Imp Horas Of 1ª**: 
 - **AUX Pr Capataz**: [rollup]
-- **Importe total**: 1694
-- **Report Importe Parte**: Importe del parte:  1694€
-- **Última edición**: 2025-08-04T16:48:00.000Z
+- **Importe total**: 368
+- **RP Importe Parte**: Importe del parte:  368€
+- **Última edición**: 2025-08-25T11:43:00.000Z
 - **AUX Pr Encargado**: [rollup]
-- **Notas**: 
-- **Imp Horas Capataz**: 216
+- **Notas**: nota del parte
+- **Imp Horas Capataz**: 
 - **Persona Autorizada**: [1 relaciones]
-- **Horas Oficial 2ª **: 7
-- **AUX ID PDF Onedrive**: 01YTENQULGO377BCB7TZFJQH4JE6EMLAWM
+- **Horas Oficial 2ª **: 
+- **AUX ID PDF Onedrive**: 
 - **Documento Firmado**: [files]
 - **Obras**: [1 relaciones]
 - **ID**: [unique_id]
+- **RP Horas totales**: Este parte tiene un total de 16 Horas
 - **Horas totales**: [rollup]
-- **Imp Horas Encargado**: 288
+- **Imp Horas Encargado**: 368
 - **Estado**: [status]
-- **Total Horas Oficial**: 86
+- **Total Horas Oficial**: 
 - **Enviar email al cliente**: [button]
 - **AUX Obra para filtro softr**: [rollup]
-- **Imp Horas Of 2ª**: 84
+- **Imp Horas Of 2ª**: 
 - **AUX Precios Hora**: [0 relaciones]
-- **Nombre**: Parte Sabinillas76
+- **Nombre**: Parte Pelayo97
 
 ---
 

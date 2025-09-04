@@ -166,7 +166,7 @@ app.get('/api/obras', async (req, res) => {
 
 		const obras = data.results.map(page => ({
 			id: page.id,
-			nombre: extractPropertyValue(page.properties['Obra']),
+			nombre: extractPropertyValue(page.properties['Obra - Codigo']),
 			provincia: extractPropertyValue(page.properties['Provincia']),
 			estado: extractPropertyValue(page.properties['Estado']),
 			precioEncargado: extractPropertyValue(page.properties['Precio Encargado']),

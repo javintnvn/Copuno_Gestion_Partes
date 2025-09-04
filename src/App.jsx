@@ -213,6 +213,7 @@ function PantallaPrincipal({ onNavigate }) {
 function ConsultaPartes({ datos, onVolver, estadoOptions }) {
 	const [filtroObra, setFiltroObra] = useState('')
 	const [filtroFecha, setFiltroFecha] = useState('')
+	const [fechaInput, setFechaInput] = useState(new Date().toISOString().split('T')[0])
 	const [parteSeleccionado, setParteSeleccionado] = useState(null)
 	const [detallesEmpleados, setDetallesEmpleados] = useState([])
 	const [loadingDetalles, setLoadingDetalles] = useState(false)
@@ -785,7 +786,7 @@ function ConsultaPartes({ datos, onVolver, estadoOptions }) {
 															onChange={(e) => cambiarHorasEmpleado(empleado.id, e.target.value)}
 														/>
 														<span className="horas-unidad">h</span>
-												</div>
+													</div>
 												<div className="empleado-estado-edicion">
 													<label className="horas-label">Estado:</label>
                                             <select
@@ -1112,8 +1113,11 @@ function ConsultaPartes({ datos, onVolver, estadoOptions }) {
 									<input
 										type="date"
 										className="form-input"
-										value={filtroFecha}
-										onChange={(e) => setFiltroFecha(e.target.value)}
+										value={fechaInput}
+										onChange={(e) => {
+											setFechaInput(e.target.value)
+											setFiltroFecha(e.target.value)
+										}}
 									/>
 								</div>
 							</div>
@@ -1606,4 +1610,4 @@ function CrearParte({ datos, onParteCreado, onVolver }) {
 	)
 }
 
-export default App 
+export default App

@@ -88,4 +88,7 @@ jspm_packages/
 
 # Temporary folders
 tmp/
-temp/ 
+temp/
+
+# Recursos Pre desarrollo (archivos históricos)
+Recursos Pre desarrollo/ 
