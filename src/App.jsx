@@ -16,21 +16,45 @@ function App() {
 	const [connectivity, setConnectivity] = useState({ status: 'checking', message: '' })
 	const [estadoOptions, setEstadoOptions] = useState({ type: 'status', options: [] })
 
-	// Cargar datos de Notion al iniciar la aplicación
-	useEffect(() => {
-		cargarDatos()
-		cargarOpcionesEstado()
-		// Actualización periódica de opciones de Estado (pseudo tiempo real)
-		const id = setInterval(() => cargarOpcionesEstado(), 60000)
-		// Polling ligero de estados de partes para lista (cada 30s)
-		const idPartes = setInterval(async () => {
-			try {
-				const partes = await getPartesTrabajo()
-				setDatos(prev => ({ ...prev, partesTrabajo: partes }))
-			} catch (e) { /* noop */ }
-		}, 30000)
-		return () => { clearInterval(id); clearInterval(idPartes) }
-	}, [])
+    // Cargar datos de Notion al iniciar la aplicación
+    const partesPollRef = useRef(null)
+    const startPartesPolling = () => {
+        if (partesPollRef.current) return
+        partesPollRef.current = setInterval(async () => {
+            try {
+                // Evitar refresh de lista mientras se edita un parte
+                if (editandoParte) return
+                const partes = await getPartesTrabajo()
+                setDatos(prev => ({ ...prev, partesTrabajo: partes }))
+            } catch (e) { /* noop */ }
+        }, 30000)
+    }
+    const stopPartesPolling = () => {
+        if (partesPollRef.current) {
+            clearInterval(partesPollRef.current)
+            partesPollRef.current = null
+        }
+    }
+
+    useEffect(() => {
+        cargarDatos()
+        cargarOpcionesEstado()
+        const id = setInterval(() => cargarOpcionesEstado(), 60000)
+        startPartesPolling()
+        const onVis = () => {
+            if (document.visibilityState === 'hidden') {
+                stopPartesPolling()
+                // cerrar stream si está abierto
+                if (estadoStreamRef.current) { estadoStreamRef.current.close(); estadoStreamRef.current = null }
+            } else {
+                // refresco inmediato al volver y reanudar
+                getPartesTrabajo().then(partes => setDatos(prev => ({ ...prev, partesTrabajo: partes }))).catch(()=>{})
+                startPartesPolling()
+            }
+        }
+        document.addEventListener('visibilitychange', onVis)
+        return () => { clearInterval(id); stopPartesPolling(); document.removeEventListener('visibilitychange', onVis) }
+    }, [])
 
 	const cargarOpcionesEstado = async () => {
 		try {
@@ -662,34 +686,50 @@ function ConsultaPartes({ datos, onVolver, estadoOptions }) {
 
 	const estadoStreamRef = useRef(null)
 
-	useEffect(() => {
-		// Abrir SSE para sincronizar estado mientras el modal de detalles esté abierto
-		if (parteSeleccionado?.id) {
-			try {
-				const es = new EventSource(`/api/partes-trabajo/${parteSeleccionado.id}/estado/stream`)
-				es.onmessage = (ev) => {
-					try {
-						const data = JSON.parse(ev.data)
-						setParteSeleccionado(prev => prev ? ({ ...prev, estado: data.estado, ultimaEdicion: data.ultimaEdicion }) : prev)
-					} catch {}
-				}
-				es.onerror = () => { /* silencioso */ }
-				estadoStreamRef.current = es
-			} catch {}
-		} else {
-			// cerrar stream si no hay parte seleccionada
-			if (estadoStreamRef.current) {
-				estadoStreamRef.current.close()
-				estadoStreamRef.current = null
-			}
-		}
-		return () => {
-			if (estadoStreamRef.current) {
-				estadoStreamRef.current.close()
-				estadoStreamRef.current = null
-			}
-		}
-	}, [parteSeleccionado?.id])
+    useEffect(() => {
+        // Abrir SSE para sincronizar estado mientras el modal de detalles esté abierto
+        if (parteSeleccionado?.id) {
+            let attempt = 0
+            const maxDelay = 30000
+            const connect = () => {
+                try {
+                    const es = new EventSource(`/api/partes-trabajo/${parteSeleccionado.id}/estado/stream`)
+                    es.onmessage = (ev) => {
+                        attempt = 0 // reset backoff en mensaje
+                        try {
+                            const data = JSON.parse(ev.data)
+                            setParteSeleccionado(prev => prev ? ({ ...prev, estado: data.estado, ultimaEdicion: data.ultimaEdicion }) : prev)
+                        } catch {}
+                    }
+                    es.onerror = () => {
+                        es.close()
+                        // backoff
+                        attempt += 1
+                        const delay = Math.min(maxDelay, 1000 * Math.pow(2, attempt))
+                        setTimeout(() => { if (estadoStreamRef.current === es) connect() }, delay)
+                    }
+                    estadoStreamRef.current = es
+                } catch {
+                    attempt += 1
+                    const delay = Math.min(maxDelay, 1000 * Math.pow(2, attempt))
+                    setTimeout(connect, delay)
+                }
+            }
+            connect()
+        } else {
+            // cerrar stream si no hay parte seleccionada
+            if (estadoStreamRef.current) {
+                estadoStreamRef.current.close()
+                estadoStreamRef.current = null
+            }
+        }
+        return () => {
+            if (estadoStreamRef.current) {
+                estadoStreamRef.current.close()
+                estadoStreamRef.current = null
+            }
+        }
+    }, [parteSeleccionado?.id])
 
 	const cerrarDetalles = () => {
 		if (estadoStreamRef.current) {

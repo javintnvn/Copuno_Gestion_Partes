@@ -477,11 +477,20 @@ body {
 }
 
 .parte-header {
-	display: flex;
-	justify-content: space-between;
-	align-items: center;
-	margin-bottom: var(--spacing-md);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--spacing-md);
 }
+
+/* Centrar cabecera e info de la tarjeta de parte para mejor legibilidad en tablet */
+.parte-card .parte-header {
+    justify-content: center;
+    gap: var(--spacing-sm);
+}
+.parte-card .parte-header .parte-nombre { text-align: center; }
+.parte-card .parte-info { justify-items: center; }
+.parte-card .info-item { justify-content: center; }
 
 .parte-nombre {
 	font-size: var(--font-size-xl);
