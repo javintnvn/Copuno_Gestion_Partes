@@ -127,7 +127,8 @@ body {
 	display: flex;
 	flex-direction: column;
 	gap: var(--spacing-xs);
-	align-items: flex-end;
+	align-items: center; /* centrar contenidos bajo el título */
+	text-align: center;
 }
 
 .app-title {
