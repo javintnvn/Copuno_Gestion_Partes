@@ -290,6 +290,10 @@ NODE_ENV=production
 - **Testing y despliegue** automatizado
 - **Troubleshooting** común
 
+### **⚙️ Operaciones Backend**
+- **[CONFIGURACION_ENTORNO.md](docs/CONFIGURACION_ENTORNO.md)** - Variables y buenas prácticas
+- **[OPERACIONES_BACKEND.md](docs/OPERACIONES_BACKEND.md)** - Estado, decisiones y siguientes pasos
+
 ## 📄 Licencia
 
 Este proyecto está bajo la Licencia MIT. Ver el archivo `LICENSE` para más detalles.

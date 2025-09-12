@@ -2,6 +2,9 @@ require('dotenv').config()
 const express = require('express')
 const rateLimit = require('express-rate-limit')
 const morgan = require('morgan')
+const helmet = require('helmet')
+const compression = require('compression')
+const { v4: uuidv4 } = require('uuid')
 const cors = require('cors')
 const axios = require('axios')
 const path = require('path')
@@ -26,6 +29,10 @@ const DATABASES = {
 // Confiar en proxy para IP real (útil en despliegues detrás de CDN/Reverse Proxy)
 app.set('trust proxy', 1)
 
+// Seguridad y performance
+app.use(helmet())
+app.use(compression())
+
 // CORS: si se definen orígenes permitidos, restringir; en otro caso permitir (dev)
 const ALLOWED_ORIGINS = (process.env.ALLOWED_ORIGINS || '').split(',').map(s => s.trim()).filter(Boolean)
 if (ALLOWED_ORIGINS.length > 0) {
@@ -34,8 +41,16 @@ if (ALLOWED_ORIGINS.length > 0) {
   app.use(cors())
 }
 
+// Request ID para trazabilidad
+app.use((req, res, next) => {
+  req.id = req.headers['x-request-id'] || uuidv4()
+  res.setHeader('x-request-id', req.id)
+  next()
+})
+
 // Access logging (morgan) con tiempos y filtrado de rutas de ruido
-const logFormat = ':remote-addr - :method :url :status :res[content-length] - :response-time ms'
+morgan.token('id', (req) => req.id)
+const logFormat = ':id :remote-addr - :method :url :status :res[content-length] - :response-time ms'
 app.use(morgan(logFormat, {
   skip: (req) => {
     const p = req.path || ''
@@ -67,6 +82,20 @@ const apiLimiter = rateLimit({
   skip: (req) => (req.path === '/health') // no limitar health
 })
 app.use('/api', apiLimiter)
+
+// Cache simple en memoria para catálogos (TTL configurable)
+const CACHE_TTL_MS = Number(process.env.CACHE_TTL_MS || 60 * 1000) // 60s
+const cache = new Map()
+const setCache = (key, data) => cache.set(key, { data, ts: Date.now() })
+const getCache = (key) => {
+  const e = cache.get(key)
+  if (!e) return null
+  if (Date.now() - e.ts > CACHE_TTL_MS) {
+    cache.delete(key)
+    return null
+  }
+  return e.data
+}
 
 // Headers para Notion
 const getNotionHeaders = () => ({
@@ -197,7 +226,9 @@ app.get('/api/health', (req, res) => {
 
 // Obtener todas las obras
 app.get('/api/obras', async (req, res) => {
-	try {
+  try {
+    const cached = getCache('obras')
+    if (cached) return res.json(cached)
 		const data = await makeNotionRequest('POST', `/databases/${DATABASES.OBRAS}/query`, {
 			page_size: 100
 		})
@@ -213,8 +244,9 @@ app.get('/api/obras', async (req, res) => {
 			precioOficial2: extractPropertyValue(page.properties['Precio Oficial 2ª'])
 		}))
 
-		res.json(obras)
-	} catch (error) {
+    setCache('obras', obras)
+    res.json(obras)
+  } catch (error) {
 		console.error('Error al obtener obras:', error.message)
 		res.status(500).json({ 
 			error: 'Error al obtener obras',
@@ -225,7 +257,9 @@ app.get('/api/obras', async (req, res) => {
 
 // Obtener todos los jefes de obra
 app.get('/api/jefes-obra', async (req, res) => {
-	try {
+  try {
+    const cached = getCache('jefes')
+    if (cached) return res.json(cached)
 		const data = await makeNotionRequest('POST', `/databases/${DATABASES.JEFE_OBRAS}/query`, {
 			page_size: 100
 		})
@@ -236,8 +270,9 @@ app.get('/api/jefes-obra', async (req, res) => {
 			email: extractPropertyValue(page.properties[' Email'])
 		}))
 
-		res.json(jefesObra)
-	} catch (error) {
+    setCache('jefes', jefesObra)
+    res.json(jefesObra)
+  } catch (error) {
 		console.error('Error al obtener jefes de obra:', error.message)
 		res.status(500).json({ 
 			error: 'Error al obtener jefes de obra',
@@ -248,7 +283,9 @@ app.get('/api/jefes-obra', async (req, res) => {
 
 // Obtener todos los empleados
 app.get('/api/empleados', async (req, res) => {
-	try {
+  try {
+    const cached = getCache('empleados')
+    if (cached) return res.json(cached)
 		const data = await makeNotionRequest('POST', `/databases/${DATABASES.EMPLEADOS}/query`, {
 			page_size: 100
 		})
@@ -265,8 +302,9 @@ app.get('/api/empleados', async (req, res) => {
 			delegado: extractPropertyValue(page.properties['Delegado'])
 		}))
 
-		res.json(empleados)
-	} catch (error) {
+    setCache('empleados', empleados)
+    res.json(empleados)
+  } catch (error) {
 		console.error('Error al obtener empleados:', error.message)
 		res.status(500).json({ 
 			error: 'Error al obtener empleados',
