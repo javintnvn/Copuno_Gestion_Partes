@@ -637,13 +637,9 @@ function ConsultaPartes({ datos, onVolver, estadoOptions }) {
 	}
     // Cambiar estado de un empleado (permitido siempre excepto partes firmados)
     const cambiarEstadoEmpleado = async (empleadoId, nuevoEstado) => {
-        // Reflecta instantáneamente en UI
+        // Reflejo instantáneo en UI
         setEstadoLocal(prev => ({ ...prev, [empleadoId]: nuevoEstado }))
         try {
-            if (parteSeleccionado && !puedeEditarParte(parteSeleccionado.estado)) {
-            setMensajeUI({ tipo: 'warning', texto: 'No se puede cambiar el estado en partes firmados/enviados.' })
-                return
-            }
             await actualizarEstadoEmpleado(empleadoId, normalizeEstadoForApi(nuevoEstado))
             // Si estamos viendo detalles, refrescar la lista de detalles para ver el estado actualizado
             if (parteSeleccionado) {
@@ -1549,6 +1545,7 @@ function CrearParte({ datos, onParteCreado, onVolver }) {
                                                 <span className="categoria">{empleado.categoria}</span>
 											</span>
 										</label>
+                                        {/* Bloque de horas solo si está seleccionado */}
                                         {formData.empleados.includes(empleado.id) && (
                                                 <>
                                                 <div className="empleado-horas-input">
@@ -1573,34 +1570,35 @@ function CrearParte({ datos, onParteCreado, onVolver }) {
                                                     />
                                                     <span className="horas-unidad">h</span>
                                                 </div>
-                                                <div className="empleado-estado-edicion">
-                                                    <label className="horas-label">Estado:</label>
-                                                    <select
-                                                        className="form-select"
-                                                        onChange={(e) => cambiarEstadoEmpleadoObra(empleado.id, e.target.value)}
-                                                        defaultValue={estadoLocal[empleado.id] || empleado.estado || ''}
-                                                    >
-                                                        <option value="">{empleado.estado ? `Estado actual: ${empleado.estado}` : 'Sin estado'}</option>
-                                                        {(estadoOptions.options || []).map(opt => (
-                                                            <option key={opt.name} value={opt.name}>
-                                                                {opt.name}
-                                                            </option>
-                                                        ))}
-                                                    </select>
-                                                    {(() => {
-                                                        const seleccionado = estadoLocal[empleado.id] || empleado.estado
-                                                        const opt = getEstadoOptionByName(seleccionado)
-                                                        if (!opt) return null
-                                                        const color = mapNotionColorToHex(opt.color)
-                                                        return (
-                                                            <span className="estado-empleado" title={seleccionado}>
-                                                                <span className="badge-dot" style={{ backgroundColor: color }} /> {seleccionado}
-                                                            </span>
-                                                        )
-                                                    })()}
-                                                </div>
                                                 </>
-										)}
+                                            )}
+                                        {/* Selector de estado SIEMPRE visible para permitir cambios en asignación */}
+                                        <div className="empleado-estado-edicion">
+                                            <label className="horas-label">Estado:</label>
+                                            <select
+                                                className="form-select"
+                                                onChange={(e) => cambiarEstadoEmpleadoObra(empleado.id, e.target.value)}
+                                                defaultValue={estadoLocal[empleado.id] || empleado.estado || ''}
+                                            >
+                                                <option value="">{empleado.estado ? `Estado actual: ${empleado.estado}` : 'Sin estado'}</option>
+                                                {(estadoOptions.options || []).map(opt => (
+                                                    <option key={opt.name} value={opt.name}>
+                                                        {opt.name}
+                                                    </option>
+                                                ))}
+                                            </select>
+                                            {(() => {
+                                                const seleccionado = estadoLocal[empleado.id] || empleado.estado
+                                                const opt = getEstadoOptionByName(seleccionado)
+                                                if (!opt) return null
+                                                const color = mapNotionColorToHex(opt.color)
+                                                return (
+                                                    <span className="estado-empleado" title={seleccionado}>
+                                                        <span className="badge-dot" style={{ backgroundColor: color }} /> {seleccionado}
+                                                    </span>
+                                                )
+                                            })()}
+                                        </div>
 									</div>
 								))}
 							</div>
@@ -1632,9 +1630,9 @@ function CrearParte({ datos, onParteCreado, onVolver }) {
 								</>
 							)}
 						</button>
-						<button type="button" className="btn btn-secondary" disabled={loading}>
-							Cancelar
-						</button>
+                    <button type="button" className="btn btn-secondary" disabled={loading} onClick={onVolver}>
+                        Cancelar
+                    </button>
 					</div>
 				</form>
 				)}
