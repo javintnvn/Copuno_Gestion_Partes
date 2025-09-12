@@ -936,6 +936,19 @@ body {
 	/* En tablet vertical, apilar y hacer botones de ancho completo para mejor toque */
 	.parte-acciones { flex-direction: column; align-items: stretch; }
 	.parte-acciones .btn, .form-actions .btn { min-height: 52px; width: 100%; }
+
+	/* En tablet vertical, mostrar info, horas y estado en líneas separadas para nombres largos */
+	.empleado-edicion-item,
+	.empleado-disponible-item {
+		flex-direction: column;
+		align-items: stretch;
+		gap: var(--spacing-sm);
+	}
+	.empleado-horas-edicion,
+	.empleado-estado-edicion,
+	.empleado-horas-disponible {
+		align-self: stretch;
+	}
 }
 
 /* Mejoras de accesibilidad */
