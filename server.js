@@ -484,6 +484,7 @@ app.get('/api/partes-trabajo', async (req, res) => {
       id: page.id,
       nombre: extractPropertyValue(page.properties['Nombre']),
       fecha: extractPropertyValue(page.properties['Fecha']),
+      ultimaEdicion: extractPropertyValue(page.properties['Última edición']),
       estado: extractPropertyValue(page.properties['Estado']),
       obra: extractPropertyValue(page.properties['AUX Obra']),
       rpHorasTotales: extractPropertyValue(page.properties['RP Horas totales']),
@@ -639,8 +640,8 @@ app.post('/api/partes-trabajo', async (req, res) => {
 
 // Obtener detalles de empleados de un parte específico
 app.get('/api/partes-trabajo/:parteId/empleados', async (req, res) => {
-	try {
-		const { parteId } = req.params
+  try {
+    const { parteId } = req.params
 
 		// Obtener detalles de horas para este parte
 		const data = await makeNotionRequest('POST', `/databases/${DATABASES.DETALLES_HORA}/query`, {
@@ -679,7 +680,7 @@ app.get('/api/partes-trabajo/:parteId/detalles', async (req, res) => {
 		const { parteId } = req.params
 
 		// Obtener el parte específico
-		const parteData = await makeNotionRequest('GET', `/pages/${parteId}`)
+    const parteData = await makeNotionRequest('GET', `/pages/${parteId}`)
 		
 		// Extraer la Persona Autorizada
 		const personaAutorizada = extractPropertyValue(parteData.properties['Persona Autorizada'])
@@ -705,18 +706,19 @@ app.get('/api/partes-trabajo/:parteId/detalles', async (req, res) => {
 			detalle: extractPropertyValue(detalle.properties['Detalle'])
 		}))
 
-		res.json({
-			parte: {
-				id: parteData.id,
-				nombre: extractPropertyValue(parteData.properties['Nombre']),
-				fecha: extractPropertyValue(parteData.properties['Fecha']),
-				obra: extractPropertyValue(parteData.properties['AUX Obra']),
-				estado: extractPropertyValue(parteData.properties['Estado']),
-				notas: extractPropertyValue(parteData.properties['Notas']),
-				personaAutorizada: personaAutorizada
-			},
-			empleados: detallesEmpleados
-		})
+    res.json({
+      parte: {
+        id: parteData.id,
+        nombre: extractPropertyValue(parteData.properties['Nombre']),
+        fecha: extractPropertyValue(parteData.properties['Fecha']),
+        obra: extractPropertyValue(parteData.properties['AUX Obra']),
+        estado: extractPropertyValue(parteData.properties['Estado']),
+        ultimaEdicion: extractPropertyValue(parteData.properties['Última edición']),
+        notas: extractPropertyValue(parteData.properties['Notas']),
+        personaAutorizada: personaAutorizada
+      },
+      empleados: detallesEmpleados
+    })
 	} catch (error) {
 		console.error('Error al obtener detalles completos del parte:', error.message)
 		res.status(500).json({ 

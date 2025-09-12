@@ -957,10 +957,14 @@ function ConsultaPartes({ datos, onVolver, estadoOptions }) {
 									<Building size={20} />
 									<span><strong>Obra:</strong> {parteSeleccionado.obra || 'Sin obra'}</span>
 								</div>
-								<div className="info-item">
-									<Calendar size={20} />
-									<span><strong>Fecha:</strong> {formatearFecha(parteSeleccionado.fecha)}</span>
-								</div>
+                            <div className="info-item">
+                                <Calendar size={20} />
+                                <span><strong>Fecha:</strong> {formatearFecha(parteSeleccionado.fecha)}</span>
+                            </div>
+                            <div className="info-item">
+                                <Clock size={20} />
+                                <span><strong>Última Edición:</strong> {formatearFecha(parteSeleccionado.ultimaEdicion)}</span>
+                            </div>
 								<div className="info-item">
 									<Users size={20} />
 									<span><strong>Horas Oficial 1ª:</strong> {parteSeleccionado.horasOficial1 || 0}h</span>
