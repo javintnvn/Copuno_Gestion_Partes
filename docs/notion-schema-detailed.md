@@ -1,7 +1,7 @@
 # Esquema Detallado de Bases de Datos - Notion
 
 ## Configuración API
-- **Token**: `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`
+- Define `NOTION_TOKEN` en tu entorno (no publiques este valor)
 - **API**: `https://api.notion.com/v1`
 
 ## Bases de Datos
@@ -273,4 +273,3 @@
 - **Nombre**: Parte Pelayo97
 
 ---
-

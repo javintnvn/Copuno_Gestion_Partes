@@ -1,3 +1,4 @@
+require('dotenv').config()
 const express = require('express')
 const cors = require('cors')
 const axios = require('axios')
@@ -6,8 +7,8 @@ const path = require('path')
 const app = express()
 const PORT = process.env.PORT || 3001
 
-// Configuración de Notion
-const NOTION_TOKEN = process.env.NOTION_TOKEN || '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'
+// Configuración de Notion (sin fallback: exigir variable de entorno)
+const NOTION_TOKEN = process.env.NOTION_TOKEN
 const NOTION_API = 'https://api.notion.com/v1'
 
 // Configuración de bases de datos corregida
@@ -20,7 +21,13 @@ const DATABASES = {
 }
 
 // Middleware
-app.use(cors())
+// CORS: si se definen orígenes permitidos, restringir; en otro caso permitir (dev)
+const ALLOWED_ORIGINS = (process.env.ALLOWED_ORIGINS || '').split(',').map(s => s.trim()).filter(Boolean)
+if (ALLOWED_ORIGINS.length > 0) {
+  app.use(cors({ origin: ALLOWED_ORIGINS, credentials: true }))
+} else {
+  app.use(cors())
+}
 app.use(express.json())
 app.use(express.static(path.join(__dirname, 'dist')))
 
@@ -29,6 +36,13 @@ app.use((req, res, next) => {
 	console.log(`${new Date().toISOString()} - ${req.method} ${req.path}`)
 	next()
 })
+
+// Verificar token al iniciar
+if (!NOTION_TOKEN) {
+  console.error('ERROR: Falta la variable de entorno NOTION_TOKEN. Configure su token de Notion antes de iniciar el servidor.')
+  // Finalizar proceso para evitar ejecutar sin credenciales válidas
+  process.exit(1)
+}
 
 // Headers para Notion
 const getNotionHeaders = () => ({
@@ -625,6 +639,37 @@ app.put('/api/partes-trabajo/:parteId', async (req, res) => {
 				error: 'Faltan campos requeridos',
 				required: ['obraId', 'fecha', 'personaAutorizadaId']
 			})
+		}
+
+		// Validar que el parte sea editable según su estado actual
+		try {
+			const parteActual = await makeNotionRequest('GET', `/pages/${parteId}`)
+			const estadoParte = extractPropertyValue(parteActual.properties['Estado'])
+			const noEditables = ['firmado', 'datos enviados', 'enviado']
+			if (estadoParte && noEditables.includes(String(estadoParte).toLowerCase())) {
+				return res.status(409).json({
+					error: 'El parte no es editable por su estado actual',
+					estado: estadoParte
+				})
+			}
+		} catch (e) {
+			console.warn('Aviso: no se pudo validar el estado del parte antes de editar:', e.message)
+		}
+
+		// Validar horas por empleado si vienen definidas
+		if (empleados && empleadosHoras) {
+			for (const empId of empleados) {
+				const horasVal = empleadosHoras[empId]
+				if (horasVal !== undefined) {
+					const num = Number(horasVal)
+					if (!Number.isFinite(num) || num < 0 || num > 24) {
+						return res.status(400).json({
+							error: `Horas inválidas para empleado ${empId}`,
+							details: 'Las horas deben estar entre 0 y 24'
+						})
+					}
+				}
+			}
 		}
 
 		// Obtener la obra para el nombre

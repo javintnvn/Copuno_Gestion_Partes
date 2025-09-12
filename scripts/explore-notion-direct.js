@@ -1,9 +1,10 @@
+require('dotenv').config();
 const axios = require('axios');
 const fs = require('fs');
 const path = require('path');
 
 // Configuración
-const NOTION_TOKEN = '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';
+const NOTION_TOKEN = process.env.NOTION_TOKEN;
 const NOTION_API = 'https://api.notion.com/v1';
 
 // Bases de datos
@@ -21,6 +22,10 @@ const DATABASES = {
 async function getDatabaseInfo(databaseId, databaseName) {
 	try {
 		console.log(`\n=== Explorando ${databaseName} ===`);
+
+		if (!NOTION_TOKEN) {
+			throw new Error('Falta NOTION_TOKEN en el entorno para explorar Notion');
+		}
 		
 		// Obtener información de la base de datos
 		const dbResponse = await axios.get(`${NOTION_API}/databases/${databaseId}`, {

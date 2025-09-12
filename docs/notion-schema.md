@@ -1,8 +1,8 @@
 # Esquema de Bases de Datos - Notion
 
 ## Configuración API
-- **Token**: `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`
-- **Proxy**: `https://copuno.onrender.com/notion/`
+- Define `NOTION_TOKEN` en tu entorno (no lo publiques)
+- Proxy: `https://copuno.onrender.com/notion/` (opcional para pruebas)
 
 ## Bases de Datos
 

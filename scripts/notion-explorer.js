@@ -1,7 +1,8 @@
+require('dotenv').config();
 const axios = require('axios');
 
 // Configuración
-const NOTION_TOKEN = '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';
+const NOTION_TOKEN = process.env.NOTION_TOKEN;
 const PROXY_API = 'https://copuno.onrender.com/notion/';
 
 // Bases de datos
@@ -19,6 +20,10 @@ const DATABASES = {
 async function getDatabaseSchema(databaseId, databaseName) {
 	try {
 		console.log(`\n=== Explorando ${databaseName} ===`);
+
+		if (!NOTION_TOKEN) {
+			throw new Error('Falta NOTION_TOKEN en el entorno para explorar Notion');
+		}
 		
 		// Obtener información de la base de datos
 		const dbResponse = await axios.get(`${PROXY_API}databases/${databaseId}`, {

@@ -59,9 +59,12 @@ npm install
 
 3. **Configurar variables de entorno:**
 ```bash
-# Crear archivo .env (opcional)
-NOTION_TOKEN=tu_token_de_notion_aqui
+# Crear archivo .env (recomendado)
+NOTION_TOKEN=YOUR_NOTION_TOKEN
+# PORT=3001
+# ALLOWED_ORIGINS=https://tudominio.com,https://app.tudominio.com
 ```
+La carga de `.env` es automática (dotenv). Más detalles en `docs/CONFIGURACION_ENTORNO.md`.
 
 4. **Construir la aplicación:**
 ```bash

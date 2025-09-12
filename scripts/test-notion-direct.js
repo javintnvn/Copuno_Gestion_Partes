@@ -1,7 +1,8 @@
+require('dotenv').config();
 const axios = require('axios');
 
 // Configuración
-const NOTION_TOKEN = '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';
+const NOTION_TOKEN = process.env.NOTION_TOKEN;
 const NOTION_API = 'https://api.notion.com/v1';
 
 // Bases de datos corregidas
@@ -16,6 +17,9 @@ const DATABASES = {
 // Función para hacer requests a Notion con manejo de errores
 const makeNotionRequest = async (method, endpoint, data = null) => {
 	try {
+		if (!NOTION_TOKEN) {
+			throw new Error('Falta NOTION_TOKEN en el entorno para pruebas directas');
+		}
 		const config = {
 			method,
 			url: `${NOTION_API}${endpoint}`,
