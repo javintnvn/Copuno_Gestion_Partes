@@ -97,6 +97,46 @@ const getCache = (key) => {
   return e.data
 }
 
+// Sanitización de datos económicos en respuestas API
+const ECONOMIC_KEY_SUBSTRINGS = ['importe', 'precio', 'coste', 'tarifa', 'eur', 'euro']
+const ECONOMIC_VALUE_REGEX = /(€|eur|euros)/i
+function sanitizeEconomic(value) {
+  if (Array.isArray(value)) {
+    return value.map(sanitizeEconomic)
+  }
+  if (value && typeof value === 'object') {
+    const out = {}
+    for (const [k, v] of Object.entries(value)) {
+      const kl = String(k).toLowerCase()
+      const keyHits = ECONOMIC_KEY_SUBSTRINGS.some(s => kl.includes(s))
+      if (keyHits) continue // eliminar claves económicas
+      const sv = sanitizeEconomic(v)
+      // Si el valor es string económico, redáctalo
+      if (typeof sv === 'string' && ECONOMIC_VALUE_REGEX.test(sv)) {
+        out[k] = '[redacted]'
+      } else {
+        out[k] = sv
+      }
+    }
+    return out
+  }
+  if (typeof value === 'string') {
+    return ECONOMIC_VALUE_REGEX.test(value) ? '[redacted]' : value
+  }
+  return value
+}
+
+// Interceptor para res.json que sanea datos económicos (excepto health)
+app.use((req, res, next) => {
+  const originalJson = res.json.bind(res)
+  res.json = (data) => {
+    const shouldSanitize = req.path.startsWith('/api/') && req.path !== '/api/health'
+    const payload = shouldSanitize ? sanitizeEconomic(data) : data
+    return originalJson(payload)
+  }
+  next()
+})
+
 // Headers para Notion
 const getNotionHeaders = () => ({
 	'Authorization': `Bearer ${NOTION_TOKEN}`,

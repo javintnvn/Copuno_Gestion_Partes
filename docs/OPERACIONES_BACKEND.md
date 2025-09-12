@@ -12,7 +12,8 @@ Este documento resume el estado actual del servidor, las decisiones técnicas, c
   - Headers de seguridad con `helmet`.
   - Compresión HTTP con `compression`.
   - Request ID (`x-request-id`) por petición.
-  - Cache en memoria (TTL) para catálogos: obras, jefes, empleados.
+- Cache en memoria (TTL) para catálogos: obras, jefes, empleados.
+- Saneado de datos económicos: las respuestas de `/api/*` se filtran para eliminar claves y valores con información económica (excepto `/api/health`).
 - Reglas de negocio:
   - PUT de partes bloquea estados no editables: firmado, datos enviados, enviado.
   - Validación de horas por empleado [0–24].
@@ -22,6 +23,7 @@ Ver `docs/CONFIGURACION_ENTORNO.md` y `env.example`.
 - Relevantes nuevas:
   - `CACHE_TTL_MS` (opcional, TTL cache catálogos; por defecto 60000).
   - `RATE_LIMIT_WINDOW_MS`, `RATE_LIMIT_MAX` (rate limit).
+  - El saneado económico está activado por defecto y no requiere configuración.
 
 ## Procedimientos
 - Arranque local:
