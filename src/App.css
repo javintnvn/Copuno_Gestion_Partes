@@ -548,10 +548,46 @@ body {
 }
 
 .parte-acciones {
-	display: flex;
-	gap: var(--spacing-sm);
-	flex-wrap: wrap;
+    display: flex;
+    gap: var(--spacing-sm);
+    flex-wrap: wrap;
+    align-items: center;
 }
+
+/* Alinear y homogeneizar botones en contenedores de acciones */
+.parte-acciones .btn {
+    flex: 1 1 180px;
+    justify-content: center;
+}
+
+/* Acciones de formularios: alineación y consistencia */
+.form-actions {
+    display: flex;
+    gap: var(--spacing-sm);
+    flex-wrap: wrap;
+    justify-content: center;
+    margin-top: var(--spacing-lg);
+}
+
+.form-actions .btn {
+    min-width: 180px;
+    justify-content: center;
+}
+
+/* Estilo de botón "cerrar/volver" compacto pero alineado */
+.btn-close {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+    background: none;
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    padding: var(--spacing-sm) var(--spacing-md);
+    color: var(--text-secondary);
+    cursor: pointer;
+}
+
+.btn-close:hover { background-color: var(--background-color); }
 
 /* Botones */
 .btn {
@@ -896,6 +932,10 @@ body {
 	.logo-button { margin: 0 auto; }
 	.header-info { align-items: center; }
 	.connectivity-status { margin-top: 6px; }
+
+	/* En tablet vertical, apilar y hacer botones de ancho completo para mejor toque */
+	.parte-acciones { flex-direction: column; align-items: stretch; }
+	.parte-acciones .btn, .form-actions .btn { min-height: 52px; width: 100%; }
 }
 
 /* Mejoras de accesibilidad */
