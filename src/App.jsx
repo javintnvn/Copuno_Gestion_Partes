@@ -222,7 +222,8 @@ function ConsultaPartes({ datos, onVolver, estadoOptions }) {
 	const [loadingEmpleados, setLoadingEmpleados] = useState(false)
 	const [mostrarEmpleadosObra, setMostrarEmpleadosObra] = useState(false)
 	const [loadingEmpleadosParte, setLoadingEmpleadosParte] = useState(false)
-	const [guardandoCambios, setGuardandoCambios] = useState(false)
+    const [guardandoCambios, setGuardandoCambios] = useState(false)
+    const [mensajeUI, setMensajeUI] = useState({ tipo: '', texto: '' })
 	// Estado local para reflejar selección de estado inmediatamente en UI
 	const [estadoLocal, setEstadoLocal] = useState({})
 
@@ -484,23 +485,23 @@ function ConsultaPartes({ datos, onVolver, estadoOptions }) {
 
 	// Función para guardar cambios
 	const guardarCambios = async () => {
-		if (!editandoParte) return
+        if (!editandoParte) return
 
-		setGuardandoCambios(true)
+        setGuardandoCambios(true)
 
-		try {
-			// Validar datos requeridos
-			if (!editandoParte.obraId || !editandoParte.fecha || !editandoParte.personaAutorizadaId) {
-				alert('Por favor, completa todos los campos requeridos (obra, fecha y persona autorizada)')
-				return
-			}
+        try {
+            // Validar datos requeridos
+            if (!editandoParte.obraId || !editandoParte.fecha || !editandoParte.personaAutorizadaId) {
+                setMensajeUI({ tipo: 'error', texto: 'Completa obra, fecha y persona autorizada para continuar.' })
+                return
+            }
 
 			// Encontrar la obra seleccionada
 			const obraSeleccionada = datos.obras.find(obra => obra.id === editandoParte.obraId)
-			if (!obraSeleccionada) {
-				alert('La obra seleccionada no es válida')
-				return
-			}
+            if (!obraSeleccionada) {
+                setMensajeUI({ tipo: 'error', texto: 'La obra seleccionada no es válida.' })
+                return
+            }
 
 			// Preparar datos para actualizar
 			const datosActualizacion = {
@@ -520,7 +521,7 @@ function ConsultaPartes({ datos, onVolver, estadoOptions }) {
 			console.log('Parte actualizado:', resultado)
 			
 			// Mostrar mensaje de éxito
-			alert(`Parte actualizado exitosamente. ${resultado.detallesCreados} empleados asignados.`)
+            setMensajeUI({ tipo: 'success', texto: `Parte actualizado. ${resultado.detallesCreados} empleados asignados.` })
 			
 			// Recargar datos para reflejar los cambios
 			if (onVolver) {
@@ -532,8 +533,8 @@ function ConsultaPartes({ datos, onVolver, estadoOptions }) {
 			cancelarEdicion()
 			
 		} catch (error) {
-			console.error('Error al actualizar parte:', error)
-			alert(`Error al actualizar el parte: ${error.message}`)
+            console.error('Error al actualizar parte:', error)
+            setMensajeUI({ tipo: 'error', texto: `No se pudo actualizar el parte: ${error.message}` })
 		} finally {
 			setGuardandoCambios(false)
 		}
@@ -586,16 +587,26 @@ function ConsultaPartes({ datos, onVolver, estadoOptions }) {
 		})
 	}
 
-	// Función para cambiar horas de un empleado
-	const cambiarHorasEmpleado = (empleadoId, horas) => {
-		setEditandoParte(prev => ({
-			...prev,
-			empleadosHoras: {
-				...prev.empleadosHoras,
-				[empleadoId]: parseFloat(horas) || 0
-			}
-		}))
-	}
+    // Helper para limitar/redondear horas
+    const clampRoundHoras = (val) => {
+        let n = parseFloat(val)
+        if (!isFinite(n)) n = 0
+        if (n < 0) n = 0
+        if (n > 24) n = 24
+        return Math.round(n * 2) / 2
+    }
+
+    // Función para cambiar horas de un empleado
+    const cambiarHorasEmpleado = (empleadoId, horas) => {
+        const h = clampRoundHoras(horas)
+        setEditandoParte(prev => ({
+            ...prev,
+            empleadosHoras: {
+                ...prev.empleadosHoras,
+                [empleadoId]: h
+            }
+        }))
+    }
 
 	// Filtrar partes según los criterios
 	const partesFiltrados = datos.partesTrabajo.filter(parte => {
@@ -630,7 +641,7 @@ function ConsultaPartes({ datos, onVolver, estadoOptions }) {
         setEstadoLocal(prev => ({ ...prev, [empleadoId]: nuevoEstado }))
         try {
             if (parteSeleccionado && !puedeEditarParte(parteSeleccionado.estado)) {
-                alert('No es posible modificar el estado de empleados en un parte firmado/enviado')
+            setMensajeUI({ tipo: 'warning', texto: 'No se puede cambiar el estado en partes firmados/enviados.' })
                 return
             }
             await actualizarEstadoEmpleado(empleadoId, normalizeEstadoForApi(nuevoEstado))
@@ -641,7 +652,7 @@ function ConsultaPartes({ datos, onVolver, estadoOptions }) {
         } catch (error) {
             // Revertir si falla
             setEstadoLocal(prev => ({ ...prev, [empleadoId]: undefined }))
-            alert(error.message)
+            setMensajeUI({ tipo: 'error', texto: error.message })
         }
     }
 
@@ -664,7 +675,12 @@ function ConsultaPartes({ datos, onVolver, estadoOptions }) {
 							<h2 className="edicion-title">Editar Parte: {editandoParte.nombre}</h2>
 						</div>
 						
-						<div className="edicion-form">
+                    {mensajeUI.texto && (
+                        <div className={`message ${mensajeUI.tipo}`} style={{ marginBottom: 12 }}>
+                            {mensajeUI.texto}
+                        </div>
+                    )}
+                    <div className="edicion-form">
 							<div className="grid grid-2">
 								<div className="form-group">
 									<label className="form-label">Fecha y Hora:</label>
@@ -1073,15 +1089,20 @@ function ConsultaPartes({ datos, onVolver, estadoOptions }) {
 						</div>
 					</div>
 				</div>
-			) : (
-				<>
-					<div className="section-header">
-						<button className="btn-back" onClick={onVolver}>
-							<ArrowLeft size={20} />
-							Volver al Inicio
-						</button>
-						<h2 className="section-title">Consultar Partes Existentes</h2>
-					</div>
+            ) : (
+                <>
+                    <div className="section-header">
+                        <button className="btn-back" onClick={onVolver}>
+                            <ArrowLeft size={20} />
+                            Volver al Inicio
+                        </button>
+                        <h2 className="section-title">Consultar Partes Existentes</h2>
+                    </div>
+                    {mensajeUI.texto && (
+                        <div className={`message ${mensajeUI.tipo}`} style={{ marginBottom: 12 }}>
+                            {mensajeUI.texto}
+                        </div>
+                    )}
 
 					<div className="card">
 						<div className="card-header">
@@ -1236,9 +1257,19 @@ function CrearParte({ datos, onParteCreado, onVolver }) {
 	const [message, setMessage] = useState('')
   const [empleadosObra, setEmpleadosObra] = useState([])
   const [estadoLocal, setEstadoLocal] = useState({})
-	const [loadingEmpleados, setLoadingEmpleados] = useState(false)
-	const [parteCreado, setParteCreado] = useState(null)
-	const [showOpciones, setShowOpciones] = useState(false)
+  const [loadingEmpleados, setLoadingEmpleados] = useState(false)
+  const [parteCreado, setParteCreado] = useState(null)
+  const [showOpciones, setShowOpciones] = useState(false)
+  const [mensajeUI, setMensajeUI] = useState({ tipo: '', texto: '' })
+
+  // Helpers tolerantes para horas: limitar 0-24 y redondear a 0.5
+  const clampRoundHoras = (val) => {
+    let n = parseFloat(val)
+    if (!isFinite(n)) n = 0
+    if (n < 0) n = 0
+    if (n > 24) n = 24
+    return Math.round(n * 2) / 2
+  }
 
 	// Función para cargar empleados de una obra
   const cargarEmpleadosObra = async (obraId) => {
@@ -1264,7 +1295,7 @@ function CrearParte({ datos, onParteCreado, onVolver }) {
       await actualizarEstadoEmpleado(empleadoId, normalizeEstadoForApi(nuevoEstado))
     } catch (e) {
       setEstadoLocal(prev => ({ ...prev, [empleadoId]: undefined }))
-      alert(e.message)
+      setMensajeUI({ tipo: 'error', texto: e.message })
     }
   }
 	}
@@ -1280,19 +1311,20 @@ function CrearParte({ datos, onParteCreado, onVolver }) {
 		cargarEmpleadosObra(obraId)
 	}
 
-	const handleSubmit = async (e) => {
-		e.preventDefault()
-		setLoading(true)
-		setMessage('')
+  const handleSubmit = async (e) => {
+    e.preventDefault()
+    setLoading(true)
+    setMessage('')
+    setMensajeUI({ tipo: '', texto: '' })
 
 		try {
 			// Encontrar la obra seleccionada
 			const obraSeleccionada = datos.obras.find(obra => obra.id === formData.obraId)
 			const personaAutorizadaSeleccionada = datos.jefesObra.find(jefe => jefe.id === formData.personaAutorizadaId)
 
-			if (!obraSeleccionada || !personaAutorizadaSeleccionada) {
-				throw new Error('Por favor, selecciona una obra y una Persona Autorizada válidos')
-			}
+      if (!obraSeleccionada || !personaAutorizadaSeleccionada) {
+        throw new Error('Selecciona una obra y una Persona Autorizada válidos')
+      }
 
 			const parteCreado = await crearParteTrabajo({
 				obra: obraSeleccionada.nombre,
@@ -1306,15 +1338,17 @@ function CrearParte({ datos, onParteCreado, onVolver }) {
 
 			setParteCreado(parteCreado)
 			setShowOpciones(true)
-			setMessage(parteCreado.mensaje || 'Parte creado exitosamente')
+      setMessage(parteCreado.mensaje || 'Parte creado exitosamente')
+      setMensajeUI({ tipo: 'success', texto: 'Parte creado correctamente.' })
 
 			// Recargar datos
 			if (onParteCreado) {
 				onParteCreado()
 			}
 		} catch (error) {
-			console.error('Error al crear parte:', error)
-			setMessage(`Error al crear el parte: ${error.message}`)
+      console.error('Error al crear parte:', error)
+      setMessage(`Error al crear el parte: ${error.message}`)
+      setMensajeUI({ tipo: 'error', texto: error.message })
 		} finally {
 			setLoading(false)
 		}
@@ -1403,11 +1437,16 @@ function CrearParte({ datos, onParteCreado, onVolver }) {
 					</div>
 				) : (
 					<form onSubmit={handleSubmit} className="formulario-parte">
-						{message && (
-							<div className={`message ${message.includes('Error') ? 'error' : 'success'}`}>
-								{message}
-							</div>
-						)}
+                    {mensajeUI.texto && (
+                        <div className={`message ${mensajeUI.tipo}`}>
+                            {mensajeUI.texto}
+                        </div>
+                    )}
+                    {message && !mensajeUI.texto && (
+                        <div className={`message ${message.includes('Error') ? 'error' : 'success'}`}>
+                            {message}
+                        </div>
+                    )}
 					
 					<div className="grid grid-2">
 						<div className="form-group">
@@ -1513,27 +1552,27 @@ function CrearParte({ datos, onParteCreado, onVolver }) {
                                         {formData.empleados.includes(empleado.id) && (
                                                 <>
                                                 <div className="empleado-horas-input">
-												<label className="horas-label">Horas trabajadas:</label>
-												<input
-													type="number"
-													className="horas-input"
-													min="0"
-													max="24"
-													step="0.5"
-													value={formData.empleadosHoras[empleado.id] || 8}
-													onChange={(e) => {
-														const horas = parseFloat(e.target.value) || 0
-														setFormData({
-															...formData,
-															empleadosHoras: {
-																...formData.empleadosHoras,
-																[empleado.id]: horas
-															}
-														})
-													}}
-												/>
-												<span className="horas-unidad">h</span>
-											</div>
+                                                    <label className="horas-label">Horas trabajadas:</label>
+                                                    <input
+                                                        type="number"
+                                                        className="horas-input"
+                                                        min="0"
+                                                        max="24"
+                                                        step="0.5"
+                                                        value={formData.empleadosHoras[empleado.id] || 8}
+                                                        onChange={(e) => {
+                                                            const horas = clampRoundHoras(e.target.value)
+                                                            setFormData({
+                                                                ...formData,
+                                                                empleadosHoras: {
+                                                                    ...formData.empleadosHoras,
+                                                                    [empleado.id]: horas
+                                                                }
+                                                            })
+                                                        }}
+                                                    />
+                                                    <span className="horas-unidad">h</span>
+                                                </div>
                                                 <div className="empleado-estado-edicion">
                                                     <label className="horas-label">Estado:</label>
                                                     <select
