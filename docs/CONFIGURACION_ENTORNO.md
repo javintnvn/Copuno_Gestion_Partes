@@ -10,6 +10,8 @@ Este proyecto usa variables de entorno para credenciales y ajustes de runtime. E
 
 - `PORT`: Puerto de escucha del servidor (por defecto `3001`).
 - `ALLOWED_ORIGINS`: Lista separada por comas de orígenes permitidos para CORS (p. ej. `https://tudominio.com,https://app.tudominio.com`). Si no se define, en desarrollo se permite cualquier origen.
+- `RATE_LIMIT_WINDOW_MS`: Ventana de rate limit en milisegundos (por defecto `900000`, 15 min).
+- `RATE_LIMIT_MAX`: Máximo de peticiones por IP en cada ventana (por defecto `100`).
 
 ## Pasos para configurar
 
@@ -36,4 +38,3 @@ Si un token se ha expuesto o quieres rotarlo:
 - Nunca publiques el token en commits, issues o documentación pública.
 - Mantén `.env` fuera del control de versiones (ya está incluido en `.gitignore`).
 - Usa `ALLOWED_ORIGINS` en producción para restringir CORS.
-

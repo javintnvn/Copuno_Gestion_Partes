@@ -1,5 +1,7 @@
 require('dotenv').config()
 const express = require('express')
+const rateLimit = require('express-rate-limit')
+const morgan = require('morgan')
 const cors = require('cors')
 const axios = require('axios')
 const path = require('path')
@@ -21,6 +23,9 @@ const DATABASES = {
 }
 
 // Middleware
+// Confiar en proxy para IP real (útil en despliegues detrás de CDN/Reverse Proxy)
+app.set('trust proxy', 1)
+
 // CORS: si se definen orígenes permitidos, restringir; en otro caso permitir (dev)
 const ALLOWED_ORIGINS = (process.env.ALLOWED_ORIGINS || '').split(',').map(s => s.trim()).filter(Boolean)
 if (ALLOWED_ORIGINS.length > 0) {
@@ -28,14 +33,21 @@ if (ALLOWED_ORIGINS.length > 0) {
 } else {
   app.use(cors())
 }
+
+// Access logging (morgan) con tiempos y filtrado de rutas de ruido
+const logFormat = ':remote-addr - :method :url :status :res[content-length] - :response-time ms'
+app.use(morgan(logFormat, {
+  skip: (req) => {
+    const p = req.path || ''
+    // Reducir ruido: evitar logs de assets estáticos y health
+    return p.startsWith('/assets') || p.endsWith('.js') || p.endsWith('.css') || p.endsWith('.map') || p === '/api/health'
+  }
+}))
 app.use(express.json())
 app.use(express.static(path.join(__dirname, 'dist')))
 
 // Middleware de logging
-app.use((req, res, next) => {
-	console.log(`${new Date().toISOString()} - ${req.method} ${req.path}`)
-	next()
-})
+// (Se reemplaza el logging manual por morgan)
 
 // Verificar token al iniciar
 if (!NOTION_TOKEN) {
@@ -43,6 +55,18 @@ if (!NOTION_TOKEN) {
   // Finalizar proceso para evitar ejecutar sin credenciales válidas
   process.exit(1)
 }
+
+// Rate limiting para /api con valores configurables
+const RATE_LIMIT_WINDOW_MS = Number(process.env.RATE_LIMIT_WINDOW_MS || 15 * 60 * 1000) // 15 minutos
+const RATE_LIMIT_MAX = Number(process.env.RATE_LIMIT_MAX || 100) // 100 req por ventana
+const apiLimiter = rateLimit({
+  windowMs: RATE_LIMIT_WINDOW_MS,
+  max: RATE_LIMIT_MAX,
+  standardHeaders: true,
+  legacyHeaders: false,
+  skip: (req) => (req.path === '/health') // no limitar health
+})
+app.use('/api', apiLimiter)
 
 // Headers para Notion
 const getNotionHeaders = () => ({
