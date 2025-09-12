@@ -1007,36 +1007,7 @@ function ConsultaPartes({ datos, onVolver, estadoOptions }) {
 														<span>{detalle.horas || 0} horas</span>
 													</div>
 										</div>
-										{puedeEditarParte(parteSeleccionado.estado) && (
-											<div className="empleado-estado-edicion" style={{ marginTop: 8 }}>
-												<label className="horas-label">Estado:</label>
-                                            <select
-													className="form-select"
-													onChange={(e) => cambiarEstadoEmpleado(extractRelacionId(detalle.empleadoId), e.target.value)}
-													defaultValue={detalle.estado || ''}
-												>
-                                                    <option value="">{detalle.estado ? `Estado actual: ${detalle.estado}` : 'Sin estado'}</option>
-                                                {(estadoOptions.options || []).map(opt => (
-                                                    <option key={opt.name} value={opt.name}>
-                                                        {opt.name}
-                                                    </option>
-                                                ))}
-												</select>
-                                            {/* Indicador del color del estado seleccionado */}
-                                            {(() => {
-                                                const currentId = extractRelacionId(detalle.empleadoId)
-                                                const seleccionado = estadoLocal[currentId] || detalle.estado
-                                                const opt = getEstadoOptionByName(seleccionado)
-                                                if (!opt) return null
-                                                const color = mapNotionColorToHex(opt.color)
-                                                return (
-                                                    <span className="estado-empleado" title={seleccionado}>
-                                                        <span className="badge-dot" style={{ backgroundColor: color }} /> {seleccionado}
-                                                    </span>
-                                                )
-                                            })()}
-											</div>
-										)}
+										{/* Estado del empleado oculto en vista de detalles por requerimiento */}
 												{detalle.detalle && (
 													<div className="empleado-notas">
 														<p>{detalle.detalle}</p>
