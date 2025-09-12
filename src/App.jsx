@@ -1227,7 +1227,7 @@ function ConsultaPartes({ datos, onVolver, estadoOptions }) {
 }
 
 // Componente para crear nuevo parte
-function CrearParte({ datos, onParteCreado, onVolver }) {
+function CrearParte({ datos, estadoOptions, onParteCreado, onVolver }) {
 	// Función para obtener fecha y hora actual en formato YYYY-MM-DDTHH:MM
 	const getCurrentDateTime = () => {
 		const now = new Date()
@@ -1265,6 +1265,36 @@ function CrearParte({ datos, onParteCreado, onVolver }) {
     if (n < 0) n = 0
     if (n > 24) n = 24
     return Math.round(n * 2) / 2
+  }
+
+  // Helpers de estado (locales a creación)
+  const mapNotionColorToHex = (color) => {
+    switch ((color || '').toLowerCase()) {
+      case 'gray': return '#6b7280'
+      case 'brown': return '#92400e'
+      case 'orange': return '#f97316'
+      case 'yellow': return '#eab308'
+      case 'green': return '#16a34a'
+      case 'blue': return '#2563eb'
+      case 'purple': return '#7c3aed'
+      case 'pink': return '#db2777'
+      case 'red': return '#dc2626'
+      default: return '#64748b'
+    }
+  }
+
+  const getEstadoOptionByName = (name) => {
+    return (estadoOptions?.options || []).find(opt => opt.name === name)
+  }
+
+  const normalizeEstadoForApi = (valor) => {
+    const type = estadoOptions?.type
+    if (type === 'checkbox') {
+      if (typeof valor === 'boolean') return valor
+      const v = String(valor).toLowerCase()
+      return v === 'on' || v === 'true' || v === 'sí' || v === 'si'
+    }
+    return valor
   }
 
 	// Función para cargar empleados de una obra
