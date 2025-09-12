@@ -1182,10 +1182,10 @@ function ConsultaPartes({ datos, onVolver, estadoOptions }) {
 												<Calendar size={20} />
 												<span>Fecha: {formatearFecha(parte.fecha)}</span>
 											</div>
-											<div className="info-item">
-												<Users size={20} />
-												<span>Horas: {parte.horasOficial1 + parte.horasOficial2 + parte.horasCapataz + parte.horasEncargado || 0}h</span>
-											</div>
+                                        <div className="info-item">
+                                            <Users size={20} />
+                                            <span>{parte.rpHorasTotales ? parte.rpHorasTotales : `Horas: ${(parte.horasOficial1 + parte.horasOficial2 + parte.horasCapataz + parte.horasEncargado) || 0}h`}</span>
+                                        </div>
 
 										</div>
 										
