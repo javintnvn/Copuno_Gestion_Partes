@@ -58,6 +58,15 @@ Nota: Todas las respuestas de `/api/*` (excepto `/api/health`) se someten a un s
   - No se permite editar si el parte está en: `firmado`, `datos enviados`, `enviado`.
   - Horas por empleado deben estar en el rango `[0, 24]`.
 
+### Estado (sincronización)
+- Método: GET
+- Ruta: `/api/partes-trabajo/:parteId/estado`
+- Descripción: Devuelve `{ estado, ultimaEdicion }` para el parte indicado.
+
+- Método: GET (SSE)
+- Ruta: `/api/partes-trabajo/:parteId/estado/stream`
+- Descripción: Stream de Server-Sent Events que emite `{ estado, ultimaEdicion }` cuando hay cambios. Mantiene la conexión con latidos y reconecta con backoff en caso de error.
+
 ## Datos Completos
 - Método: GET
 - Ruta: `/api/datos-completos`

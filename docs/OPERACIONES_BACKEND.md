@@ -14,6 +14,12 @@ Este documento resume el estado actual del servidor, las decisiones técnicas, c
   - Request ID (`x-request-id`) por petición.
 - Cache en memoria (TTL) para catálogos: obras, jefes, empleados.
 - Saneado de datos económicos: las respuestas de `/api/*` se filtran para eliminar claves y valores con información económica (excepto `/api/health`).
+
+### Sincronización de estado (Partes)
+- Stream SSE: `GET /api/partes-trabajo/:parteId/estado/stream` emite cambios de `estado` y `Última edición` (sondeo a Notion cada 5s, reconexión con backoff hasta 30s).
+- Consulta puntual: `GET /api/partes-trabajo/:parteId/estado` devuelve el estado actual y la última edición.
+- Frontend: abre SSE al mostrar el modal de detalles; cierra al ocultar/cerrar. La lista se refresca cada 30s.
+- Ahorro de recursos: el polling/SSE se pausan cuando la pestaña está en segundo plano y al abrir edición.
 - Reglas de negocio:
   - PUT de partes bloquea estados no editables: firmado, datos enviados, enviado.
   - Validación de horas por empleado [0–24].
@@ -24,6 +30,7 @@ Ver `docs/CONFIGURACION_ENTORNO.md` y `env.example`.
   - `CACHE_TTL_MS` (opcional, TTL cache catálogos; por defecto 60000).
   - `RATE_LIMIT_WINDOW_MS`, `RATE_LIMIT_MAX` (rate limit).
   - El saneado económico está activado por defecto y no requiere configuración.
+  - Frecuencias actuales (hardcode): SSE 5s; lista 30s. Se pueden parametrizar en el futuro si es necesario.
 
 ## Procedimientos
 - Arranque local:

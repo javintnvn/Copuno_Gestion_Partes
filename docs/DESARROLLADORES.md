@@ -32,6 +32,7 @@
 - Rate limiting: `express-rate-limit` (por IP), configurable con `RATE_LIMIT_*`.
 - Cache: memoria (TTL) para catálogos (`/api/obras`, `/api/jefes-obra`, `/api/empleados`), `CACHE_TTL_MS`.
 - Saneado económico: eliminación/redacción de claves/valores económicos en todas las respuestas `/api/*` (excepto health).
+- Sincronización de estado: endpoints `/api/partes-trabajo/:id/estado` y stream `/api/partes-trabajo/:id/estado/stream` (SSE cada 5s, backoff hasta 30s). El frontend pausa SSE y polling si la pestaña está oculta o durante edición.
 
 ## Integración Notion
 - Se usa Axios contra `https://api.notion.com/v1` con el token de integración.
@@ -42,6 +43,7 @@
 - Añadir endpoint: crear ruta en `server.js`, usar `makeNotionRequest` y respetar políticas (cache, límites, saneado).
 - Consumir endpoint: añadir función en `src/services/notionService.js` y usar en UI.
 - Validación: mantener rangos/estados (p. ej., edición prohibida por estados no editables).
+- Sincronización: usar SSE para detalles y polling para la lista; pausar/resumir según visibilidad/edición.
 
 ## Convenciones
 - Commits: estilo Conventional Commits (feat, fix, chore, docs, refactor...).
@@ -58,4 +60,4 @@
 - UI: no mostrar datos económicos.
 - API: sin campos económicos; sanitización activa.
 - `README.md`, `docs/*` actualizados si hay cambios de comportamiento.
-
+- Revisión de sincronización: SSE funciona en detalles; lista refresca y se pausa en background.
