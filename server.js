@@ -732,6 +732,70 @@ app.get('/api/partes-trabajo/:parteId/detalles', async (req, res) => {
 	}
 })
 
+// Obtener solo el estado y última edición de un parte (consulta puntual)
+app.get('/api/partes-trabajo/:parteId/estado', async (req, res) => {
+  try {
+    const { parteId } = req.params
+    const parteData = await makeNotionRequest('GET', `/pages/${parteId}`)
+    res.json({
+      estado: extractPropertyValue(parteData.properties['Estado']),
+      ultimaEdicion: extractPropertyValue(parteData.properties['Última edición'])
+    })
+  } catch (error) {
+    console.error('Error al obtener estado del parte:', error.message)
+    res.status(500).json({ error: 'Error al obtener estado del parte', details: error.message })
+  }
+})
+
+// Stream de estado del parte (SSE): emite cambios en tiempo (casi) real
+app.get('/api/partes-trabajo/:parteId/estado/stream', async (req, res) => {
+  const { parteId } = req.params
+  res.writeHead(200, {
+    'Content-Type': 'text/event-stream',
+    'Cache-Control': 'no-cache',
+    Connection: 'keep-alive'
+  })
+
+  let closed = false
+  req.on('close', () => { closed = true })
+
+  let lastEstado = null
+  let lastEdit = null
+
+  const send = (obj) => {
+    res.write(`data: ${JSON.stringify(obj)}\n\n`)
+  }
+
+  // Función de sondeo
+  const poll = async () => {
+    try {
+      const parteData = await makeNotionRequest('GET', `/pages/${parteId}`)
+      const estado = extractPropertyValue(parteData.properties['Estado'])
+      const ultimaEdicion = extractPropertyValue(parteData.properties['Última edición'])
+      if (estado !== lastEstado || ultimaEdicion !== lastEdit) {
+        lastEstado = estado
+        lastEdit = ultimaEdicion
+        send({ estado, ultimaEdicion })
+      } else {
+        // latidos para mantener vivo el stream
+        res.write(': heartbeat\n\n')
+      }
+    } catch (e) {
+      res.write(`event: error\ndata: ${JSON.stringify({ message: e.message })}\n\n`)
+    }
+  }
+
+  // Primer envío inmediato
+  await poll()
+  // Intervalo de sondeo (5s)
+  const interval = setInterval(async () => {
+    if (closed) {
+      clearInterval(interval)
+      return
+    }
+    await poll()
+  }, 5000)
+})
 // Actualizar un parte de trabajo existente
 app.put('/api/partes-trabajo/:parteId', async (req, res) => {
 	try {

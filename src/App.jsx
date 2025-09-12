@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { Search, Plus, FileText, Calendar, Users, Building, Loader2, Wifi, WifiOff, Home, ArrowLeft, Clock, User } from 'lucide-react'
-import { getDatosCompletos, crearParteTrabajo, actualizarParteTrabajo, checkConnectivity, retryOperation, getDetallesEmpleados, getEmpleadosObra, getDetallesCompletosParte, actualizarEstadoEmpleado, getOpcionesEstadoEmpleados } from './services/notionService'
+import { getDatosCompletos, crearParteTrabajo, actualizarParteTrabajo, checkConnectivity, retryOperation, getDetallesEmpleados, getEmpleadosObra, getDetallesCompletosParte, actualizarEstadoEmpleado, getOpcionesEstadoEmpleados, getPartesTrabajo } from './services/notionService'
 import './App.css'
 
 function App() {
@@ -22,7 +22,14 @@ function App() {
 		cargarOpcionesEstado()
 		// Actualización periódica de opciones de Estado (pseudo tiempo real)
 		const id = setInterval(() => cargarOpcionesEstado(), 60000)
-		return () => clearInterval(id)
+		// Polling ligero de estados de partes para lista (cada 30s)
+		const idPartes = setInterval(async () => {
+			try {
+				const partes = await getPartesTrabajo()
+				setDatos(prev => ({ ...prev, partesTrabajo: partes }))
+			} catch (e) { /* noop */ }
+		}, 30000)
+		return () => { clearInterval(id); clearInterval(idPartes) }
 	}, [])
 
 	const cargarOpcionesEstado = async () => {
@@ -653,7 +660,42 @@ function ConsultaPartes({ datos, onVolver, estadoOptions }) {
     }
 
 
+	const estadoStreamRef = useRef(null)
+
+	useEffect(() => {
+		// Abrir SSE para sincronizar estado mientras el modal de detalles esté abierto
+		if (parteSeleccionado?.id) {
+			try {
+				const es = new EventSource(`/api/partes-trabajo/${parteSeleccionado.id}/estado/stream`)
+				es.onmessage = (ev) => {
+					try {
+						const data = JSON.parse(ev.data)
+						setParteSeleccionado(prev => prev ? ({ ...prev, estado: data.estado, ultimaEdicion: data.ultimaEdicion }) : prev)
+					} catch {}
+				}
+				es.onerror = () => { /* silencioso */ }
+				estadoStreamRef.current = es
+			} catch {}
+		} else {
+			// cerrar stream si no hay parte seleccionada
+			if (estadoStreamRef.current) {
+				estadoStreamRef.current.close()
+				estadoStreamRef.current = null
+			}
+		}
+		return () => {
+			if (estadoStreamRef.current) {
+				estadoStreamRef.current.close()
+				estadoStreamRef.current = null
+			}
+		}
+	}, [parteSeleccionado?.id])
+
 	const cerrarDetalles = () => {
+		if (estadoStreamRef.current) {
+			estadoStreamRef.current.close()
+			estadoStreamRef.current = null
+		}
 		setParteSeleccionado(null)
 		setDetallesEmpleados([])
 	}
