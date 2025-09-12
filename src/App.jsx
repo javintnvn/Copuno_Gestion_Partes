@@ -965,10 +965,7 @@ function ConsultaPartes({ datos, onVolver, estadoOptions }) {
 									<Users size={20} />
 									<span><strong>Horas Encargado:</strong> {parteSeleccionado.horasEncargado || 0}h</span>
 								</div>
-								<div className="info-item">
-									<FileText size={20} />
-									<span><strong>Importe Total:</strong> {parteSeleccionado.importeTotal || 0}€</span>
-								</div>
+
 								<div className="info-item">
 									<span><strong>Estado:</strong> {parteSeleccionado.estado || 'Pendiente'}</span>
 								</div>
@@ -1172,10 +1169,7 @@ function ConsultaPartes({ datos, onVolver, estadoOptions }) {
 												<Users size={20} />
 												<span>Horas: {parte.horasOficial1 + parte.horasOficial2 + parte.horasCapataz + parte.horasEncargado || 0}h</span>
 											</div>
-											<div className="info-item">
-												<FileText size={20} />
-												<span>Importe: {parte.importeTotal || 0}€</span>
-											</div>
+
 										</div>
 										
 										{/* Indicador visual si el parte no es editable */}
