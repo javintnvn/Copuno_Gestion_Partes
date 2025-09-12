@@ -293,6 +293,10 @@ NODE_ENV=production
 ### **⚙️ Operaciones Backend**
 - **[CONFIGURACION_ENTORNO.md](docs/CONFIGURACION_ENTORNO.md)** - Variables y buenas prácticas
 - **[OPERACIONES_BACKEND.md](docs/OPERACIONES_BACKEND.md)** - Estado, decisiones y siguientes pasos
+- **[DESARROLLADORES.md](docs/DESARROLLADORES.md)** - Guía para desarrolladores (setup, flujos, convenciones)
+- **[API_REFERENCIA.md](docs/API_REFERENCIA.md)** - Endpoints de API y reglas de validación
+
+> Nota: Por requerimiento del cliente, la UI y la API no exponen datos económicos. El backend purga y sanea cualquier información económica de las respuestas.
 
 ## 📄 Licencia
 
