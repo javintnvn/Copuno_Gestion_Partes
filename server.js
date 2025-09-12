@@ -158,7 +158,7 @@ const extractPropertyValue = (property) => {
 		return ''
 	}
 
-	switch (property.type) {
+		switch (property.type) {
 		case 'title':
 			return property.title?.[0]?.plain_text || ''
 		case 'rich_text':
@@ -209,6 +209,10 @@ const extractPropertyValue = (property) => {
 			return property.unique_id?.prefix + property.unique_id?.number || ''
 		case 'files':
 			return property.files || []
+		case 'created_time':
+			return property.created_time || ''
+		case 'last_edited_time':
+			return property.last_edited_time || ''
 		default:
 			return `[${property.type}]`
 	}
