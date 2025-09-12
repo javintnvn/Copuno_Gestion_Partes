@@ -233,16 +233,12 @@ app.get('/api/obras', async (req, res) => {
 			page_size: 100
 		})
 
-		const obras = data.results.map(page => ({
-			id: page.id,
-			nombre: extractPropertyValue(page.properties['Obra - Codigo']),
-			provincia: extractPropertyValue(page.properties['Provincia']),
-			estado: extractPropertyValue(page.properties['Estado']),
-			precioEncargado: extractPropertyValue(page.properties['Precio Encargado']),
-			precioCapataz: extractPropertyValue(page.properties['Precio Capataz']),
-			precioOficial1: extractPropertyValue(page.properties['Precio Oficial 1ª']),
-			precioOficial2: extractPropertyValue(page.properties['Precio Oficial 2ª'])
-		}))
+    const obras = data.results.map(page => ({
+      id: page.id,
+      nombre: extractPropertyValue(page.properties['Obra - Codigo']),
+      provincia: extractPropertyValue(page.properties['Provincia']),
+      estado: extractPropertyValue(page.properties['Estado'])
+    }))
 
     setCache('obras', obras)
     res.json(obras)
@@ -433,7 +429,7 @@ app.get('/api/obras/:obraId/empleados', async (req, res) => {
 
 // Obtener todos los partes de trabajo
 app.get('/api/partes-trabajo', async (req, res) => {
-	try {
+  try {
 		const data = await makeNotionRequest('POST', `/databases/${DATABASES.PARTES_TRABAJO}/query`, {
 			page_size: 100,
 			sorts: [
@@ -444,21 +440,20 @@ app.get('/api/partes-trabajo', async (req, res) => {
 			]
 		})
 
-		const partesTrabajo = data.results.map(page => ({
-			id: page.id,
-			nombre: extractPropertyValue(page.properties['Nombre']),
-			fecha: extractPropertyValue(page.properties['Fecha']),
-			estado: extractPropertyValue(page.properties['Estado']),
-			obra: extractPropertyValue(page.properties['AUX Obra']),
-			horasOficial1: extractPropertyValue(page.properties['Horas Oficial 1ª']),
-			horasOficial2: extractPropertyValue(page.properties['Horas Oficial 2ª ']),
-			horasCapataz: extractPropertyValue(page.properties['Horas Capataz']),
-			horasEncargado: extractPropertyValue(page.properties['Horas Encargado ']),
-			importeTotal: extractPropertyValue(page.properties['Importe total']),
-			urlPDF: extractPropertyValue(page.properties['URL PDF']),
-			enviadoCliente: extractPropertyValue(page.properties['Enviado a cliente']),
-			notas: extractPropertyValue(page.properties['Notas'])
-		}))
+    const partesTrabajo = data.results.map(page => ({
+      id: page.id,
+      nombre: extractPropertyValue(page.properties['Nombre']),
+      fecha: extractPropertyValue(page.properties['Fecha']),
+      estado: extractPropertyValue(page.properties['Estado']),
+      obra: extractPropertyValue(page.properties['AUX Obra']),
+      horasOficial1: extractPropertyValue(page.properties['Horas Oficial 1ª']),
+      horasOficial2: extractPropertyValue(page.properties['Horas Oficial 2ª ']),
+      horasCapataz: extractPropertyValue(page.properties['Horas Capataz']),
+      horasEncargado: extractPropertyValue(page.properties['Horas Encargado ']),
+      urlPDF: extractPropertyValue(page.properties['URL PDF']),
+      enviadoCliente: extractPropertyValue(page.properties['Enviado a cliente']),
+      notas: extractPropertyValue(page.properties['Notas'])
+    }))
 
 		res.json(partesTrabajo)
 	} catch (error) {
