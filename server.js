@@ -8,12 +8,18 @@ const { v4: uuidv4 } = require('uuid')
 const cors = require('cors')
 const axios = require('axios')
 const path = require('path')
+const mockStore = require('./mock/mockData')
 
 const app = express()
 const PORT = process.env.PORT || 3001
 
 // Configuración de Notion (sin fallback: exigir variable de entorno)
 const NOTION_TOKEN = process.env.NOTION_TOKEN
+const USE_MOCK_DATA = process.env.USE_MOCK_DATA === 'true' || (NOTION_TOKEN || '').toLowerCase() === 'mock' || !NOTION_TOKEN
+const PARTES_DATOS_WEBHOOK_URL = process.env.PARTES_DATOS_WEBHOOK_URL || process.env.PARTE_DATOS_WEBHOOK_URL || ''
+const PARTES_WEBHOOK_TIMEOUT_MS = Number(process.env.PARTES_WEBHOOK_TIMEOUT_MS || 10000)
+const PARTE_ESTADO_BORRADOR = 'borrador'
+const PARTE_ESTADO_DATOS_ENVIADOS = 'Datos Enviados'
 const NOTION_API = 'https://api.notion.com/v1'
 
 // Configuración de bases de datos corregida
@@ -64,11 +70,15 @@ app.use(express.static(path.join(__dirname, 'dist')))
 // Middleware de logging
 // (Se reemplaza el logging manual por morgan)
 
-// Verificar token al iniciar
-if (!NOTION_TOKEN) {
+// Verificar token al iniciar o activar modo mock
+if (!NOTION_TOKEN && !USE_MOCK_DATA) {
   console.error('ERROR: Falta la variable de entorno NOTION_TOKEN. Configure su token de Notion antes de iniciar el servidor.')
   // Finalizar proceso para evitar ejecutar sin credenciales válidas
   process.exit(1)
+}
+
+if (USE_MOCK_DATA) {
+  console.warn('⚠️  Ejecutando en modo MOCK: se utilizarán datos simulados para todas las peticiones.')
 }
 
 // Rate limiting para /api con valores configurables
@@ -218,8 +228,37 @@ const extractPropertyValue = (property) => {
 	}
 }
 
+const serializeNotionProperties = (properties = {}) => {
+  const serialized = {}
+  for (const [key, property] of Object.entries(properties)) {
+    serialized[key] = {
+      type: property?.type || null,
+      value: extractPropertyValue(property)
+    }
+  }
+  return serialized
+}
+
+const buildEstadoUpdatePayload = (estadoProperty, nuevoEstado) => {
+  const estadoNombre = String(nuevoEstado || '').trim()
+  if (!estadoNombre) {
+    throw new Error('Nombre de estado inválido')
+  }
+  const tipo = estadoProperty?.type
+  if (tipo === 'select') {
+    return { select: { name: estadoNombre } }
+  }
+  if (tipo === 'multi_select') {
+    return { multi_select: [{ name: estadoNombre }] }
+  }
+  return { status: { name: estadoNombre } }
+}
+
 // Función para hacer requests a Notion con manejo de errores
 const makeNotionRequest = async (method, endpoint, data = null) => {
+	if (USE_MOCK_DATA) {
+		throw new Error(`Notion API no disponible en modo mock: ${method} ${endpoint}`)
+	}
 	try {
 		const config = {
 			method,
@@ -261,16 +300,24 @@ const makeNotionRequest = async (method, endpoint, data = null) => {
 
 // Health check
 app.get('/api/health', (req, res) => {
+  if (USE_MOCK_DATA) {
+    return res.json({ ...mockStore.getHealthStatus(), mode: 'mock' })
+  }
 	res.json({ 
 		status: 'ok', 
 		timestamp: new Date().toISOString(),
-		notionToken: NOTION_TOKEN ? 'configured' : 'missing'
+		notionToken: NOTION_TOKEN ? 'configured' : 'missing',
+    mode: 'live'
 	})
 })
 
 // Obtener todas las obras
 app.get('/api/obras', async (req, res) => {
   try {
+    if (USE_MOCK_DATA) {
+      const obras = mockStore.getObras()
+      return res.json(obras)
+    }
     const cached = getCache('obras')
     if (cached) return res.json(cached)
 		const data = await makeNotionRequest('POST', `/databases/${DATABASES.OBRAS}/query`, {
@@ -298,6 +345,9 @@ app.get('/api/obras', async (req, res) => {
 // Obtener todos los jefes de obra
 app.get('/api/jefes-obra', async (req, res) => {
   try {
+    if (USE_MOCK_DATA) {
+      return res.json(mockStore.getJefesObra())
+    }
     const cached = getCache('jefes')
     if (cached) return res.json(cached)
 		const data = await makeNotionRequest('POST', `/databases/${DATABASES.JEFE_OBRAS}/query`, {
@@ -324,6 +374,9 @@ app.get('/api/jefes-obra', async (req, res) => {
 // Obtener todos los empleados
 app.get('/api/empleados', async (req, res) => {
   try {
+    if (USE_MOCK_DATA) {
+      return res.json(mockStore.getEmpleados())
+    }
     const cached = getCache('empleados')
     if (cached) return res.json(cached)
 		const data = await makeNotionRequest('POST', `/databases/${DATABASES.EMPLEADOS}/query`, {
@@ -356,6 +409,9 @@ app.get('/api/empleados', async (req, res) => {
 // Obtener opciones válidas de la propiedad Estado de empleados (dinámico desde Notion)
 app.get('/api/empleados/estado-opciones', async (req, res) => {
     try {
+        if (USE_MOCK_DATA) {
+            return res.json(mockStore.getEstadoOpciones())
+        }
         const db = await makeNotionRequest('GET', `/databases/${DATABASES.EMPLEADOS}`)
         const prop = db.properties?.['Estado']
         if (!prop) {
@@ -390,6 +446,15 @@ app.put('/api/empleados/:empleadoId/estado', async (req, res) => {
 
         if (!estado || typeof estado !== 'string') {
             return res.status(400).json({ error: 'Parámetro "estado" requerido' })
+        }
+
+        if (USE_MOCK_DATA) {
+            try {
+                const empleado = mockStore.updateEmpleadoEstado(empleadoId, estado)
+                return res.json({ ok: true, empleadoId: empleado.id, estado: empleado.estado })
+            } catch (error) {
+                return res.status(404).json({ error: error.message })
+            }
         }
 
         // Obtener la página del empleado para detectar el tipo de la propiedad Estado
@@ -427,6 +492,10 @@ app.put('/api/empleados/:empleadoId/estado', async (req, res) => {
 app.get('/api/obras/:obraId/empleados', async (req, res) => {
 	try {
 		const { obraId } = req.params
+
+    if (USE_MOCK_DATA) {
+      return res.json(mockStore.getEmpleadosPorObra(obraId))
+    }
 
 		// Obtener la obra específica para ver sus empleados relacionados
 		const obraData = await makeNotionRequest('GET', `/pages/${obraId}`)
@@ -474,6 +543,9 @@ app.get('/api/obras/:obraId/empleados', async (req, res) => {
 // Obtener todos los partes de trabajo
 app.get('/api/partes-trabajo', async (req, res) => {
   try {
+		if (USE_MOCK_DATA) {
+			return res.json(mockStore.getPartesTrabajo())
+		}
 		const data = await makeNotionRequest('POST', `/databases/${DATABASES.PARTES_TRABAJO}/query`, {
 			page_size: 100,
 			sorts: [
@@ -521,6 +593,26 @@ app.post('/api/partes-trabajo', async (req, res) => {
 				error: 'Faltan campos requeridos',
 				required: ['obra', 'obraId', 'fecha', 'jefeObraId']
 			})
+		}
+
+		if (USE_MOCK_DATA) {
+			try {
+				const parte = mockStore.createParteTrabajo({
+					obra,
+					obraId,
+					fecha,
+					jefeObraId,
+					notas,
+					empleados,
+					empleadosHoras
+				})
+				return res.json(parte)
+			} catch (error) {
+				return res.status(400).json({
+					error: 'Error al crear parte de trabajo',
+					details: error.message
+				})
+			}
 		}
 
 		// Crear el parte de trabajo
@@ -647,6 +739,10 @@ app.get('/api/partes-trabajo/:parteId/empleados', async (req, res) => {
   try {
     const { parteId } = req.params
 
+		if (USE_MOCK_DATA) {
+			return res.json(mockStore.getDetallesEmpleados(parteId))
+		}
+
 		// Obtener detalles de horas para este parte
 		const data = await makeNotionRequest('POST', `/databases/${DATABASES.DETALLES_HORA}/query`, {
 			filter: {
@@ -682,6 +778,14 @@ app.get('/api/partes-trabajo/:parteId/empleados', async (req, res) => {
 app.get('/api/partes-trabajo/:parteId/detalles', async (req, res) => {
 	try {
 		const { parteId } = req.params
+
+		if (USE_MOCK_DATA) {
+			try {
+				return res.json(mockStore.getParteDetallesCompletos(parteId))
+			} catch (error) {
+				return res.status(404).json({ error: error.message })
+			}
+		}
 
 		// Obtener el parte específico
     const parteData = await makeNotionRequest('GET', `/pages/${parteId}`)
@@ -736,6 +840,13 @@ app.get('/api/partes-trabajo/:parteId/detalles', async (req, res) => {
 app.get('/api/partes-trabajo/:parteId/estado', async (req, res) => {
   try {
     const { parteId } = req.params
+    if (USE_MOCK_DATA) {
+      try {
+        return res.json(mockStore.getParteEstado(parteId))
+      } catch (error) {
+        return res.status(404).json({ error: error.message })
+      }
+    }
     const parteData = await makeNotionRequest('GET', `/pages/${parteId}`)
     res.json({
       estado: extractPropertyValue(parteData.properties['Estado']),
@@ -761,6 +872,25 @@ app.get('/api/partes-trabajo/:parteId/estado/stream', async (req, res) => {
 
   let lastEstado = null
   let lastEdit = null
+
+  if (USE_MOCK_DATA) {
+    try {
+      const snapshot = mockStore.getParteEstado(parteId)
+      res.write(`data: ${JSON.stringify(snapshot)}\n\n`)
+    } catch (error) {
+      res.write(`event: error\ndata: ${JSON.stringify({ message: error.message })}\n\n`)
+    }
+
+    const interval = setInterval(() => {
+      if (closed) {
+        clearInterval(interval)
+        return
+      }
+      res.write(': heartbeat\n\n')
+    }, 5000)
+
+    return
+  }
 
   const send = (obj) => {
     res.write(`data: ${JSON.stringify(obj)}\n\n`)
@@ -796,6 +926,111 @@ app.get('/api/partes-trabajo/:parteId/estado/stream', async (req, res) => {
     await poll()
   }, 5000)
 })
+app.post('/api/partes-trabajo/:parteId/enviar-datos', async (req, res) => {
+  if (!PARTES_DATOS_WEBHOOK_URL) {
+    return res.status(500).json({ error: 'Webhook no configurado. Defina PARTES_DATOS_WEBHOOK_URL en el entorno.' })
+  }
+
+  const { parteId } = req.params
+  if (!parteId) {
+    return res.status(400).json({ error: 'ID de parte requerido' })
+  }
+
+  if (USE_MOCK_DATA) {
+    try {
+      const resultado = mockStore.sendParteDatos(parteId)
+      return res.json({
+        status: 'ok',
+        parteId,
+        nuevoEstado: resultado.parte.estado,
+        modo: 'mock'
+      })
+    } catch (error) {
+      const status = error.code === 'NOT_FOUND' ? 404 : error.code === 'INVALID_STATE' ? 409 : 400
+      return res.status(status).json({
+        error: error.message,
+        estado: error.meta?.estado
+      })
+    }
+  }
+
+  let parteData
+  try {
+    parteData = await makeNotionRequest('GET', `/pages/${parteId}`)
+  } catch (error) {
+    console.error('Error al recuperar parte antes de enviar datos:', {
+      message: error.message,
+      status: error.response?.status
+    })
+    const status = error.response?.status === 404 ? 404 : 500
+    return res.status(status).json({
+      error: 'No se pudo recuperar el parte desde Notion',
+      details: error.response?.data?.message || error.message
+    })
+  }
+
+  if (!parteData || !parteData.properties) {
+    return res.status(404).json({ error: 'Parte no encontrado en Notion' })
+  }
+
+  const estadoActual = extractPropertyValue(parteData.properties['Estado']) || ''
+  if (String(estadoActual).toLowerCase() !== PARTE_ESTADO_BORRADOR) {
+    return res.status(409).json({
+      error: 'Solo los partes en estado Borrador pueden enviarse',
+      estado: estadoActual
+    })
+  }
+
+  const serializedProperties = serializeNotionProperties(parteData.properties)
+  const payload = {
+    parteId,
+    properties: serializedProperties,
+    metadata: {
+      notionId: parteData.id,
+      createdTime: parteData.created_time,
+      lastEditedTime: parteData.last_edited_time,
+      triggeredAt: new Date().toISOString()
+    }
+  }
+
+  try {
+    await axios.post(PARTES_DATOS_WEBHOOK_URL, payload, {
+      timeout: PARTES_WEBHOOK_TIMEOUT_MS
+    })
+  } catch (error) {
+    console.error('Error al invocar el webhook de partes:', {
+      message: error.message,
+      status: error.response?.status
+    })
+    return res.status(error.response?.status || 502).json({
+      error: 'No se pudo enviar los datos al webhook configurado',
+      details: error.response?.data?.error || error.response?.data?.message || error.message
+    })
+  }
+
+  try {
+    await makeNotionRequest('PATCH', `/pages/${parteId}`, {
+      properties: {
+        'Estado': buildEstadoUpdatePayload(parteData.properties['Estado'], PARTE_ESTADO_DATOS_ENVIADOS)
+      }
+    })
+  } catch (error) {
+    console.error('Error al actualizar estado del parte tras enviar datos:', {
+      message: error.message,
+      status: error.response?.status
+    })
+    return res.status(500).json({
+      error: 'Datos enviados, pero falló la actualización del estado en Notion',
+      details: error.response?.data?.message || error.message
+    })
+  }
+
+  res.json({
+    status: 'ok',
+    parteId,
+    nuevoEstado: PARTE_ESTADO_DATOS_ENVIADOS
+  })
+})
 // Actualizar un parte de trabajo existente
 app.put('/api/partes-trabajo/:parteId', async (req, res) => {
 	try {
@@ -807,6 +1042,31 @@ app.put('/api/partes-trabajo/:parteId', async (req, res) => {
 				error: 'Faltan campos requeridos',
 				required: ['obraId', 'fecha', 'personaAutorizadaId']
 			})
+		}
+
+		if (USE_MOCK_DATA) {
+			try {
+				const parte = mockStore.updateParteTrabajo(parteId, {
+					obraId,
+					fecha,
+					personaAutorizadaId,
+					notas,
+					empleados,
+					empleadosHoras
+				})
+				return res.json(parte)
+			} catch (error) {
+				if (error.code === 'NOT_EDITABLE') {
+					return res.status(409).json({
+						error: error.message,
+						estado: error.meta?.estado
+					})
+				}
+				return res.status(400).json({
+					error: 'Error al actualizar parte de trabajo',
+					details: error.message
+				})
+			}
 		}
 
 		// Validar que el parte sea editable según su estado actual
@@ -980,6 +1240,14 @@ app.put('/api/partes-trabajo/:parteId', async (req, res) => {
 // Obtener datos completos
 app.get('/api/datos-completos', async (req, res) => {
 	try {
+		if (USE_MOCK_DATA) {
+			return res.json({
+				obras: mockStore.getObras(),
+				jefesObra: mockStore.getJefesObra(),
+				empleados: mockStore.getEmpleados(),
+				partesTrabajo: mockStore.getPartesTrabajo()
+			})
+		}
 		const [obrasRes, jefesObraRes, empleadosRes, partesTrabajoRes] = await Promise.all([
 			axios.get(`${req.protocol}://${req.get('host')}/api/obras`),
 			axios.get(`${req.protocol}://${req.get('host')}/api/jefes-obra`),
@@ -1013,4 +1281,7 @@ app.listen(PORT, () => {
 	console.log(`📊 API disponible en http://localhost:${PORT}/api`)
 	console.log(`🔍 Health check: http://localhost:${PORT}/api/health`)
 	console.log(`🔑 Token de Notion: ${NOTION_TOKEN ? 'Configurado' : 'FALTANTE'}`)
+  if (USE_MOCK_DATA) {
+    console.log('🧪 Modo datos simulados ACTIVO (USE_MOCK_DATA)')
+  }
 }) 

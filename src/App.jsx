@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react'
-import { Search, Plus, FileText, Calendar, Users, Building, Loader2, Wifi, WifiOff, Home, ArrowLeft, Clock, User } from 'lucide-react'
-import { getDatosCompletos, crearParteTrabajo, actualizarParteTrabajo, checkConnectivity, retryOperation, getDetallesEmpleados, getEmpleadosObra, getDetallesCompletosParte, actualizarEstadoEmpleado, getOpcionesEstadoEmpleados, getPartesTrabajo } from './services/notionService'
+import { Search, Plus, FileText, Calendar, Users, Building, Loader2, Wifi, WifiOff, Home, ArrowLeft, Clock, User, Send } from 'lucide-react'
+import { getDatosCompletos, crearParteTrabajo, actualizarParteTrabajo, checkConnectivity, retryOperation, getDetallesEmpleados, getEmpleadosObra, getDetallesCompletosParte, actualizarEstadoEmpleado, getOpcionesEstadoEmpleados, getPartesTrabajo, enviarDatosParte } from './services/notionService'
 import './App.css'
 
 function App() {
@@ -103,6 +103,17 @@ function App() {
 		}
 	}
 
+	const refrescarPartes = async () => {
+		try {
+			const partes = await getPartesTrabajo()
+			setDatos(prev => ({ ...prev, partesTrabajo: partes }))
+			return partes
+		} catch (error) {
+			console.error('Error al refrescar partes:', error)
+			throw error
+		}
+	}
+
 	const volverInicio = () => {
 		setActiveSection('main')
 	}
@@ -188,7 +199,7 @@ function App() {
 								{activeSection === 'main' ? (
 									<PantallaPrincipal onNavigate={setActiveSection} />
 								) : activeSection === 'consulta' ? (
-									<ConsultaPartes datos={datos} onVolver={() => setActiveSection('main')} estadoOptions={estadoOptions} />
+									<ConsultaPartes datos={datos} onVolver={() => setActiveSection('main')} estadoOptions={estadoOptions} onRefrescarPartes={refrescarPartes} />
 								) : activeSection === 'crear' ? (
 									<CrearParte datos={datos} estadoOptions={estadoOptions} onParteCreado={cargarDatos} onVolver={() => setActiveSection('main')} />
 								) : null}
@@ -241,7 +252,7 @@ function PantallaPrincipal({ onNavigate }) {
 }
 
 // Componente para consultar partes existentes
-function ConsultaPartes({ datos, onVolver, estadoOptions }) {
+function ConsultaPartes({ datos, onVolver, estadoOptions, onRefrescarPartes }) {
 	const [filtroObra, setFiltroObra] = useState('')
 	const [filtroFecha, setFiltroFecha] = useState('')
 	const [fechaInput, setFechaInput] = useState(new Date().toISOString().split('T')[0])
@@ -257,6 +268,7 @@ function ConsultaPartes({ datos, onVolver, estadoOptions }) {
     const [mensajeUI, setMensajeUI] = useState({ tipo: '', texto: '' })
 	// Estado local para reflejar selección de estado inmediatamente en UI
 	const [estadoLocal, setEstadoLocal] = useState({})
+    const [enviandoParteId, setEnviandoParteId] = useState(null)
 
 	// Mapea color de Notion a un color CSS visible
 	const mapNotionColorToHex = (color) => {
@@ -292,6 +304,8 @@ function ConsultaPartes({ datos, onVolver, estadoOptions }) {
 		const estadosNoEditables = ['firmado', 'datos enviados', 'enviado']
 		return !estadosNoEditables.includes(estado?.toLowerCase())
 	}
+
+	const esEstadoBorrador = (estado) => String(estado || '').toLowerCase() === 'borrador'
 
 	// Función para obtener el mensaje de estado no editable
 	const getMensajeEstadoNoEditable = (estado) => {
@@ -332,6 +346,40 @@ function ConsultaPartes({ datos, onVolver, estadoOptions }) {
 			return `${dia}-${mes}-${año} ${hora}:${minutos}`
 		} catch (error) {
 			return fecha
+		}
+	}
+
+	const handleEnviarDatos = async (parte) => {
+		if (!parte || enviandoParteId) return
+		setEnviandoParteId(parte.id)
+		try {
+			const resultado = await enviarDatosParte(parte.id)
+			setMensajeUI({ tipo: 'success', texto: 'Datos enviados correctamente al webhook.' })
+
+			let partesActualizados = null
+			if (typeof onRefrescarPartes === 'function') {
+				try {
+					partesActualizados = await onRefrescarPartes()
+				} catch (refreshError) {
+					console.error('Error al refrescar partes tras enviar datos:', refreshError)
+				}
+			}
+
+			const nuevoEstado = resultado?.nuevoEstado || 'Datos Enviados'
+			setParteSeleccionado((prev) => {
+				if (!prev || prev.id !== parte.id) return prev
+				const actualizado = partesActualizados?.find((p) => p.id === parte.id)
+				return {
+					...prev,
+					estado: nuevoEstado,
+					ultimaEdicion: actualizado?.ultimaEdicion || prev.ultimaEdicion
+				}
+			})
+		} catch (error) {
+			console.error('Error al enviar datos del parte:', error)
+			setMensajeUI({ tipo: 'error', texto: error.message || 'No se pudo enviar los datos del parte.' })
+		} finally {
+			setEnviandoParteId(null)
 		}
 	}
 
@@ -1124,6 +1172,25 @@ function ConsultaPartes({ datos, onVolver, estadoOptions }) {
 										Descargar PDF
 									</button>
 								)}
+								{esEstadoBorrador(parteSeleccionado.estado) && (
+									<button
+										className="btn btn-warning"
+										onClick={() => handleEnviarDatos(parteSeleccionado)}
+										disabled={enviandoParteId === parteSeleccionado.id}
+									>
+										{enviandoParteId === parteSeleccionado.id ? (
+											<>
+												<Loader2 size={18} className="spinner-inline" />
+												Enviando...
+											</>
+										) : (
+											<>
+												<Send size={18} />
+												Enviar Datos
+											</>
+										)}
+									</button>
+								)}
 								
 								{/* Botones de edición solo si el parte es editable */}
 								{puedeEditarParte(parteSeleccionado.estado) ? (
@@ -1261,6 +1328,25 @@ function ConsultaPartes({ datos, onVolver, estadoOptions }) {
 											{parte.urlPDF && (
 												<button className="btn btn-secondary" onClick={() => window.open(parte.urlPDF, '_blank')}>
 													Descargar PDF
+												</button>
+											)}
+											{esEstadoBorrador(parte.estado) && (
+												<button
+													className="btn btn-warning"
+													onClick={() => handleEnviarDatos(parte)}
+													disabled={enviandoParteId === parte.id}
+												>
+													{enviandoParteId === parte.id ? (
+														<>
+															<Loader2 size={18} className="spinner-inline" />
+															Enviando...
+														</>
+													) : (
+														<>
+															<Send size={18} />
+															Enviar Datos
+														</>
+													)}
 												</button>
 											)}
 											

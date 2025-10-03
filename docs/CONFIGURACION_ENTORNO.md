@@ -10,6 +10,9 @@ Este proyecto usa variables de entorno para credenciales y ajustes de runtime. E
 
 - `PORT`: Puerto de escucha del servidor (por defecto `3001`).
 - `ALLOWED_ORIGINS`: Lista separada por comas de orígenes permitidos para CORS (p. ej. `https://tudominio.com,https://app.tudominio.com`). Si no se define, en desarrollo se permite cualquier origen.
+- `USE_MOCK_DATA`: Activa el modo mock (valores `true/false`). Si es `true` o no hay `NOTION_TOKEN`, el backend usa datos locales y NO llama a Notion.
+- `PARTES_DATOS_WEBHOOK_URL`: URL a la que se enviarán los datos de un parte cuando se pulse "Enviar Datos".
+- `PARTES_WEBHOOK_TIMEOUT_MS`: Tiempo máximo de espera (ms) para el webhook (por defecto `10000`).
 - `RATE_LIMIT_WINDOW_MS`: Ventana de rate limit en milisegundos (por defecto `900000`, 15 min).
 - `RATE_LIMIT_MAX`: Máximo de peticiones por IP en cada ventana (por defecto `100`).
 

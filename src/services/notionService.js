@@ -207,6 +207,16 @@ export const getDetallesCompletosParte = async (parteId) => {
 	}
 }
 
+// Enviar datos de un parte al webhook y actualizar su estado
+export const enviarDatosParte = async (parteId) => {
+  try {
+    const response = await apiClient.post(`/api/partes-trabajo/${parteId}/enviar-datos`)
+    return response.data
+  } catch (error) {
+    handleApiError(error, 'enviar datos del parte')
+  }
+}
+
 // Crear un nuevo parte de trabajo
 export const crearParteTrabajo = async (datos) => {
 	try {
