@@ -958,6 +958,15 @@ body {
 	.empleado-horas-disponible {
 		align-self: stretch;
 	}
+	.empleado-estado-edicion {
+		width: 100%;
+		min-width: 0;
+		max-width: none;
+		padding: var(--spacing-sm);
+	}
+	.empleado-estado-edicion .form-select {
+		width: 100%;
+	}
 }
 
 /* Mejoras de accesibilidad */
@@ -1365,14 +1374,44 @@ body {
 /* Compactación de controles de estado de empleado */
 .empleado-estado-edicion {
   display: flex;
-  align-items: center;
-  gap: var(--spacing-sm);
-  flex-wrap: wrap;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: center;
+  gap: 6px;
+  padding: var(--spacing-xs) var(--spacing-sm);
+  background-color: rgba(15, 23, 42, 0.04);
+  border-radius: calc(var(--border-radius) - 2px);
+  min-width: 180px;
+  max-width: 220px;
+}
+
+.empleado-estado-edicion .horas-label {
+  min-width: 0;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  margin-bottom: 0;
 }
 
 .empleado-estado-edicion .form-select {
-  min-width: 220px;
+  width: 100%;
+  min-width: 0;
   max-width: 100%;
+  padding: 6px 12px;
+  font-size: 14px;
+  border-radius: 12px;
+}
+
+.empleado-estado-edicion .estado-empleado {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 9999px;
+  font-size: 11px;
+  letter-spacing: 0.05em;
 }
 
 /* Punto de color para estado */
@@ -1586,7 +1625,8 @@ body {
 .empleado-edicion-item {
 	display: flex;
 	justify-content: space-between;
-	align-items: center;
+	align-items: flex-start;
+	gap: var(--spacing-md);
 	padding: var(--spacing-md);
 	background-color: var(--surface-color);
 	border: 1px solid var(--border-color);
