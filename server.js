@@ -560,7 +560,8 @@ app.get('/api/partes-trabajo', async (req, res) => {
       horasEncargado: extractPropertyValue(page.properties['Horas Encargado ']),
       urlPDF: extractPropertyValue(page.properties['URL PDF']),
       enviadoCliente: extractPropertyValue(page.properties['Enviado a cliente']),
-      notas: extractPropertyValue(page.properties['Notas'])
+      notas: extractPropertyValue(page.properties['Notas']),
+      firmarUrl: extractPropertyValue(page.properties['Firmar'])
     }))
 
 		res.json(partesTrabajo)
@@ -813,7 +814,8 @@ app.get('/api/partes-trabajo/:parteId/detalles', async (req, res) => {
         estado: extractPropertyValue(parteData.properties['Estado']),
         ultimaEdicion: extractPropertyValue(parteData.properties['Última edición']),
         notas: extractPropertyValue(parteData.properties['Notas']),
-        personaAutorizada: personaAutorizada
+        personaAutorizada: personaAutorizada,
+        firmarUrl: extractPropertyValue(parteData.properties['Firmar'])
       },
       empleados: detallesEmpleados
     })

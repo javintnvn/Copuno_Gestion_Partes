@@ -102,7 +102,8 @@ const mockPartes = [
     horasEncargado: 2,
     urlPDF: '',
     enviadoCliente: false,
-    notas: 'Cableado planta 1'
+    notas: 'Cableado planta 1',
+    firmarUrl: 'https://mock.notion.local/firma/parte-1'
   },
   {
     id: 'parte-2',
@@ -121,9 +122,14 @@ const mockPartes = [
     horasEncargado: 1.5,
     urlPDF: '',
     enviadoCliente: true,
-    notas: 'Revisión preventiva completada'
+    notas: 'Revisión preventiva completada',
+    firmarUrl: 'https://mock.notion.local/firma/parte-2'
   }
 ]
+
+mockPartes.forEach(parte => {
+  parte.firmarUrl = parte.firmarUrl || buildFirmarUrl(parte)
+})
 
 const mockDetalles = [
   {
@@ -202,6 +208,12 @@ const mapEmpleado = (empleado) => ({
   obraId: empleado.obraId
 })
 
+const buildFirmarUrl = (parte) => {
+  const idParam = encodeURIComponent(parte?.id || '')
+  const obraParam = encodeURIComponent(parte?.obra || '')
+  return `https://www.copuno.com/es/notion/?parteId=${idParam}&obra=${obraParam}`
+}
+
 const mapParte = (parte) => ({
   id: parte.id,
   nombre: parte.nombre,
@@ -217,7 +229,8 @@ const mapParte = (parte) => ({
   horasEncargado: parte.horasEncargado,
   urlPDF: parte.urlPDF,
   enviadoCliente: parte.enviadoCliente,
-  notas: parte.notas
+  notas: parte.notas,
+  firmarUrl: parte.firmarUrl || buildFirmarUrl(parte)
 })
 
 const mapDetalle = (detalle) => ({
@@ -324,6 +337,14 @@ const createNotionLikePage = (parte) => ({
       button: {
         type: 'checked'
       }
+    },
+    'Firmar': {
+      id: 'mock-firmar',
+      type: 'formula',
+      formula: {
+        type: 'string',
+        string: parte.firmarUrl || buildFirmarUrl(parte)
+      }
     }
   },
   url: `https://mock.notion.local/${parte.id}`
@@ -383,7 +404,8 @@ const getParteDetallesCompletos = (parteId) => {
       estado: parte.estado,
       ultimaEdicion: parte.ultimaEdicion,
       notas: parte.notas,
-      personaAutorizada: parte.personaAutorizadaId
+      personaAutorizada: parte.personaAutorizadaId,
+      firmarUrl: parte.firmarUrl || buildFirmarUrl(parte)
     },
     empleados: getDetallesEmpleados(parteId)
   }
@@ -431,7 +453,8 @@ const createParteTrabajo = ({ obra, obraId, fecha, jefeObraId, notas, empleados 
     horasEncargado: 0,
     urlPDF: '',
     enviadoCliente: false,
-    notas: notas || ''
+    notas: notas || '',
+    firmarUrl: buildFirmarUrl({ id: parteId, obra: obra || obraInfo.nombre })
   }
 
   mockPartes.unshift(nuevoParte)
@@ -527,6 +550,7 @@ const updateParteTrabajo = (parteId, { obraId, fecha, personaAutorizadaId, notas
     detallesCreados.push(detalle)
   })
 
+  parte.firmarUrl = buildFirmarUrl(parte)
   recalculateHoras(parte)
 
   return {

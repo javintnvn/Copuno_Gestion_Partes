@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react'
-import { Search, Plus, FileText, Calendar, Users, Building, Loader2, Wifi, WifiOff, Home, ArrowLeft, Clock, User, Send } from 'lucide-react'
+import { Search, Plus, FileText, Calendar, Users, Building, Loader2, Wifi, WifiOff, Home, ArrowLeft, Clock, User, Send, PenSquare } from 'lucide-react'
 import { getDatosCompletos, crearParteTrabajo, actualizarParteTrabajo, checkConnectivity, retryOperation, getDetallesEmpleados, getEmpleadosObra, getDetallesCompletosParte, actualizarEstadoEmpleado, getOpcionesEstadoEmpleados, getPartesTrabajo, enviarDatosParte } from './services/notionService'
 import './App.css'
 
@@ -306,6 +306,8 @@ function ConsultaPartes({ datos, onVolver, estadoOptions, onRefrescarPartes }) {
 	}
 
 	const esEstadoBorrador = (estado) => String(estado || '').toLowerCase() === 'borrador'
+
+	const esEstadoListoFirmar = (estado) => String(estado || '').toLowerCase() === 'listo para firmar'
 
 	// Función para obtener el mensaje de estado no editable
 	const getMensajeEstadoNoEditable = (estado) => {
@@ -713,6 +715,11 @@ function ConsultaPartes({ datos, onVolver, estadoOptions, onRefrescarPartes }) {
 		} finally {
 			setLoadingDetalles(false)
 		}
+	}
+
+	const abrirFirma = (url) => {
+		if (!url) return
+		window.open(url, '_blank', 'noopener,noreferrer')
 	}
     // Cambiar estado de un empleado (permitido siempre excepto partes firmados)
     const cambiarEstadoEmpleado = async (empleadoId, nuevoEstado) => {
@@ -1172,6 +1179,15 @@ function ConsultaPartes({ datos, onVolver, estadoOptions, onRefrescarPartes }) {
 										Descargar PDF
 									</button>
 								)}
+								{esEstadoListoFirmar(parteSeleccionado.estado) && parteSeleccionado.firmarUrl && (
+									<button
+										className="btn btn-sign"
+										onClick={() => abrirFirma(parteSeleccionado.firmarUrl)}
+									>
+										<PenSquare size={20} />
+										Firmar ahora
+									</button>
+								)}
 								{esEstadoBorrador(parteSeleccionado.estado) && (
 									<button
 										className="btn btn-warning"
@@ -1328,6 +1344,15 @@ function ConsultaPartes({ datos, onVolver, estadoOptions, onRefrescarPartes }) {
 											{parte.urlPDF && (
 												<button className="btn btn-secondary" onClick={() => window.open(parte.urlPDF, '_blank')}>
 													Descargar PDF
+												</button>
+											)}
+											{esEstadoListoFirmar(parte.estado) && parte.firmarUrl && (
+												<button
+													className="btn btn-sign"
+													onClick={() => abrirFirma(parte.firmarUrl)}
+												>
+													<PenSquare size={18} />
+													Firmar
 												</button>
 											)}
 											{esEstadoBorrador(parte.estado) && (
