@@ -18,6 +18,8 @@ El proyecto **Copuno - Gestión de Partes** está en un estado **100% funcional*
 - ✅ **Interfaz moderna y elegante**
 - ✅ **Conectividad completa con Notion**
 - ✅ **API escalable y bien documentada**
+- ✅ **Webhook de envío de datos (Make) con fallback local**
+- ✅ **Botón de firma para partes “Listo para firmar”**
 
 ---
 
@@ -59,6 +61,7 @@ GET  /api/jefes-obra               # Lista de jefes
 GET  /api/partes-trabajo           # Lista de partes
 POST /api/partes-trabajo           # Crear parte
 PUT  /api/partes-trabajo/:id       # Editar parte ✅ NUEVO
+POST /api/partes-trabajo/:id/enviar-datos # Enviar datos al webhook ✅ NUEVO
 GET  /api/obras/:obraId/empleados  # Empleados de obra específica
 GET  /api/partes-trabajo/:parteId/detalles  # Detalles completos
 GET  /api/partes-trabajo/:parteId/empleados # Empleados de parte
@@ -86,6 +89,12 @@ GET  /api/partes-trabajo/:parteId/empleados # Empleados de parte
 - ✅ Gestión de empleados y horas
 - ✅ Control de errores avanzado
 
+#### **POST /api/partes-trabajo/:id/enviar-datos** ⭐ **NUEVO**
+- ✅ Serializa todas las propiedades del parte
+- ✅ Envía payload a `PARTES_DATOS_WEBHOOK_URL`
+- ✅ Cambia el estado a “Datos Enviados” tras éxito
+- ✅ Fallback local si el webhook no está configurado
+
 #### **GET /api/partes-trabajo/:id/detalles**
 - ✅ Información completa del parte
 - ✅ Empleados asignados con horas
@@ -106,7 +115,8 @@ GET  /api/partes-trabajo/:parteId/empleados # Empleados de parte
 - ✅ **Filtros avanzados** por obra y fecha
 - ✅ **Modal de detalles** con información completa
 - ✅ **Estados visuales** con badges de colores
-- ✅ **Botones de edición** contextuales
+- ✅ **Botones contextuales:** editar, enviar datos y firmar
+- ✅ **Acceso directo a firma cuando el estado es “Listo para firmar”**
 
 ### **Crear Partes**
 - ✅ **Formulario intuitivo** con validación
@@ -138,7 +148,8 @@ const estadosNoEditables = [
 const estadosEditables = [
     'borrador',
     'en revisión',
-    'pendiente'
+    'pendiente',
+    'listo para firmar'
 ];
 ```
 
@@ -184,6 +195,7 @@ const estadosEditables = [
 - getDetallesEmpleados()        # Empleados de parte
 - getEmpleadosObra()           # Empleados por obra
 - getDetallesCompletosParte()   # Detalles completos
+- enviarDatosParte()            # Enviar datos al webhook
 - checkConnectivity()           # Health check
 - retryOperation()              # Reintentos automáticos
 ```

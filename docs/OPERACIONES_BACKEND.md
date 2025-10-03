@@ -23,12 +23,14 @@ Este documento resume el estado actual del servidor, las decisiones técnicas, c
 - Reglas de negocio:
   - PUT de partes bloquea estados no editables: firmado, datos enviados, enviado.
   - Validación de horas por empleado [0–24].
+  - Estado “Listo para firmar” habilita CTA de firma y mantiene edición posible.
 
 ## Variables de Entorno
 Ver `docs/CONFIGURACION_ENTORNO.md` y `env.example`.
 - Relevantes nuevas:
   - `CACHE_TTL_MS` (opcional, TTL cache catálogos; por defecto 60000).
   - `RATE_LIMIT_WINDOW_MS`, `RATE_LIMIT_MAX` (rate limit).
+  - `PARTES_DATOS_WEBHOOK_URL` (webhook Make) + `PARTES_WEBHOOK_TIMEOUT_MS` (timeout opcional). Si falta la URL se simula y se loguea el payload.
   - El saneado económico está activado por defecto y no requiere configuración.
   - Frecuencias actuales (hardcode): SSE 5s; lista 30s. Se pueden parametrizar en el futuro si es necesario.
 
@@ -42,6 +44,7 @@ Ver `docs/CONFIGURACION_ENTORNO.md` y `env.example`.
   - `GET /api/health` → ok.
   - `GET /api/obras`/`empleados`/`jefes-obra` → datos (cacheados 60s).
   - `node scripts/test-notion-direct.js` (usa `.env`).
+  - `POST /api/partes-trabajo/:id/enviar-datos` (curl) para verificar el webhook; revisar `server.live.log` para ver `page_id`/`property_id` enviados y respuesta de Make.
 
 ## Decisiones y Racional
 - SPA + API desde Express: simplifica despliegue y evita CORS internos.
@@ -82,4 +85,4 @@ Ver `docs/CONFIGURACION_ENTORNO.md` y `env.example`.
 - `docs/CONFIGURACION_ENTORNO.md`: variables y rotación.
 
 ---
-Última actualización: request-id, helmet+compression y cache de catálogos aplicados.
+Última actualización: integración con webhook Make y botón de firma en partes “Listo para firmar”.
