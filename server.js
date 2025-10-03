@@ -18,6 +18,7 @@ const NOTION_TOKEN = process.env.NOTION_TOKEN
 const USE_MOCK_DATA = process.env.USE_MOCK_DATA === 'true' || (NOTION_TOKEN || '').toLowerCase() === 'mock' || !NOTION_TOKEN
 const PARTES_DATOS_WEBHOOK_URL = process.env.PARTES_DATOS_WEBHOOK_URL || process.env.PARTE_DATOS_WEBHOOK_URL || ''
 const PARTES_WEBHOOK_TIMEOUT_MS = Number(process.env.PARTES_WEBHOOK_TIMEOUT_MS || 10000)
+const PARTES_WEBHOOK_CONFIGURED = Boolean(PARTES_DATOS_WEBHOOK_URL)
 const PARTE_ESTADO_BORRADOR = 'borrador'
 const PARTE_ESTADO_DATOS_ENVIADOS = 'Datos Enviados'
 const NOTION_API = 'https://api.notion.com/v1'
@@ -927,10 +928,6 @@ app.get('/api/partes-trabajo/:parteId/estado/stream', async (req, res) => {
   }, 5000)
 })
 app.post('/api/partes-trabajo/:parteId/enviar-datos', async (req, res) => {
-  if (!PARTES_DATOS_WEBHOOK_URL) {
-    return res.status(500).json({ error: 'Webhook no configurado. Defina PARTES_DATOS_WEBHOOK_URL en el entorno.' })
-  }
-
   const { parteId } = req.params
   if (!parteId) {
     return res.status(400).json({ error: 'ID de parte requerido' })
@@ -993,19 +990,24 @@ app.post('/api/partes-trabajo/:parteId/enviar-datos', async (req, res) => {
     }
   }
 
-  try {
-    await axios.post(PARTES_DATOS_WEBHOOK_URL, payload, {
-      timeout: PARTES_WEBHOOK_TIMEOUT_MS
-    })
-  } catch (error) {
-    console.error('Error al invocar el webhook de partes:', {
-      message: error.message,
-      status: error.response?.status
-    })
-    return res.status(error.response?.status || 502).json({
-      error: 'No se pudo enviar los datos al webhook configurado',
-      details: error.response?.data?.error || error.response?.data?.message || error.message
-    })
+  if (PARTES_WEBHOOK_CONFIGURED) {
+    try {
+      await axios.post(PARTES_DATOS_WEBHOOK_URL, payload, {
+        timeout: PARTES_WEBHOOK_TIMEOUT_MS
+      })
+    } catch (error) {
+      console.error('Error al invocar el webhook de partes:', {
+        message: error.message,
+        status: error.response?.status
+      })
+      return res.status(error.response?.status || 502).json({
+        error: 'No se pudo enviar los datos al webhook configurado',
+        details: error.response?.data?.error || error.response?.data?.message || error.message
+      })
+    }
+  } else {
+    console.warn('Webhook no configurado. Registrando payload localmente para diagnóstico.')
+    console.info('Payload parte enviado (simulado):', JSON.stringify(payload, null, 2))
   }
 
   try {
@@ -1028,7 +1030,8 @@ app.post('/api/partes-trabajo/:parteId/enviar-datos', async (req, res) => {
   res.json({
     status: 'ok',
     parteId,
-    nuevoEstado: PARTE_ESTADO_DATOS_ENVIADOS
+    nuevoEstado: PARTE_ESTADO_DATOS_ENVIADOS,
+    modo: PARTES_WEBHOOK_CONFIGURED ? 'webhook' : 'simulado'
   })
 })
 // Actualizar un parte de trabajo existente

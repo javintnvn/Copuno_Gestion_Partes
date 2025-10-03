@@ -67,6 +67,7 @@ NOTION_TOKEN=YOUR_NOTION_TOKEN
 # PARTES_DATOS_WEBHOOK_URL=https://tuwebhook.com/evento  # URL para "Enviar Datos"
 # PARTES_WEBHOOK_TIMEOUT_MS=10000                         # (opcional) timeout en ms
 ```
+Si no configuras `PARTES_DATOS_WEBHOOK_URL`, el backend simula el envío y deja un log con el payload para permitir pruebas locales.
 La carga de `.env` es automática (dotenv). Más detalles en `docs/CONFIGURACION_ENTORNO.md`.
 
 4. **Construir la aplicación:**
