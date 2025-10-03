@@ -220,27 +220,6 @@ const mapParte = (parte) => ({
   notas: parte.notas
 })
 
-const serializeParteProperties = (parte) => ({
-  Nombre: parte.nombre,
-  Fecha: parte.fecha,
-  Estado: parte.estado,
-  'Última edición': parte.ultimaEdicion,
-  Obra: parte.obra,
-  ObraId: parte.obraId,
-  PersonaAutorizada: parte.personaAutorizada,
-  PersonaAutorizadaId: parte.personaAutorizadaId,
-  Notas: parte.notas,
-  URLPDF: parte.urlPDF,
-  EnviadoCliente: parte.enviadoCliente,
-  Horas: {
-    total: parte.rpHorasTotales,
-    oficial1: parte.horasOficial1,
-    oficial2: parte.horasOficial2,
-    capataz: parte.horasCapataz,
-    encargado: parte.horasEncargado
-  }
-})
-
 const mapDetalle = (detalle) => ({
   id: detalle.id,
   empleadoId: detalle.empleadoId,
@@ -275,41 +254,79 @@ const recalculateHoras = (parte) => {
 }
 
 const createNotionLikePage = (parte) => ({
-  id: parte.id,
   object: 'page',
+  id: parte.id,
+  created_time: parte.fecha || new Date().toISOString(),
+  last_edited_time: parte.ultimaEdicion || new Date().toISOString(),
+  parent: {
+    type: 'database_id',
+    database_id: 'mock-database'
+  },
+  archived: false,
   properties: {
-    Nombre: {
+    'Nombre': {
+      id: 'title',
+      type: 'title',
       title: [
         {
+          type: 'text',
+          text: { content: parte.nombre },
           plain_text: parte.nombre
         }
       ]
     },
-    Fecha: {
+    'Fecha': {
+      id: 'mock-fecha',
+      type: 'date',
       date: {
-        start: parte.fecha
+        start: parte.fecha || new Date().toISOString(),
+        end: null,
+        time_zone: null
       }
     },
-    Estado: {
+    'Estado': {
+      id: 'mock-estado',
+      type: 'status',
       status: {
-        name: parte.estado
+        id: 'mock-status',
+        name: parte.estado || 'Borrador',
+        color: 'blue'
       }
     },
-    'Última edición': {
-      date: {
-        start: parte.ultimaEdicion
-      }
-    },
-    Notas: {
+    'Notas': {
+      id: 'mock-notas',
+      type: 'rich_text',
       rich_text: parte.notas
         ? [
             {
+              type: 'text',
+              text: { content: parte.notas },
               plain_text: parte.notas
             }
           ]
         : []
+    },
+    'Obras': {
+      id: 'mock-obras',
+      type: 'relation',
+      relation: parte.obraId ? [{ id: parte.obraId }] : [],
+      has_more: false
+    },
+    'Persona Autorizada': {
+      id: 'mock-persona-autorizada',
+      type: 'relation',
+      relation: parte.personaAutorizadaId ? [{ id: parte.personaAutorizadaId }] : [],
+      has_more: false
+    },
+    'Enviar Datos': {
+      id: 'mock-enviar-datos',
+      type: 'button',
+      button: {
+        type: 'checked'
+      }
     }
-  }
+  },
+  url: `https://mock.notion.local/${parte.id}`
 })
 
 const getHealthStatus = () => ({
@@ -537,13 +554,21 @@ const sendParteDatos = (parteId) => {
     throw error
   }
 
+  const data = createNotionLikePage(parte)
+  const buttonEntry = data.properties?.['Enviar Datos'] || null
   const payload = {
     parteId,
-    properties: serializeParteProperties(parte),
-    metadata: {
-      sentAt: new Date().toISOString(),
+    notionPageId: parte.id,
+    page_id: parte.id,
+    property_id: buttonEntry?.id || null,
+    property_name: 'Enviar Datos',
+    source: {
+      type: 'copuno-app',
+      action: 'enviar-datos',
+      triggeredAt: new Date().toISOString(),
       mode: 'mock'
-    }
+    },
+    data
   }
 
   parte.estado = 'Datos Enviados'

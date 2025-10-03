@@ -229,17 +229,6 @@ const extractPropertyValue = (property) => {
 	}
 }
 
-const serializeNotionProperties = (properties = {}) => {
-  const serialized = {}
-  for (const [key, property] of Object.entries(properties)) {
-    serialized[key] = {
-      type: property?.type || null,
-      value: extractPropertyValue(property)
-    }
-  }
-  return serialized
-}
-
 const buildEstadoUpdatePayload = (estadoProperty, nuevoEstado) => {
   const estadoNombre = String(nuevoEstado || '').trim()
   if (!estadoNombre) {
@@ -978,20 +967,34 @@ app.post('/api/partes-trabajo/:parteId/enviar-datos', async (req, res) => {
     })
   }
 
-  const serializedProperties = serializeNotionProperties(parteData.properties)
+  const buttonEntries = Object.entries(parteData.properties || {}).filter(([, prop]) => prop?.type === 'button')
+  const safeButton = buttonEntries.find(([, prop]) => prop?.button?.type === 'checked') || buttonEntries[0] || []
+  const [buttonName, buttonProperty] = safeButton
   const payload = {
     parteId,
-    properties: serializedProperties,
-    metadata: {
-      notionId: parteData.id,
-      createdTime: parteData.created_time,
-      lastEditedTime: parteData.last_edited_time,
+    notionPageId: parteData.id,
+    page_id: parteData.id,
+    property_id: buttonProperty?.id || null,
+    property_name: buttonName || null,
+    source: {
+      type: 'copuno-app',
+      action: 'enviar-datos',
       triggeredAt: new Date().toISOString()
+    },
+    data: {
+      ...parteData,
+      // asegurar copia superficial para evitar mutaciones accidentales
+      properties: { ...parteData.properties }
     }
   }
 
   if (PARTES_WEBHOOK_CONFIGURED) {
     try {
+      console.info('[Webhook] Enviando payload partes:', JSON.stringify({
+        page_id: payload.page_id,
+        property_id: payload.property_id,
+        property_name: payload.property_name
+      }))
       await axios.post(PARTES_DATOS_WEBHOOK_URL, payload, {
         timeout: PARTES_WEBHOOK_TIMEOUT_MS
       })
@@ -1000,6 +1003,9 @@ app.post('/api/partes-trabajo/:parteId/enviar-datos', async (req, res) => {
         message: error.message,
         status: error.response?.status
       })
+      if (error.response?.data) {
+        console.error('Respuesta recibida del webhook:', error.response.data)
+      }
       return res.status(error.response?.status || 502).json({
         error: 'No se pudo enviar los datos al webhook configurado',
         details: error.response?.data?.error || error.response?.data?.message || error.message
