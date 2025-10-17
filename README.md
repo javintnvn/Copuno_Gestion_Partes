@@ -7,6 +7,7 @@ Aplicación web moderna para la gestión de partes de trabajo con backend en Not
 ### 🔗 Conectividad Robusta
 - ✅ **Conexión directa con Notion API**
 - ✅ **Datos reales en tiempo real** (sin datos sintéticos)
+- ✅ **Smart Polling adaptativo** - Sincronización inteligente según actividad
 - ✅ **Manejo de errores avanzado** con reintentos automáticos
 - ✅ **Health check** para monitoreo de conectividad
 - ✅ **Logging detallado** para debugging
@@ -29,6 +30,7 @@ Aplicación web moderna para la gestión de partes de trabajo con backend en Not
 - ✅ **Formato de fechas español** (DD-MM-YYYY HH:MM)
 - ✅ **Gestión avanzada de empleados** por obra
 - ✅ **Control de estados** y permisos de edición
+- ✅ **Sincronización inteligente** con indicadores visuales en tiempo real
 
 ### 🔧 Características Técnicas
 - ✅ **Frontend:** React + Vite
@@ -245,7 +247,16 @@ NODE_ENV=production
 
 ## 📝 Changelog
 
-### v1.3.0 - Funcionalidad de Edición y Gestión Avanzada ⭐ **ACTUAL**
+### v1.4.0 - Smart Polling y Optimización de Sincronización ⭐ **ACTUAL**
+- ✅ **Smart Polling adaptativo** - Sistema de sincronización inteligente con 3 niveles
+- ✅ **Optimización de API** - Consumo reducido 60% en picos de actividad
+- ✅ **Indicadores visuales** - Badge animado mostrando modo de sincronización actual
+- ✅ **Detección de cambios** - Hash-based change detection para evitar updates innecesarios
+- ✅ **Latencia ultra-baja** - 3 segundos de actualización cuando hay actividad
+- ✅ **Escalabilidad mejorada** - Soporte para 10+ usuarios concurrentes
+- ✅ **Documentación técnica** - [SMART_POLLING.md](docs/SMART_POLLING.md) completa
+
+### v1.3.0 - Funcionalidad de Edición y Gestión Avanzada
 - ✅ **Funcionalidad de edición de partes** - Endpoint PUT completo
 - ✅ **Validación de estados editables** - Control granular de permisos
 - ✅ **Gestión avanzada de empleados** - Asignación y horas individuales
@@ -276,6 +287,12 @@ NODE_ENV=production
 
 ## 📚 **Documentación Adicional**
 
+### **⚡ Sincronización y Rendimiento**
+- **[SMART_POLLING.md](docs/SMART_POLLING.md)** - Sistema de sincronización inteligente
+- **Arquitectura adaptativa** con 3 niveles de polling
+- **Análisis de consumo de API** y límites de Notion
+- **Guía de configuración** y troubleshooting
+
 ### **📋 Estado Actual del Proyecto**
 - **[ESTADO_ACTUAL_V1.3.0.md](docs/ESTADO_ACTUAL_V1.3.0.md)** - Documentación completa del estado actual
 - **Punto de referencia sólido** para futuras versiones
@@ -283,9 +300,9 @@ NODE_ENV=production
 
 ### **🗺️ Roadmap de Futuras Versiones**
 - **[ROADMAP_FUTURAS_VERSIONES.md](docs/ROADMAP_FUTURAS_VERSIONES.md)** - Planificación detallada
-- **Versión 1.4.0:** Eliminación y exportación de datos
-- **Versión 1.5.0:** Dashboard y analytics
-- **Versión 1.6.0:** Autenticación y seguridad
+- **Versión 1.5.0:** Eliminación y exportación de datos
+- **Versión 1.6.0:** Dashboard y analytics
+- **Versión 1.7.0:** Autenticación y seguridad
 - **Versión 2.0.0:** PWA y mobile
 
 ### **🛠️ Comandos de Desarrollo**

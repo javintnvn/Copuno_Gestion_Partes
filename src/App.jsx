@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react'
-import { Search, Plus, FileText, Calendar, Users, Building, Loader2, Wifi, WifiOff, Home, ArrowLeft, Clock, User, Send, PenSquare } from 'lucide-react'
+import { Search, Plus, FileText, Calendar, Users, Building, Loader2, Wifi, WifiOff, Home, ArrowLeft, Clock, User, Send, PenSquare, RefreshCw } from 'lucide-react'
 import { getDatosCompletos, crearParteTrabajo, actualizarParteTrabajo, checkConnectivity, retryOperation, getDetallesEmpleados, getEmpleadosObra, getDetallesCompletosParte, actualizarEstadoEmpleado, getOpcionesEstadoEmpleados, getPartesTrabajo, enviarDatosParte } from './services/notionService'
 import './App.css'
 
@@ -15,20 +15,69 @@ function App() {
 	const [error, setError] = useState(null)
 	const [connectivity, setConnectivity] = useState({ status: 'checking', message: '' })
 	const [estadoOptions, setEstadoOptions] = useState({ type: 'status', options: [] })
+	const [syncMode, setSyncMode] = useState('rápido') // Estado del modo de sincronización
+	const [refrescando, setRefrescando] = useState(false) // Estado para el botón de refrescar
+	const [mostrarInfoSync, setMostrarInfoSync] = useState(false) // Estado para el popup de info de sincronización
 
-    // Cargar datos de Notion al iniciar la aplicación
+    // Smart Polling: ajusta frecuencia según actividad
     const partesPollRef = useRef(null)
+    const lastParteChangeRef = useRef(Date.now())
+    const currentPollIntervalRef = useRef(3000) // Empezar en modo rápido
+    const lastPartesHashRef = useRef('')
+
+    const getSmartPollInterval = () => {
+        const timeSinceChange = Date.now() - lastParteChangeRef.current
+        if (timeSinceChange < 30000) {
+            setSyncMode('rápido')
+            return 3000 // Modo rápido: cambios recientes (<30s)
+        }
+        if (timeSinceChange < 120000) {
+            setSyncMode('normal')
+            return 8000 // Modo normal: sin cambios <2min
+        }
+        setSyncMode('lento')
+        return 15000 // Modo lento: sin cambios >2min
+    }
+
+    const hashPartes = (partes) => {
+        // Hash simple basado en IDs, estados y última edición
+        return partes.map(p => `${p.id}-${p.estado}-${p.ultimaEdicion}`).join('|')
+    }
+
     const startPartesPolling = () => {
         if (partesPollRef.current) return
-        partesPollRef.current = setInterval(async () => {
+
+        const poll = async () => {
             try {
-                // Evitar refresh de lista mientras se edita un parte
                 if (editandoParte) return
+
                 const partes = await getPartesTrabajo()
-                setDatos(prev => ({ ...prev, partesTrabajo: partes }))
+                const newHash = hashPartes(partes)
+
+                // Detectar cambios
+                if (newHash !== lastPartesHashRef.current) {
+                    lastPartesHashRef.current = newHash
+                    lastParteChangeRef.current = Date.now()
+                    setDatos(prev => ({ ...prev, partesTrabajo: partes }))
+                } else {
+                    // Sin cambios, solo actualizar datos
+                    setDatos(prev => ({ ...prev, partesTrabajo: partes }))
+                }
+
+                // Ajustar intervalo si cambió
+                const newInterval = getSmartPollInterval()
+                if (newInterval !== currentPollIntervalRef.current) {
+                    currentPollIntervalRef.current = newInterval
+                    stopPartesPolling()
+                    startPartesPolling()
+                }
             } catch (e) { /* noop */ }
-        }, 30000)
+        }
+
+        poll() // Primera ejecución inmediata
+        partesPollRef.current = setInterval(poll, currentPollIntervalRef.current)
     }
+
     const stopPartesPolling = () => {
         if (partesPollRef.current) {
             clearInterval(partesPollRef.current)
@@ -36,24 +85,79 @@ function App() {
         }
     }
 
+    // Smart Polling para opciones de estado
+    const estadoOptionsPollRef = useRef(null)
+    const lastEstadoChangeRef = useRef(Date.now())
+    const lastEstadoHashRef = useRef('')
+
+    const hashEstadoOptions = (opts) => {
+        return JSON.stringify(opts?.options?.map(o => o.name) || [])
+    }
+
+    const startEstadoPolling = () => {
+        if (estadoOptionsPollRef.current) return
+
+        const poll = async () => {
+            try {
+                const opts = await getOpcionesEstadoEmpleados()
+                const newHash = hashEstadoOptions(opts)
+
+                if (newHash !== lastEstadoHashRef.current) {
+                    lastEstadoHashRef.current = newHash
+                    lastEstadoChangeRef.current = Date.now()
+                    setEstadoOptions(opts || { type: 'status', options: [] })
+                }
+
+                // Ajustar intervalo basado en actividad
+                const timeSinceChange = Date.now() - lastEstadoChangeRef.current
+                let newInterval = timeSinceChange < 60000 ? 10000 : 30000 // 10s si cambios recientes, 30s si no
+
+                if (estadoOptionsPollRef.current) {
+                    clearInterval(estadoOptionsPollRef.current)
+                    estadoOptionsPollRef.current = setInterval(poll, newInterval)
+                }
+            } catch (e) {
+                setEstadoOptions({ type: 'status', options: [] })
+            }
+        }
+
+        poll()
+        estadoOptionsPollRef.current = setInterval(poll, 10000)
+    }
+
+    const stopEstadoPolling = () => {
+        if (estadoOptionsPollRef.current) {
+            clearInterval(estadoOptionsPollRef.current)
+            estadoOptionsPollRef.current = null
+        }
+    }
+
     useEffect(() => {
         cargarDatos()
         cargarOpcionesEstado()
-        const id = setInterval(() => cargarOpcionesEstado(), 60000)
+        startEstadoPolling()
         startPartesPolling()
+
         const onVis = () => {
             if (document.visibilityState === 'hidden') {
                 stopPartesPolling()
+                stopEstadoPolling()
                 // cerrar stream si está abierto
                 if (estadoStreamRef.current) { estadoStreamRef.current.close(); estadoStreamRef.current = null }
             } else {
                 // refresco inmediato al volver y reanudar
                 getPartesTrabajo().then(partes => setDatos(prev => ({ ...prev, partesTrabajo: partes }))).catch(()=>{})
+                cargarOpcionesEstado()
                 startPartesPolling()
+                startEstadoPolling()
             }
         }
         document.addEventListener('visibilitychange', onVis)
-        return () => { clearInterval(id); stopPartesPolling(); document.removeEventListener('visibilitychange', onVis) }
+        return () => {
+            stopPartesPolling()
+            stopEstadoPolling()
+            document.removeEventListener('visibilitychange', onVis)
+        }
     }, [])
 
 	const cargarOpcionesEstado = async () => {
@@ -114,6 +218,43 @@ function App() {
 		}
 	}
 
+	const refrescarTodosDatos = async () => {
+		try {
+			setRefrescando(true)
+			setError(null)
+
+			// Verificar conectividad
+			const connectivityCheck = await checkConnectivity()
+			setConnectivity({
+				status: connectivityCheck.status,
+				message: connectivityCheck.status === 'ok' ? 'Conectado' : connectivityCheck.message
+			})
+
+			if (connectivityCheck.status === 'error') {
+				throw new Error(`Problema de conectividad: ${connectivityCheck.message}`)
+			}
+
+			// Cargar todos los datos
+			const datosCompletos = await retryOperation(async () => {
+				return await getDatosCompletos()
+			}, 3, 1000)
+
+			setDatos(datosCompletos)
+			setConnectivity({ status: 'ok', message: 'Conectado' })
+
+			// También refrescar opciones de estado
+			await cargarOpcionesEstado()
+
+			console.log('✅ Datos refrescados correctamente')
+		} catch (err) {
+			console.error('Error al refrescar datos:', err)
+			setError(err.message)
+			setConnectivity({ status: 'error', message: err.message })
+		} finally {
+			setRefrescando(false)
+		}
+	}
+
 	const volverInicio = () => {
 		setActiveSection('main')
 	}
@@ -131,22 +272,45 @@ function App() {
 						</button>
 						<div className="header-info">
 							<h2 className="app-title">Gestión de Partes</h2>
-							<div className={`connectivity-status ${connectivity.status}`}>
-								{connectivity.status === 'ok' ? (
-									<>
-										<Wifi size={14} />
-										<span>{connectivity.message}</span>
-									</>
-								) : connectivity.status === 'error' ? (
-									<>
-										<WifiOff size={14} />
-										<span>{connectivity.message}</span>
-									</>
-								) : (
-									<>
-										<Loader2 size={14} className="loading-spinner" />
-										<span>{connectivity.message}</span>
-									</>
+							<div className="header-status-row">
+								<div className={`connectivity-status ${connectivity.status}`}>
+									{connectivity.status === 'ok' ? (
+										<>
+											<Wifi size={14} />
+											<span>{connectivity.message}</span>
+										</>
+									) : connectivity.status === 'error' ? (
+										<>
+											<WifiOff size={14} />
+											<span>{connectivity.message}</span>
+										</>
+									) : (
+										<>
+											<Loader2 size={14} className="loading-spinner" />
+											<span>{connectivity.message}</span>
+										</>
+									)}
+								</div>
+								{!loading && !error && connectivity.status === 'ok' && (
+									<button
+										className={`sync-mode-indicator sync-${syncMode}`}
+										title={`Sincronización en modo ${syncMode} - Click para más info`}
+										onClick={() => setMostrarInfoSync(true)}
+									>
+										<Clock size={12} />
+										<span>{syncMode}</span>
+									</button>
+								)}
+								{!loading && (
+									<button
+										className="btn-refresh"
+										onClick={refrescarTodosDatos}
+										disabled={refrescando}
+										title="Refrescar datos desde Notion"
+									>
+										<RefreshCw size={16} className={refrescando ? 'spinning' : ''} />
+										{refrescando ? 'Refrescando...' : 'Refrescar'}
+									</button>
 								)}
 							</div>
 						</div>
@@ -208,6 +372,63 @@ function App() {
 					</div>
 				</div>
 			</main>
+
+			{/* Modal de información de sincronización */}
+			{mostrarInfoSync && (
+				<div className="modal-overlay" onClick={() => setMostrarInfoSync(false)}>
+					<div className="modal-content sync-info-modal" onClick={(e) => e.stopPropagation()}>
+						<div className="modal-header">
+							<h2>Sincronización Automática Inteligente</h2>
+							<button className="btn-close-modal" onClick={() => setMostrarInfoSync(false)}>
+								×
+							</button>
+						</div>
+						<div className="modal-body">
+							<p className="modal-intro">
+								El sistema ajusta automáticamente la frecuencia de sincronización según la actividad detectada:
+							</p>
+
+							<div className="sync-modes-info">
+								<div className="sync-mode-card rapido">
+									<div className="sync-mode-header">
+										<Clock size={20} />
+										<h3>Modo RÁPIDO</h3>
+										<span className="sync-badge rapido">Cada 3 segundos</span>
+									</div>
+									<p>Se activa cuando hay cambios recientes (últimos 30 segundos). Ideal para detectar actualizaciones rápidamente cuando hay actividad.</p>
+								</div>
+
+								<div className="sync-mode-card normal">
+									<div className="sync-mode-header">
+										<Clock size={20} />
+										<h3>Modo NORMAL</h3>
+										<span className="sync-badge normal">Cada 8 segundos</span>
+									</div>
+									<p>Se activa cuando no hay cambios entre 30 segundos y 2 minutos. Velocidad moderada para mantener datos actualizados.</p>
+								</div>
+
+								<div className="sync-mode-card lento">
+									<div className="sync-mode-header">
+										<Clock size={20} />
+										<h3>Modo LENTO</h3>
+										<span className="sync-badge lento">Cada 15 segundos</span>
+									</div>
+									<p>Se activa cuando no hay cambios por más de 2 minutos. Ahorra recursos cuando no hay actividad reciente.</p>
+								</div>
+							</div>
+
+							<div className="sync-info-footer">
+								<p>
+									<strong>Modo actual:</strong> <span className={`current-mode ${syncMode}`}>{syncMode.toUpperCase()}</span>
+								</p>
+								<p className="sync-tip">
+									💡 Usa el botón "Refrescar" para actualizar manualmente en cualquier momento
+								</p>
+							</div>
+						</div>
+					</div>
+				</div>
+			)}
 		</div>
 	)
 }
@@ -496,6 +717,7 @@ function ConsultaPartes({ datos, onVolver, estadoOptions, onRefrescarPartes }) {
 				id: parte.id,
 				nombre: parte.nombre,
 				fecha: parte.fecha ? new Date(parte.fecha).toISOString().slice(0, 16) : getCurrentDateTime(),
+				provinciaSeleccionada: obraEncontrada?.provincia || '',
 				obraId: obraId,
 				obra: parte.obra,
 				personaAutorizadaId: personaAutorizadaId,
@@ -516,6 +738,7 @@ function ConsultaPartes({ datos, onVolver, estadoOptions, onRefrescarPartes }) {
 				id: parte.id,
 				nombre: parte.nombre,
 				fecha: parte.fecha ? new Date(parte.fecha).toISOString().slice(0, 16) : getCurrentDateTime(),
+				provinciaSeleccionada: obraEncontrada?.provincia || '',
 				obraId: obraId,
 				obra: parte.obra,
 				personaAutorizadaId: '',
@@ -533,10 +756,26 @@ function ConsultaPartes({ datos, onVolver, estadoOptions, onRefrescarPartes }) {
 		}
 	}
 
+	// Función para obtener provincias únicas (en edición)
+	const getProvinciasUnicasEdicion = () => {
+		const provincias = datos.obras
+			.map(obra => obra.provincia)
+			.filter(provincia => provincia)
+		return [...new Set(provincias)].sort()
+	}
+
+	// Función para filtrar obras por provincia (en edición)
+	const getObrasFiltradasEdicion = () => {
+		if (!editandoParte?.provinciaSeleccionada) {
+			return datos.obras
+		}
+		return datos.obras.filter(obra => obra.provincia === editandoParte.provinciaSeleccionada)
+	}
+
 	// Función para obtener empleados no asignados al parte
 	const getEmpleadosNoAsignados = () => {
 		if (!editandoParte || !empleadosObra.length) return []
-		
+
 		const empleadosAsignados = editandoParte.empleados || []
 		return empleadosObra.filter(empleado => !empleadosAsignados.includes(empleado.id))
 	}
@@ -629,11 +868,26 @@ function ConsultaPartes({ datos, onVolver, estadoOptions, onRefrescarPartes }) {
 		}))
 	}
 
+	// Función para manejar cambio de provincia en edición
+	const handleProvinciaChangeEdicion = (provincia) => {
+		setEditandoParte(prev => ({
+			...prev,
+			provinciaSeleccionada: provincia,
+			obraId: '',
+			empleados: [],
+			empleadosHoras: {}
+		}))
+		setEmpleadosObra([])
+	}
+
 	// Función para manejar cambio de obra en edición
-	const handleObraChange = async (obraId) => {
-		handleEdicionChange('obraId', obraId)
-		handleEdicionChange('empleados', [])
-		handleEdicionChange('empleadosHoras', {})
+	const handleObraChangeEdicion = async (obraId) => {
+		setEditandoParte(prev => ({
+			...prev,
+			obraId: obraId,
+			empleados: [],
+			empleadosHoras: {}
+		}))
 		await cargarEmpleadosObra(obraId)
 	}
 
@@ -814,6 +1068,22 @@ function ConsultaPartes({ datos, onVolver, estadoOptions, onRefrescarPartes }) {
                         </div>
                     )}
                     <div className="edicion-form">
+							<div className="form-group">
+								<label className="form-label">Provincia:</label>
+								<select
+									className="form-select"
+									value={editandoParte.provinciaSeleccionada}
+									onChange={(e) => handleProvinciaChangeEdicion(e.target.value)}
+								>
+									<option value="">Selecciona una provincia</option>
+									{getProvinciasUnicasEdicion().map(provincia => (
+										<option key={provincia} value={provincia}>
+											{provincia}
+										</option>
+									))}
+								</select>
+							</div>
+
 							<div className="grid grid-2">
 								<div className="form-group">
 									<label className="form-label">Fecha y Hora:</label>
@@ -824,18 +1094,23 @@ function ConsultaPartes({ datos, onVolver, estadoOptions, onRefrescarPartes }) {
 										onChange={(e) => handleEdicionChange('fecha', e.target.value)}
 									/>
 								</div>
-								
+
 								<div className="form-group">
 									<label className="form-label">Obra:</label>
 									<select
 										className="form-select"
 										value={editandoParte.obraId}
-										onChange={(e) => handleObraChange(e.target.value)}
+										onChange={(e) => handleObraChangeEdicion(e.target.value)}
+										disabled={!editandoParte.provinciaSeleccionada}
 									>
-										<option value="">Selecciona una obra</option>
-										{datos.obras.map(obra => (
+										<option value="">
+											{!editandoParte.provinciaSeleccionada
+												? 'Primero selecciona una provincia'
+												: 'Selecciona una obra'}
+										</option>
+										{getObrasFiltradasEdicion().map(obra => (
 											<option key={obra.id} value={obra.id}>
-												{obra.nombre} - {obra.provincia}
+												{obra.nombre}
 											</option>
 										))}
 									</select>
@@ -1408,6 +1683,7 @@ function CrearParte({ datos, estadoOptions, onParteCreado, onVolver }) {
 	}
 
   const [formData, setFormData] = useState({
+		provinciaSeleccionada: '', // Nueva propiedad para provincia
 		obraId: '',
 		obra: '',
 		fecha: getCurrentDateTime(),
@@ -1494,6 +1770,34 @@ function CrearParte({ datos, estadoOptions, onParteCreado, onVolver }) {
   }
 	}
 
+	// Función para obtener provincias únicas
+	const getProvinciasUnicas = () => {
+		const provincias = datos.obras
+			.map(obra => obra.provincia)
+			.filter(provincia => provincia) // Filtrar valores vacíos
+		return [...new Set(provincias)].sort() // Eliminar duplicados y ordenar
+	}
+
+	// Función para filtrar obras por provincia
+	const getObrasFiltradas = () => {
+		if (!formData.provinciaSeleccionada) {
+			return datos.obras
+		}
+		return datos.obras.filter(obra => obra.provincia === formData.provinciaSeleccionada)
+	}
+
+	// Función para manejar el cambio de provincia
+	const handleProvinciaChange = (provincia) => {
+		setFormData({
+			...formData,
+			provinciaSeleccionada: provincia,
+			obraId: '', // Resetear obra seleccionada
+			empleados: [], // Limpiar empleados seleccionados
+			empleadosHoras: {} // Limpiar horas
+		})
+		setEmpleadosObra([]) // Limpiar lista de empleados de obra
+	}
+
 	// Función para manejar el cambio de obra
 	const handleObraChange = (obraId) => {
 		setFormData({
@@ -1551,6 +1855,7 @@ function CrearParte({ datos, estadoOptions, onParteCreado, onVolver }) {
 	// Función para volver al formulario
 	const volverAFormulario = () => {
 		setFormData({
+			provinciaSeleccionada: '',
 			obraId: '',
 			obra: '',
 			fecha: getCurrentDateTime(),
@@ -1642,6 +1947,23 @@ function CrearParte({ datos, estadoOptions, onParteCreado, onVolver }) {
                         </div>
                     )}
 					
+					<div className="form-group">
+						<label className="form-label">Seleccionar Provincia:</label>
+						<select
+							className="form-select"
+							value={formData.provinciaSeleccionada}
+							onChange={(e) => handleProvinciaChange(e.target.value)}
+							required
+						>
+							<option value="">Selecciona una provincia</option>
+							{getProvinciasUnicas().map(provincia => (
+								<option key={provincia} value={provincia}>
+									{provincia}
+								</option>
+							))}
+						</select>
+					</div>
+
 					<div className="grid grid-2">
 						<div className="form-group">
 							<label className="form-label">Seleccionar Obra:</label>
@@ -1650,11 +1972,16 @@ function CrearParte({ datos, estadoOptions, onParteCreado, onVolver }) {
 								value={formData.obraId}
 								onChange={(e) => handleObraChange(e.target.value)}
 								required
+								disabled={!formData.provinciaSeleccionada}
 							>
-								<option value="">Selecciona una obra</option>
-								{datos.obras.map(obra => (
+								<option value="">
+									{!formData.provinciaSeleccionada
+										? 'Primero selecciona una provincia'
+										: 'Selecciona una obra'}
+								</option>
+								{getObrasFiltradas().map(obra => (
 									<option key={obra.id} value={obra.id}>
-										{obra.nombre} - {obra.provincia}
+										{obra.nombre}
 									</option>
 								))}
 							</select>

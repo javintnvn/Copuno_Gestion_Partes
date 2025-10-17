@@ -15,6 +15,7 @@ Este proyecto usa variables de entorno para credenciales y ajustes de runtime. E
 - `PARTES_WEBHOOK_TIMEOUT_MS`: Tiempo máximo de espera (ms) para el webhook (por defecto `10000`).
 - `RATE_LIMIT_WINDOW_MS`: Ventana de rate limit en milisegundos (por defecto `900000`, 15 min).
 - `RATE_LIMIT_MAX`: Máximo de peticiones por IP en cada ventana (por defecto `100`).
+- `CACHE_TTL_MS`: **[v1.4.0+]** Tiempo de vida del cache en milisegundos (por defecto `5000`, 5 segundos). Optimizado para Smart Polling. Valores recomendados: `2000` (muy rápido), `5000` (balanceado), `10000` (conservador).
 
 ## Pasos para configurar
 
@@ -25,6 +26,7 @@ Este proyecto usa variables de entorno para credenciales y ajustes de runtime. E
 ```
 NOTION_TOKEN=YOUR_NOTION_TOKEN
 PORT=3001
+CACHE_TTL_MS=5000
 # ALLOWED_ORIGINS=https://tudominio.com,https://app.tudominio.com
 ```
 
