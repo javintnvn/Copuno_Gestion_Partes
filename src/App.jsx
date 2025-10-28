@@ -530,6 +530,12 @@ function ConsultaPartes({ datos, onVolver, estadoOptions, onRefrescarPartes }) {
 
 	const esEstadoListoFirmar = (estado) => String(estado || '').toLowerCase() === 'listo para firmar'
 
+	// Función para verificar si el PDF debe estar disponible (solo después de firmar)
+	const tienePDFDisponible = (estado) => {
+		const estadosConPDF = ['firmado', 'datos enviados', 'enviado']
+		return estadosConPDF.includes(String(estado || '').toLowerCase())
+	}
+
 	// Función para obtener el mensaje de estado no editable
 	const getMensajeEstadoNoEditable = (estado) => {
 		const estadoLower = estado?.toLowerCase()
@@ -837,18 +843,25 @@ function ConsultaPartes({ datos, onVolver, estadoOptions, onRefrescarPartes }) {
 
 			// Llamar a la API para actualizar
 			const resultado = await actualizarParteTrabajo(editandoParte.id, datosActualizacion)
-			
+
 			console.log('Parte actualizado:', resultado)
-			
-			// Mostrar mensaje de éxito
-            setMensajeUI({ tipo: 'success', texto: `Parte actualizado. ${resultado.detallesCreados} empleados asignados.` })
-			
+
+			// Mostrar mensaje de éxito con advertencia si el estado cambió
+			let mensajeExito = `Parte actualizado. ${resultado.detallesCreados} empleados asignados.`
+			if (resultado.estadoCambiado) {
+				mensajeExito = `⚠️ Parte actualizado. El estado ha cambiado de "${resultado.estadoAnterior}" a "Borrador". Deberás enviar los datos nuevamente para que el parte esté listo para firmar.`
+			}
+			setMensajeUI({ tipo: resultado.estadoCambiado ? 'warning' : 'success', texto: mensajeExito })
+
+			// Esperar un momento para que el usuario lea el mensaje antes de cerrar
+			await new Promise(resolve => setTimeout(resolve, resultado.estadoCambiado ? 4000 : 2000))
+
 			// Recargar datos para reflejar los cambios
 			if (onVolver) {
 				// Recargar datos en el componente padre
 				window.location.reload()
 			}
-			
+
 			// Cerrar modal de edición
 			cancelarEdicion()
 			
@@ -1378,23 +1391,6 @@ function ConsultaPartes({ datos, onVolver, estadoOptions, onRefrescarPartes }) {
                                 <span><strong>Última Edición:</strong> {formatearFecha(parteSeleccionado.ultimaEdicion)}</span>
                             </div>
 								<div className="info-item">
-									<Users size={20} />
-									<span><strong>Horas Oficial 1ª:</strong> {parteSeleccionado.horasOficial1 || 0}h</span>
-								</div>
-								<div className="info-item">
-									<Users size={20} />
-									<span><strong>Horas Oficial 2ª:</strong> {parteSeleccionado.horasOficial2 || 0}h</span>
-								</div>
-								<div className="info-item">
-									<Users size={20} />
-									<span><strong>Horas Capataz:</strong> {parteSeleccionado.horasCapataz || 0}h</span>
-								</div>
-								<div className="info-item">
-									<Users size={20} />
-									<span><strong>Horas Encargado:</strong> {parteSeleccionado.horasEncargado || 0}h</span>
-								</div>
-
-								<div className="info-item">
 									<span><strong>Estado:</strong> {parteSeleccionado.estado || 'Pendiente'}</span>
 								</div>
 							</div>
@@ -1448,7 +1444,7 @@ function ConsultaPartes({ datos, onVolver, estadoOptions, onRefrescarPartes }) {
 							
 							{/* Acciones del parte */}
 							<div className="parte-acciones-detalles">
-								{parteSeleccionado.urlPDF && (
+								{parteSeleccionado.urlPDF && tienePDFDisponible(parteSeleccionado.estado) && (
 									<button className="btn btn-primary" onClick={() => window.open(parteSeleccionado.urlPDF, '_blank')}>
 										<FileText size={20} />
 										Descargar PDF
@@ -1616,7 +1612,7 @@ function ConsultaPartes({ datos, onVolver, estadoOptions, onRefrescarPartes }) {
 											<button className="btn btn-primary" onClick={() => verDetalles(parte)}>
 												Ver Detalles
 											</button>
-											{parte.urlPDF && (
+											{parte.urlPDF && tienePDFDisponible(parte.estado) && (
 												<button className="btn btn-secondary" onClick={() => window.open(parte.urlPDF, '_blank')}>
 													Descargar PDF
 												</button>

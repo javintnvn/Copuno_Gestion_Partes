@@ -1112,15 +1112,25 @@ app.put('/api/partes-trabajo/:parteId', async (req, res) => {
 		}
 
 		// Validar que el parte sea editable según su estado actual
+		let estadoAnterior = null
+		let necesitaCambioEstado = false
 		try {
 			const parteActual = await makeNotionRequest('GET', `/pages/${parteId}`)
 			const estadoParte = extractPropertyValue(parteActual.properties['Estado'])
+			estadoAnterior = estadoParte
+
 			const noEditables = ['firmado', 'datos enviados', 'enviado']
 			if (estadoParte && noEditables.includes(String(estadoParte).toLowerCase())) {
 				return res.status(409).json({
 					error: 'El parte no es editable por su estado actual',
 					estado: estadoParte
 				})
+			}
+
+			// Si el estado es "Listo para firmar", marcar que necesita cambio a "Borrador"
+			if (estadoParte && String(estadoParte).toLowerCase() === 'listo para firmar') {
+				necesitaCambioEstado = true
+				console.log(`⚠️ Parte ${parteId} está en "Listo para firmar", se cambiará a "Borrador" al editar`)
 			}
 		} catch (e) {
 			console.warn('Aviso: no se pudo validar el estado del parte antes de editar:', e.message)
@@ -1146,38 +1156,51 @@ app.put('/api/partes-trabajo/:parteId', async (req, res) => {
 		const obraData = await makeNotionRequest('GET', `/pages/${obraId}`)
 		const nombreObra = extractPropertyValue(obraData.properties['Obra'])
 
-		// Actualizar el parte de trabajo
-		const parteActualizado = await makeNotionRequest('PATCH', `/pages/${parteId}`, {
-			properties: {
-				'Fecha': {
-					date: {
-						start: fecha
+		// Preparar propiedades para actualizar
+		const propertiesToUpdate = {
+			'Fecha': {
+				date: {
+					start: fecha
+				}
+			},
+			'Obras': {
+				relation: [
+					{
+						id: obraId
 					}
-				},
-				'Obras': {
-					relation: [
-						{
-							id: obraId
+				]
+			},
+			'Persona Autorizada': {
+				relation: [
+					{
+						id: personaAutorizadaId
+					}
+				]
+			},
+			'Notas': {
+				rich_text: [
+					{
+						text: {
+							content: notas || ''
 						}
-					]
-				},
-				'Persona Autorizada': {
-					relation: [
-						{
-							id: personaAutorizadaId
-						}
-					]
-				},
-				'Notas': {
-					rich_text: [
-						{
-							text: {
-								content: notas || ''
-							}
-						}
-					]
+					}
+				]
+			}
+		}
+
+		// Si el parte estaba en "Listo para firmar", cambiar el estado a "Borrador"
+		if (necesitaCambioEstado) {
+			propertiesToUpdate['Estado'] = {
+				status: {
+					name: 'Borrador'
 				}
 			}
+			console.log(`✅ Cambiando estado del parte ${parteId} de "${estadoAnterior}" a "Borrador"`)
+		}
+
+		// Actualizar el parte de trabajo
+		const parteActualizado = await makeNotionRequest('PATCH', `/pages/${parteId}`, {
+			properties: propertiesToUpdate
 		})
 
 		// Obtener detalles existentes para este parte
@@ -1263,12 +1286,21 @@ app.put('/api/partes-trabajo/:parteId', async (req, res) => {
 			}
 		}
 
+		// Construir mensaje de respuesta
+		let mensaje = `Parte actualizado exitosamente. ${detallesCreados.length} empleados asignados.`
+		if (necesitaCambioEstado) {
+			mensaje += ` ⚠️ El estado ha cambiado de "${estadoAnterior}" a "Borrador". Deberás enviar los datos nuevamente.`
+		}
+
 		res.json({
 			...parteActualizado,
 			empleadosActualizados: empleados?.length || 0,
 			detallesCreados: detallesCreados.length,
 			erroresDetalles: erroresDetalles.length,
-			mensaje: `Parte actualizado exitosamente. ${detallesCreados.length} empleados asignados.`
+			estadoCambiado: necesitaCambioEstado,
+			estadoAnterior: necesitaCambioEstado ? estadoAnterior : null,
+			estadoNuevo: necesitaCambioEstado ? 'Borrador' : null,
+			mensaje: mensaje
 		})
 	} catch (error) {
 		console.error('Error al actualizar parte de trabajo:', error.message)

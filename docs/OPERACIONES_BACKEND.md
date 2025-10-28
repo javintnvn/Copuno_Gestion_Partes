@@ -23,7 +23,8 @@ Este documento resume el estado actual del servidor, las decisiones técnicas, c
 - Reglas de negocio:
   - PUT de partes bloquea estados no editables: firmado, datos enviados, enviado.
   - Validación de horas por empleado [0–24].
-  - Estado “Listo para firmar” habilita CTA de firma y mantiene edición posible.
+  - Estado "Listo para firmar" habilita CTA de firma y mantiene edición posible.
+  - **NUEVO**: Al editar un parte en estado "Listo para firmar", el estado cambia automáticamente a "Borrador" y se notifica al usuario que debe enviar los datos nuevamente.
 
 ## Variables de Entorno
 Ver `docs/CONFIGURACION_ENTORNO.md` y `env.example`.
@@ -79,10 +80,69 @@ Ver `docs/CONFIGURACION_ENTORNO.md` y `env.example`.
 - `chore(security): ...` para cambios de configuración/secretos.
 - `docs: ...` para documentación.
 
+## Flujo de Estados de Partes
+
+### Estados Posibles
+1. **Borrador**: Parte recién creado o editado después de estar en "Listo para firmar"
+2. **Listo para firmar**: Parte enviado y listo para firma
+3. **Firmado**: Parte firmado (no editable)
+4. **Datos Enviados**: Datos enviados al cliente (no editable)
+5. **Enviado**: Parte enviado al cliente (no editable)
+
+### Flujo de Cambio de Estado al Editar
+```
+┌─────────────────────────────────────────┐
+│ Estado: "Listo para firmar"             │
+│ Usuario hace clic en "Editar Parte"     │
+└──────────────┬──────────────────────────┘
+               │
+               ▼
+┌─────────────────────────────────────────┐
+│ Backend detecta estado actual           │
+│ Marca necesitaCambioEstado = true       │
+└──────────────┬──────────────────────────┘
+               │
+               ▼
+┌─────────────────────────────────────────┐
+│ Actualiza propiedades del parte         │
+│ Incluye: Estado = "Borrador"            │
+└──────────────┬──────────────────────────┘
+               │
+               ▼
+┌─────────────────────────────────────────┐
+│ Respuesta incluye:                      │
+│ - estadoCambiado: true                  │
+│ - estadoAnterior: "Listo para firmar"   │
+│ - estadoNuevo: "Borrador"               │
+│ - mensaje con advertencia               │
+└──────────────┬──────────────────────────┘
+               │
+               ▼
+┌─────────────────────────────────────────┐
+│ Frontend muestra mensaje warning:       │
+│ "⚠️ Parte actualizado. El estado ha     │
+│ cambiado de 'Listo para firmar' a       │
+│ 'Borrador'. Deberás enviar los datos    │
+│ nuevamente para que el parte esté       │
+│ listo para firmar."                     │
+└─────────────────────────────────────────┘
+```
+
+### Código Relevante
+**Backend** (`server.js:1115-1199`):
+- Detección del estado "Listo para firmar"
+- Cambio automático a "Borrador"
+- Respuesta con información del cambio
+
+**Frontend** (`src/App.jsx:843-851`):
+- Detección de `estadoCambiado` en la respuesta
+- Mensaje warning con tiempo extendido (4s vs 2s)
+- Recarga de datos tras la edición
+
 ## Referencias de Código
 - `server.js`: middlewares (helmet, compression, CORS, morgan, rate-limit, request-id), cache y endpoints.
 - `src/services/notionService.js`: cliente frontend.
 - `docs/CONFIGURACION_ENTORNO.md`: variables y rotación.
 
 ---
-Última actualización: integración con webhook Make y botón de firma en partes “Listo para firmar”.
+Última actualización: cambio automático de estado "Listo para firmar" → "Borrador" al editar partes.
