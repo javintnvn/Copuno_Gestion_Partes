@@ -532,7 +532,7 @@ function ConsultaPartes({ datos, onVolver, estadoOptions, onRefrescarPartes }) {
 
 	// Función para verificar si el PDF debe estar disponible (solo después de firmar)
 	const tienePDFDisponible = (estado) => {
-		const estadosConPDF = ['firmado', 'datos enviados', 'enviado']
+		const estadosConPDF = ['firmado', 'enviado']
 		return estadosConPDF.includes(String(estado || '').toLowerCase())
 	}
 
