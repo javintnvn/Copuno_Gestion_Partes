@@ -606,7 +606,7 @@ app.post('/api/partes-trabajo', async (req, res) => {
 			}
 		}
 
-		// Crear el parte de trabajo
+		// Crear el parte de trabajo con nombre temporal
 		const parteData = await makeNotionRequest('POST', '/pages', {
 			parent: { database_id: DATABASES.PARTES_TRABAJO },
 			properties: {
@@ -614,7 +614,7 @@ app.post('/api/partes-trabajo', async (req, res) => {
 					title: [
 						{
 							text: {
-								content: `Parte ${obra} - ${new Date().toLocaleDateString()}`
+								content: `Parte temporal - ${obra}`
 							}
 						}
 					]
@@ -649,6 +649,30 @@ app.post('/api/partes-trabajo', async (req, res) => {
 				}
 			}
 		})
+
+		// Obtener el ID único de Notion del parte recién creado
+		const parteCompleto = await makeNotionRequest('GET', `/pages/${parteData.id}`)
+		const notionId = extractPropertyValue(parteCompleto.properties['ID'])
+
+		// Construir el nombre final: Parte + NombreObra + ID (sin espacios)
+		const nombreFinal = `Parte${obra}${notionId}`
+
+		// Actualizar el nombre del parte con el formato correcto
+		await makeNotionRequest('PATCH', `/pages/${parteData.id}`, {
+			properties: {
+				'Nombre': {
+					title: [
+						{
+							text: {
+								content: nombreFinal
+							}
+						}
+					]
+				}
+			}
+		})
+
+		console.log(`✅ Parte creado con nombre: ${nombreFinal}`)
 
 		// Crear detalles de horas para cada empleado seleccionado
 		let detallesCreados = []
