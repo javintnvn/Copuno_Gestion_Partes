@@ -139,10 +139,79 @@ Ver `docs/CONFIGURACION_ENTORNO.md` y `env.example`.
 - Mensaje warning con tiempo extendido (4s vs 2s)
 - Recarga de datos tras la edición
 
+## Flujo de Generación de PDF y Firma
+
+### Secuencia de Estados y Generación de Documentos
+
+```
+1. BORRADOR
+   Usuario crea parte → Asigna empleados y horas
+   ↓ (Usuario hace clic en "Enviar Datos")
+
+2. LISTO PARA FIRMAR
+   Notion genera URL de firma → Se muestra botón "Firmar"
+   ⚠️ PDF NO EXISTE AÚN (no se ha firmado)
+   ↓ (Usuario hace clic en "Firmar" y completa firma)
+
+3. FIRMADO
+   Notion genera el PDF → Se muestra botón "Descargar PDF"
+   ✅ PDF AHORA EXISTE
+   ↓ (Flujo continúa según necesidad)
+
+4. DATOS ENVIADOS / ENVIADO
+   PDF disponible → Se puede descargar
+```
+
+### Tabla de Visibilidad de Botones por Estado
+
+| Estado | Ver Detalles | Descargar PDF | Firmar | Enviar Datos | Editar |
+|--------|--------------|---------------|--------|--------------|--------|
+| **Borrador** | ✅ Siempre | ❌ No (no existe PDF) | ❌ No (falta enviar) | ✅ Sí | ✅ Sí |
+| **Listo para firmar** | ✅ Siempre | ❌ No (no existe PDF aún) | ✅ Sí (si existe URL) | ❌ No | ✅ Sí |
+| **Firmado** | ✅ Siempre | ✅ Sí (PDF generado) | ❌ No (ya firmado) | ❌ No | ❌ No |
+| **Datos Enviados** | ✅ Siempre | ✅ Sí (PDF generado) | ❌ No | ❌ No | ❌ No |
+| **Enviado** | ✅ Siempre | ✅ Sí (PDF generado) | ❌ No | ❌ No | ❌ No |
+
+### Implementación Técnica
+
+**Función helper** (`src/App.jsx:533-537`):
+```javascript
+const tienePDFDisponible = (estado) => {
+    const estadosConPDF = ['firmado', 'datos enviados', 'enviado']
+    return estadosConPDF.includes(String(estado || '').toLowerCase())
+}
+```
+
+**Condición para mostrar botón "Descargar PDF"**:
+```javascript
+{parte.urlPDF && tienePDFDisponible(parte.estado) && (
+    <button onClick={() => window.open(parte.urlPDF, '_blank')}>
+        Descargar PDF
+    </button>
+)}
+```
+
+**Condición para mostrar botón "Firmar"**:
+```javascript
+{esEstadoListoFirmar(parte.estado) && parte.firmarUrl && (
+    <button onClick={() => abrirFirma(parte.firmarUrl)}>
+        Firmar ahora
+    </button>
+)}
+```
+
+### Notas Importantes
+
+- ⚠️ **El PDF no existe hasta que el parte es firmado**
+- 📄 El PDF se genera automáticamente por Notion después de la firma
+- 🔒 Los estados "Firmado", "Datos Enviados" y "Enviado" son **no editables**
+- 🔄 Si se edita un parte en "Listo para firmar", vuelve a "Borrador" y se pierde la URL de firma
+- ✅ La URL de firma (`firmarUrl`) se genera al enviar datos desde estado "Borrador"
+
 ## Referencias de Código
 - `server.js`: middlewares (helmet, compression, CORS, morgan, rate-limit, request-id), cache y endpoints.
 - `src/services/notionService.js`: cliente frontend.
 - `docs/CONFIGURACION_ENTORNO.md`: variables y rotación.
 
 ---
-Última actualización: cambio automático de estado "Listo para firmar" → "Borrador" al editar partes.
+**Última actualización**: Lógica de visibilidad de botones según estado del parte y flujo de generación de PDF post-firma.
