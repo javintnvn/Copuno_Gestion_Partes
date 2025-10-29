@@ -654,8 +654,8 @@ app.post('/api/partes-trabajo', async (req, res) => {
 		const parteCompleto = await makeNotionRequest('GET', `/pages/${parteData.id}`)
 		const notionId = extractPropertyValue(parteCompleto.properties['ID'])
 
-		// Construir el nombre final: Parte + NombreObra + ID (sin espacios)
-		const nombreFinal = `Parte${obra}${notionId}`
+		// Construir el nombre final: Parte + espacio + NombreObra + ID
+		const nombreFinal = `Parte ${obra}${notionId}`
 
 		// Actualizar el nombre del parte con el formato correcto
 		await makeNotionRequest('PATCH', `/pages/${parteData.id}`, {
