@@ -11,7 +11,9 @@
       "Bash(python3 -c \"import sys, json; branches = json.load(sys.stdin); print(''''\\n''''.join([f''''{b[\"\"name\"\"]} (commit: {b[\"\"commit\"\"][\"\"sha\"\"][:7]})'''' for b in branches]))\")",
       "Bash(python3:*)",
       "Bash(pkill:*)",
-      "Bash(node:*)"
+      "Bash(node:*)",
+      "Bash(lsof:*)",
+      "Bash(xargs kill:*)"
     ],
     "deny": [],
     "ask": []
