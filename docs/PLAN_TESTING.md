@@ -184,6 +184,9 @@ Este documento describe el plan completo de testing para la aplicación Copuno -
 - Invalidación automática por tiempo
 - Reduce latencia y presión sobre Notion API
 
+**Puntos críticos a testear**:
+- ✅ Invalidación tras cambios externos en Notion (expiración TTL refresca datos sin reiniciar cliente)
+
 #### 4. Sanitización de Datos Económicos
 - Eliminación automática de campos con keywords: importe, precio, coste, tarifa, eur, euro
 - Redacción de valores con símbolos monetarios (€, eur, euros)
@@ -528,6 +531,7 @@ Este documento describe el plan completo de testing para la aplicación Copuno -
 - ✅ Reanudación y refresco al mostrar pestaña
 - ✅ Pausa durante edición de parte
 - ✅ Reanudación tras cerrar edición
+- ✅ Manejo de modo offline prolongado durante edición (sin sobrescribir cambios locales al reconectar)
 - ✅ SSE: conexión correcta al abrir modal
 - ✅ SSE: cierre correcto al cerrar modal
 - ✅ SSE: reconexión automática tras error
@@ -588,6 +592,8 @@ Este documento describe el plan completo de testing para la aplicación Copuno -
 - ✅ Archivado vs eliminación de páginas
 - ✅ Respeto de rate limits
 - ✅ Reintentos con backoff exponencial
+- ✅ Manejo de paginación `has_more` en catálogos y listados extensos
+- ✅ Detección temprana de deriva de esquema (propiedades críticas presentes y con tipo esperado)
 - ✅ Timeout handling
 - ✅ Sanitización de datos económicos en respuestas
 
@@ -631,6 +637,7 @@ Este documento describe el plan completo de testing para la aplicación Copuno -
 - ✅ Envío HTTP exitoso al webhook
 - ✅ Manejo de timeout
 - ✅ Manejo de errores HTTP del webhook
+- ✅ Reintentos idempotentes tras timeout/500 (sin duplicar envíos ni estados inconsistentes)
 - ✅ Cambio de estado tras envío exitoso
 - ✅ Modo simulado cuando webhook no configurado
 - ✅ Logging detallado de payload y respuestas
