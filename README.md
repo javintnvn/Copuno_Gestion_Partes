@@ -26,6 +26,7 @@ Aplicación web moderna para la gestión de partes de trabajo con backend en Not
 - ✅ **Crear nuevos partes** con formulario intuitivo
 - ✅ **Editar partes existentes** con validación de estados
 - ✅ **Modal de detalles** con información completa
+- ✅ **Resumen de horas por categoría** - Vista consolidada de horas por tipo de empleado
 - ✅ **Filtros por obra y fecha** funcionales
 - ✅ **Formato de fechas español** (DD-MM-YYYY HH:MM)
 - ✅ **Gestión avanzada de empleados** por obra
@@ -247,14 +248,22 @@ NODE_ENV=production
 
 ## 📝 Changelog
 
-### v1.4.0 - Smart Polling y Optimización de Sincronización ⭐ **ACTUAL**
+### v1.4.1 - Resumen de Horas por Categoría ⭐ **ACTUAL**
+- ✅ **Resumen visual de horas** - Vista consolidada por tipo de empleado
+- ✅ **Categorías laborales** - Oficial 1ª/2ª, Oficial, Encargado, Capataz, Peón
+- ✅ **Total destacado** - Banner visual con el total de horas del parte
+- ✅ **Sin datos económicos** - Solo información de horas trabajadas
+- ✅ **UX mejorada** - Verificación rápida antes de enviar datos
+- 📄 **Changelog completo**: [CHANGELOG_V1.4.1.md](CHANGELOG_V1.4.1.md)
+
+### v1.4.0 - Smart Polling y Optimización de Sincronización
 - ✅ **Smart Polling adaptativo** - Sistema de sincronización inteligente con 3 niveles
 - ✅ **Optimización de API** - Consumo reducido 60% en picos de actividad
 - ✅ **Indicadores visuales** - Badge animado mostrando modo de sincronización actual
 - ✅ **Detección de cambios** - Hash-based change detection para evitar updates innecesarios
 - ✅ **Latencia ultra-baja** - 3 segundos de actualización cuando hay actividad
 - ✅ **Escalabilidad mejorada** - Soporte para 10+ usuarios concurrentes
-- ✅ **Documentación técnica** - [SMART_POLLING.md](docs/SMART_POLLING.md) completa
+- 📄 **Changelog completo**: [CHANGELOG_V1.4.0.md](CHANGELOG_V1.4.0.md)
 
 ### v1.3.0 - Funcionalidad de Edición y Gestión Avanzada
 - ✅ **Funcionalidad de edición de partes** - Endpoint PUT completo

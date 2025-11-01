@@ -1,23 +1,48 @@
 :root {
-    --primary-color: #0a3d91;
-    --primary-hover: #082f73;
+	/* Color palette */
+	--primary-color: #0a3d91;
+	--primary-hover: #082f73;
 	--secondary-color: #64748b;
 	--success-color: #059669;
 	--warning-color: #d97706;
 	--danger-color: #dc2626;
-	--background-color: #f8fafc;
+	--background-color: #f6f8fc;
 	--surface-color: #ffffff;
-	--text-primary: #1e293b;
-	--text-secondary: #64748b;
+	--surface-muted: #f1f5f9;
 	--border-color: #e2e8f0;
-	--shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-	--shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
-	--shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+	--text-primary: #12223b;
+	--text-secondary: #5b6b82;
+	--text-tertiary: #94a3b8;
+
+	/* Spacing scale */
+	--spacing-xs: 4px;
+	--spacing-sm: 8px;
+	--spacing-md: 16px;
+	--spacing-lg: 24px;
+	--spacing-xl: 32px;
+	--spacing-2xl: 48px;
+
+	/* Radius */
+	--border-radius-sm: 8px;
 	--border-radius: 12px;
-	--font-size-large: 1.25rem;
-	--font-size-xl: 1.5rem;
-	--font-size-2xl: 1.875rem;
-	--font-size-3xl: 2.25rem;
+	--border-radius-lg: 16px;
+
+	/* Elevation */
+	--shadow-sm: 0 1px 2px 0 rgb(15 23 42 / 0.06);
+	--shadow-md: 0 10px 24px -12px rgb(15 23 42 / 0.16);
+	--shadow-lg: 0 24px 48px -18px rgb(15 23 42 / 0.18);
+
+	/* Typography */
+	--font-size-small: clamp(0.9rem, 0.86rem + 0.2vw, 1rem);
+	--font-size-medium: clamp(1rem, 0.96rem + 0.25vw, 1.1rem);
+	--font-size-large: clamp(1.15rem, 1.08rem + 0.3vw, 1.35rem);
+	--font-size-xl: clamp(1.4rem, 1.28rem + 0.4vw, 1.7rem);
+	--font-size-2xl: clamp(1.7rem, 1.5rem + 0.6vw, 2.1rem);
+	--font-size-3xl: clamp(2.1rem, 1.85rem + 0.9vw, 2.6rem);
+	--line-height-base: 1.6;
+
+	/* Layout helpers */
+	--header-offset: clamp(72px, 8vh, 104px);
 }
 
 * {
@@ -33,9 +58,12 @@ body {
 	-webkit-font-smoothing: antialiased;
 	-moz-osx-font-smoothing: grayscale;
 	background-color: var(--background-color);
+	background-image:
+		radial-gradient(1200px 400px at 110% -10%, rgba(11, 59, 140, 0.06), transparent 60%),
+		radial-gradient(800px 300px at -10% 0%, rgba(11, 106, 166, 0.05), transparent 60%);
 	color: var(--text-primary);
-	line-height: 1.6;
-	font-size: 16px;
+	line-height: var(--line-height-base);
+	font-size: clamp(16px, 1.2vw + 14px, 18px);
 }
 
 /* Botones grandes y accesibles */

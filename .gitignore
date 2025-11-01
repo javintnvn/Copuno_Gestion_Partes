@@ -92,3 +92,5 @@ temp/
 
 # Recursos Pre desarrollo (archivos históricos)
 Recursos Pre desarrollo/ 
+.gemini/
+gha-creds-*.json

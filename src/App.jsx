@@ -264,55 +264,57 @@ function App() {
 			<header className="header">
 				<div className="container">
 					<div className="header-content">
-						<button className="logo-button" onClick={volverInicio}>
-							<div className="logo">
-								<Building size={32} />
-								<h1 className="logo-text">Copuno</h1>
-							</div>
-						</button>
-						<div className="header-info">
-							<h2 className="app-title">Gestión de Partes</h2>
-							<div className="header-status-row">
-								<div className={`connectivity-status ${connectivity.status}`}>
-									{connectivity.status === 'ok' ? (
-										<>
-											<Wifi size={14} />
-											<span>{connectivity.message}</span>
-										</>
-									) : connectivity.status === 'error' ? (
-										<>
-											<WifiOff size={14} />
-											<span>{connectivity.message}</span>
-										</>
-									) : (
-										<>
-											<Loader2 size={14} className="loading-spinner" />
-											<span>{connectivity.message}</span>
-										</>
-									)}
+						<div className="header-brand">
+							<button className="logo-button" onClick={volverInicio}>
+								<div className="logo">
+									<Building size={32} />
+									<h1 className="logo-text">Copuno</h1>
 								</div>
-								{!loading && !error && connectivity.status === 'ok' && (
-									<button
-										className={`sync-mode-indicator sync-${syncMode}`}
-										title={`Sincronización en modo ${syncMode} - Click para más info`}
-										onClick={() => setMostrarInfoSync(true)}
-									>
-										<Clock size={12} />
-										<span>{syncMode}</span>
-									</button>
-								)}
-								{!loading && (
-									<button
-										className="btn-refresh"
-										onClick={refrescarTodosDatos}
-										disabled={refrescando}
-										title="Refrescar datos desde Notion"
-									>
-										<RefreshCw size={16} className={refrescando ? 'spinning' : ''} />
-										{refrescando ? 'Refrescando...' : 'Refrescar'}
-									</button>
+							</button>
+							<div className="header-title-block">
+								<h2 className="app-title">Gestión de Partes</h2>
+							</div>
+						</div>
+						<div className="header-utility">
+							<div className={`connectivity-status ${connectivity.status}`}>
+								{connectivity.status === 'ok' ? (
+									<>
+										<Wifi size={14} />
+										<span>{connectivity.message}</span>
+									</>
+								) : connectivity.status === 'error' ? (
+									<>
+										<WifiOff size={14} />
+										<span>{connectivity.message}</span>
+									</>
+								) : (
+									<>
+										<Loader2 size={14} className="loading-spinner" />
+										<span>{connectivity.message}</span>
+									</>
 								)}
 							</div>
+							{!loading && !error && connectivity.status === 'ok' && (
+								<button
+									className={`sync-mode-indicator sync-${syncMode}`}
+									title={`Sincronización en modo ${syncMode} - Click para más info`}
+									onClick={() => setMostrarInfoSync(true)}
+								>
+									<Clock size={12} />
+									<span>{syncMode}</span>
+								</button>
+							)}
+							{!loading && (
+								<button
+									className="btn-refresh"
+									onClick={refrescarTodosDatos}
+									disabled={refrescando}
+									title="Refrescar datos desde Notion"
+								>
+									<RefreshCw size={16} className={refrescando ? 'spinning' : ''} />
+									{refrescando ? 'Refrescando...' : 'Refrescar'}
+								</button>
+							)}
 						</div>
 					</div>
 				</div>
@@ -320,16 +322,16 @@ function App() {
 
 			<main className="main">
 				<div className="container">
-					{/* Debug info - solo en desarrollo (Vite) */}
-					{!loading && !error && import.meta.env.MODE === 'development' && (
+					{/* Debug info - Comentado para ocultar */}
+					{/* {!loading && !error && import.meta.env.MODE === 'development' && (
 						<div className="debug-info">
-							<strong>Debug:</strong> Obras: {datos.obras.length} | 
-							Empleados: {datos.empleados.length} | 
-							Jefes: {datos.jefesObra.length} | 
-							Partes: {datos.partesTrabajo.length} | 
+							<strong>Debug:</strong> Obras: {datos.obras.length} |
+							Empleados: {datos.empleados.length} |
+							Jefes: {datos.jefesObra.length} |
+							Partes: {datos.partesTrabajo.length} |
 							Estado opts: {estadoOptions.options?.length || 0}
 						</div>
-					)}
+					)} */}
 
 					{/* Contenido principal */}
 					<div className="content">
@@ -576,6 +578,56 @@ function ConsultaPartes({ datos, onVolver, estadoOptions, onRefrescarPartes }) {
 		} catch (error) {
 			return fecha
 		}
+	}
+
+	const formatearFechaFiltro = (fecha) => {
+		if (!fecha) return ''
+		try {
+			const fechaObj = new Date(fecha)
+			if (isNaN(fechaObj.getTime())) return fecha
+			return fechaObj
+				.toLocaleDateString('es-ES', { day: '2-digit', month: 'short' })
+				.replace('.', '')
+		} catch (error) {
+			return fecha
+		}
+	}
+
+	// Función para calcular sumatorios de horas por categoría
+	const calcularSumatoriosHoras = (detalles) => {
+		const categorias = {
+			'Oficial 1ª': 0,
+			'Oficial 2ª': 0,
+			'Oficial': 0,
+			'Encargado': 0,
+			'Capataz': 0,
+			'Peón': 0
+		}
+
+		detalles.forEach(detalle => {
+			const horas = detalle.horas || 0
+			const categoria = detalle.categoria || ''
+
+			// Normalizar categoría para agrupar variantes
+			if (categoria.toLowerCase().includes('oficial 1') || categoria.toLowerCase().includes('of. 1')) {
+				categorias['Oficial 1ª'] += horas
+			} else if (categoria.toLowerCase().includes('oficial 2') || categoria.toLowerCase().includes('of. 2')) {
+				categorias['Oficial 2ª'] += horas
+			} else if (categoria.toLowerCase().includes('oficial') || categoria.toLowerCase().includes('of.')) {
+				categorias['Oficial'] += horas
+			} else if (categoria.toLowerCase().includes('encargado')) {
+				categorias['Encargado'] += horas
+			} else if (categoria.toLowerCase().includes('capataz')) {
+				categorias['Capataz'] += horas
+			} else if (categoria.toLowerCase().includes('pe') && categoria.toLowerCase().includes('n')) {
+				categorias['Peón'] += horas
+			}
+		})
+
+		// Calcular total
+		const total = Object.values(categorias).reduce((sum, horas) => sum + horas, 0)
+
+		return { categorias, total }
 	}
 
 	const handleEnviarDatos = async (parte) => {
@@ -1394,6 +1446,27 @@ function ConsultaPartes({ datos, onVolver, estadoOptions, onRefrescarPartes }) {
 									<span><strong>Estado:</strong> {parteSeleccionado.estado || 'Pendiente'}</span>
 								</div>
 							</div>
+
+							{/* Resumen de horas por categoría */}
+							{!loadingDetalles && detallesEmpleados.length > 0 && (() => {
+								const { categorias, total } = calcularSumatoriosHoras(detallesEmpleados)
+								return (
+									<div className="resumen-horas-section">
+										<h3>Resumen de Horas</h3>
+										<div className="resumen-horas-grid">
+											{Object.entries(categorias).map(([categoria, horas]) => (
+												<div key={categoria} className="resumen-horas-item">
+													<span className="resumen-horas">Horas de {categoria}: {horas}</span>
+												</div>
+											))}
+										</div>
+										<div className="resumen-total">
+											<span className="total-horas">Horas totales: {total}</span>
+										</div>
+									</div>
+								)
+							})()}
+
 							{/* Sección de empleados asignados */}
 							<div className="empleados-section">
 								<h3>Empleados Asignados</h3>
@@ -1519,6 +1592,10 @@ function ConsultaPartes({ datos, onVolver, estadoOptions, onRefrescarPartes }) {
 
 						{/* Filtros */}
 						<div className="filtros">
+							<div className="filtros-heading">
+								<Search size={16} />
+								<span>Filtros</span>
+							</div>
 							<div className="grid grid-2">
 								<div className="form-group">
 									<label className="form-label">Filtrar por Obra:</label>
@@ -1546,20 +1623,30 @@ function ConsultaPartes({ datos, onVolver, estadoOptions, onRefrescarPartes }) {
 									/>
 								</div>
 							</div>
+							{(filtroObra || filtroFecha) && (
+								<div className="filtros-activos">
+									{filtroObra && (
+										<span className="filtro-chip">Obra: {filtroObra}</span>
+									)}
+									{filtroFecha && (
+										<span className="filtro-chip">Fecha: {formatearFechaFiltro(filtroFecha)}</span>
+									)}
+								</div>
+							)}
 						</div>
 
-					{/* Debug info para filtros - solo en desarrollo (Vite) */}
-					{import.meta.env.MODE === 'development' && (
+					{/* Debug info para filtros - Comentado para ocultar */}
+					{/* {import.meta.env.MODE === 'development' && (
 							<div className="debug-filtros">
-								<strong>Debug Filtros:</strong> Obras disponibles: {obrasUnicas.length} | 
-								Partes totales: {datos.partesTrabajo.length} | 
-								Partes filtrados: {partesFiltrados.length} | 
+								<strong>Debug Filtros:</strong> Obras disponibles: {obrasUnicas.length} |
+								Partes totales: {datos.partesTrabajo.length} |
+								Partes filtrados: {partesFiltrados.length} |
 								Fechas disponibles: {fechasUnicas.length}
 								{filtroFecha && (
 									<span> | Fecha filtro: {filtroFecha}</span>
 								)}
 							</div>
-						)}
+						)} */}
 
 						{/* Lista de partes */}
 						<div className="partes-lista">
@@ -1576,86 +1663,110 @@ function ConsultaPartes({ datos, onVolver, estadoOptions, onRefrescarPartes }) {
 									)}
 								</div>
 							) : (
-								partesFiltrados.map((parte) => (
-									<div key={parte.id} className="parte-card">
-										<div className="parte-header">
-											<h3 className="parte-nombre">{parte.nombre}</h3>
-											<span className={`estado-badge ${parte.estado?.toLowerCase() || 'pendiente'}`}>
-												{parte.estado || 'Pendiente'}
-											</span>
-										</div>
-										<div className="parte-info">
-											<div className="info-item">
-												<Building size={20} />
-												<span>Obra: {parte.obra || 'Sin obra'}</span>
-											</div>
-											<div className="info-item">
-												<Calendar size={20} />
-												<span>Fecha: {formatearFecha(parte.fecha)}</span>
-											</div>
-                                        <div className="info-item">
-                                            <Users size={20} />
-                                            <span>{parte.rpHorasTotales ? parte.rpHorasTotales : `Horas: ${(parte.horasOficial1 + parte.horasOficial2 + parte.horasCapataz + parte.horasEncargado) || 0}h`}</span>
-                                        </div>
+								partesFiltrados.map((parte) => {
+									const estadoClase = `estado-${String(parte.estado || 'pendiente')
+										.toLowerCase()
+										.normalize('NFD')
+										.replace(/[\u0300-\u036f]/g, '')
+										.replace(/\s+/g, '-')}`
 
-										</div>
-										
-										{/* Indicador visual si el parte no es editable */}
-										{!puedeEditarParte(parte.estado) && (
-											<div className="parte-no-editable-indicator">
-												<FileText size={16} />
-												<span>No editable - {parte.estado}</span>
-											</div>
-										)}
-										
-										<div className="parte-acciones">
-											<button className="btn btn-primary" onClick={() => verDetalles(parte)}>
-												Ver Detalles
-											</button>
-											{parte.urlPDF && tienePDFDisponible(parte.estado) && (
-												<button className="btn btn-secondary" onClick={() => window.open(parte.urlPDF, '_blank')}>
-													Descargar PDF
-												</button>
-											)}
-											{esEstadoListoFirmar(parte.estado) && parte.firmarUrl && (
-												<button
-													className="btn btn-sign"
-													onClick={() => abrirFirma(parte.firmarUrl)}
-												>
-													<PenSquare size={18} />
-													Firmar
-												</button>
-											)}
-											{esEstadoBorrador(parte.estado) && (
-												<button
-													className="btn btn-warning"
-													onClick={() => handleEnviarDatos(parte)}
-													disabled={enviandoParteId === parte.id}
-												>
-													{enviandoParteId === parte.id ? (
-														<>
-															<Loader2 size={18} className="spinner-inline" />
-															Enviando...
-														</>
-													) : (
-														<>
-															<Send size={18} />
-															Enviar Datos
-														</>
+									const horasTotalesCalculadas = (() => {
+										if (parte.rpHorasTotales !== undefined && parte.rpHorasTotales !== null) {
+											const valor = Number(parte.rpHorasTotales)
+											return `${Number.isNaN(valor) ? parte.rpHorasTotales : valor} h`
+										}
+										const suma = [
+											parte.horasOficial1,
+											parte.horasOficial2,
+											parte.horasCapataz,
+											parte.horasEncargado,
+											parte.horasPeon
+										]
+											.filter((h) => typeof h === 'number')
+											.reduce((sum, h) => sum + h, 0)
+										return `${suma} h`
+									})()
+
+										return (
+											<div key={parte.id} className={`parte-card ${estadoClase}`}>
+												<div className="parte-header">
+													<h3 className="parte-nombre">{parte.nombre}</h3>
+													<span className={`estado-badge ${parte.estado?.toLowerCase() || 'pendiente'}`}>
+														{parte.estado || 'Pendiente'}
+													</span>
+												</div>
+												<div className="parte-info">
+													<div className="info-item">
+														<Building size={20} />
+														<span><strong>Obra</strong> {parte.obra || 'Sin obra'}</span>
+													</div>
+													<div className="info-item">
+														<Calendar size={20} />
+														<span><strong>Fecha</strong> {formatearFecha(parte.fecha)}</span>
+													</div>
+													<div className="info-item">
+														<Users size={20} />
+														<span><strong>Horas</strong> {horasTotalesCalculadas}</span>
+													</div>
+												</div>
+
+												{/* Indicador visual si el parte no es editable */}
+												{!puedeEditarParte(parte.estado) && (
+													<div className="parte-no-editable-indicator">
+														<FileText size={16} />
+														<span>No editable - {parte.estado}</span>
+													</div>
+												)}
+
+												<div className="parte-acciones">
+													<button className="btn btn-primary" onClick={() => verDetalles(parte)}>
+														Ver Detalles
+													</button>
+													{parte.urlPDF && tienePDFDisponible(parte.estado) && (
+														<button className="btn btn-secondary" onClick={() => window.open(parte.urlPDF, '_blank')}>
+															Descargar PDF
+														</button>
 													)}
-												</button>
-											)}
-											
-											{/* Botones de edición solo si el parte es editable */}
-											{puedeEditarParte(parte.estado) && (
-												<button className="btn btn-success" onClick={() => iniciarEdicion(parte)}>
-													<FileText size={20} />
-													Editar
-												</button>
-											)}
-										</div>
-									</div>
-								))
+													{esEstadoListoFirmar(parte.estado) && parte.firmarUrl && (
+														<button
+															className="btn btn-sign"
+															onClick={() => abrirFirma(parte.firmarUrl)}
+														>
+															<PenSquare size={18} />
+															Firmar
+														</button>
+													)}
+													{esEstadoBorrador(parte.estado) && (
+														<button
+															className="btn btn-warning"
+															onClick={() => handleEnviarDatos(parte)}
+															disabled={enviandoParteId === parte.id}
+														>
+															{enviandoParteId === parte.id ? (
+																<>
+																	<Loader2 size={18} className="spinner-inline" />
+																	Enviando...
+																</>
+															) : (
+																<>
+																	<Send size={18} />
+																	Enviar Datos
+																</>
+															)}
+														</button>
+													)}
+
+													{/* Botones de edición solo si el parte es editable */}
+													{puedeEditarParte(parte.estado) && (
+														<button className="btn btn-success" onClick={() => iniciarEdicion(parte)}>
+															<FileText size={20} />
+															Editar
+														</button>
+													)}
+												</div>
+											</div>
+										)
+									})
 							)}
 						</div>
 					</div>
