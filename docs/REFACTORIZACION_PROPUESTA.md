@@ -2,7 +2,7 @@
 
 **Versión:** 2.0.0
 **Fecha:** 15 de Octubre de 2025
-**Estado Actual:** v1.3.0
+**Estado Actual:** v1.4.1
 
 ---
 
@@ -23,12 +23,12 @@
 ## 📊 Resumen Ejecutivo
 
 ### Estado Actual
-- **Líneas de código:** ~1.850 líneas en App.jsx
+- **Líneas de código:** ~2.276 líneas en App.jsx
 - **Componentes:** 3 componentes monolíticos en un solo archivo
 - **Servicios:** 1 archivo de servicios centralizado
 - **Estilos:** 2 archivos CSS globales
 - **Gestión de estado:** useState local sin contexto global
-- **Performance:** Polling cada 30s sin optimización
+- **Performance:** Smart polling adaptativo (3/8/15s) acoplado al componente principal
 
 ### Objetivos de la Refactorización
 1. **Modularización**: Separar componentes en archivos independientes
@@ -45,7 +45,7 @@
 ### Estructura Actual
 ```
 src/
-├── App.jsx (1843 líneas) ⚠️
+├── App.jsx (2276 líneas) ⚠️
 │   ├── App (componente principal)
 │   ├── PantallaPrincipal (componente)
 │   ├── ConsultaPartes (componente - 640 líneas)
@@ -58,7 +58,7 @@ src/
 
 ### Backend (server.js)
 ```
-server.js (1299 líneas) ⚠️
+server.js (1385 líneas) ⚠️
 ├── Configuración y middlewares (95 líneas)
 ├── Funciones helper (145 líneas)
 ├── Endpoints API (1050 líneas)
@@ -173,24 +173,54 @@ const makeNotionRequest = async (method, endpoint, data) => { ... }
 
 ### 3. **Performance**
 
-#### 3.1 Polling Ineficiente
+#### 3.1 Smart Polling Acoplado
 ```javascript
-// Polling cada 30s sin optimización
-useEffect(() => {
-  const interval = setInterval(async () => {
-    if (editandoParte) return  // Condición simple
+const partesPollRef = useRef(null)
+const currentPollIntervalRef = useRef(3000)
+
+const getSmartPollInterval = () => {
+  const timeSinceChange = Date.now() - lastParteChangeRef.current
+  if (timeSinceChange < 30000) return 3000   // rápido
+  if (timeSinceChange < 120000) return 8000 // normal
+  return 15000                              // lento
+}
+
+const startPartesPolling = () => {
+  if (partesPollRef.current) return
+
+  const poll = async () => {
+    if (editandoParte) return
+
     const partes = await getPartesTrabajo()
-    setDatos(prev => ({ ...prev, partesTrabajo: partes }))
-  }, 30000)
-  return () => clearInterval(interval)
-}, [])
+    const newHash = hashPartes(partes)
+
+    if (newHash !== lastPartesHashRef.current) {
+      lastPartesHashRef.current = newHash
+      lastParteChangeRef.current = Date.now()
+      setDatos(prev => ({ ...prev, partesTrabajo: partes }))
+    } else {
+      setDatos(prev => ({ ...prev, partesTrabajo: partes }))
+    }
+
+    const newInterval = getSmartPollInterval()
+    if (newInterval !== currentPollIntervalRef.current) {
+      currentPollIntervalRef.current = newInterval
+      stopPartesPolling()
+      startPartesPolling()
+    }
+  }
+
+  poll()
+  partesPollRef.current = setInterval(poll, currentPollIntervalRef.current)
+}
 ```
 
 **Problemas:**
-- Polling global sin discriminación
-- No usa cache eficientemente
-- Re-fetching de datos completos
-- Alto consumo de API
+- La lógica de polling inteligente vive en `App.jsx`, dificultando su reutilización y testeo
+- Gestión manual de `setInterval`/`clearInterval` duplicada para partes y opciones de estado
+- El hook depende de estados mutables globales (`useRef`) y fuerza renders completos de `App`
+- Falta integración con cache/suspense (React Query, SWR) para deduplicar peticiones
+- No existe un mecanismo centralizado para pausar/reanudar desde otras vistas o pestañas secundarias
 
 #### 3.2 Re-renders Innecesarios
 ```javascript
@@ -213,10 +243,9 @@ const cargarDatos = async () => {
 ```
 
 #### 4.2 Sin Sistema de Diseño
-- Colores hardcodeados en múltiples lugares
-- Espaciados inconsistentes
-- No hay tokens de diseño centralizados
-- Componentes UI no reutilizables
+- Tokens globales definidos en `index.css`, pero expuestos como variables sueltas sin namespaces ni tipado
+- Mezcla de valores hardcodeados y tokens reutilizados (colores/espaciados aún inconsistentes)
+- Componentes UI no reutilizables ni extraídos a una librería común
 
 ### 5. **Testing**
 - ❌ No hay tests unitarios
