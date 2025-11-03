@@ -17,6 +17,16 @@
 	--primary-soft-strong: #ccd2ff;
 	--primary-ring: rgba(1, 20, 109, 0.18);
 	--primary-shadow: rgba(1, 20, 109, 0.15);
+	--btn-primary-start: #01146d;
+	--btn-primary-end: #14179a;
+	--btn-secondary-start: #121e57;
+	--btn-secondary-end: #0c1549;
+	--btn-accent-start: #1f2ee9;
+	--btn-accent-end: #5164ff;
+	--btn-success-start: #0f6a8f;
+	--btn-success-end: #18a0c3;
+	--btn-warning-start: #1626a8;
+	--btn-warning-end: #2a3fe5;
 
 	/* Spacing scale */
 	--spacing-xs: 4px;

@@ -851,26 +851,34 @@
 }
 
 .btn-primary {
-	background-image: linear-gradient(135deg, #01146d 0%, #14179a 100%);
+	background-image: linear-gradient(135deg, var(--btn-primary-start), var(--btn-primary-end));
 	color: white;
 }
 
 .btn-primary:hover {
-	filter: brightness(1.03);
+	filter: brightness(1.05);
 }
 
 .btn-secondary {
-	background-color: var(--secondary-color);
+	background-image: linear-gradient(135deg, var(--btn-secondary-start), var(--btn-secondary-end));
 	color: white;
+}
+
+.btn-secondary:hover {
+	filter: brightness(1.05);
 }
 
 .btn-success {
-	background-image: linear-gradient(135deg, #059669 0%, #047857 100%);
+	background-image: linear-gradient(135deg, var(--btn-success-start), var(--btn-success-end));
 	color: white;
 }
 
+.btn-success:hover {
+	filter: brightness(1.05);
+}
+
 .btn-sign {
-	background-image: linear-gradient(135deg, #01146d 0%, #14179a 100%);
+	background-image: linear-gradient(135deg, var(--btn-accent-start), var(--btn-accent-end));
 	color: white;
 }
 
@@ -879,7 +887,7 @@
 }
 
 .btn-warning {
-	background-image: linear-gradient(135deg, #f97316 0%, #d97706 100%);
+	background-image: linear-gradient(135deg, var(--btn-warning-start), var(--btn-warning-end));
 	color: white;
 }
 
