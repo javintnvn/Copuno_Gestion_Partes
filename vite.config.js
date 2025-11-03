@@ -15,6 +15,21 @@ export default defineConfig({
 	},
 	build: {
 		outDir: 'dist',
-		sourcemap: true
+		sourcemap: false, // Desactivar sourcemaps en producción por seguridad
+		minify: 'terser',
+		terserOptions: {
+			compress: {
+				drop_console: true, // Remover console.log en producción
+				drop_debugger: true
+			}
+		},
+		rollupOptions: {
+			output: {
+				manualChunks: {
+					'react-vendor': ['react', 'react-dom', 'react-router-dom'],
+					'ui-vendor': ['lucide-react']
+				}
+			}
+		}
 	}
 }) 

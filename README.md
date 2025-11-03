@@ -44,24 +44,52 @@ Aplicación web moderna para la gestión de partes de trabajo con backend en Not
 
 ---
 
-## 🚀 Despliegue Rápido (Vercel)
+## 🚀 Despliegue en Producción
 
-1. **Instalar dependencias**
-   ```bash
-   npm install
-   ```
-2. **Generar build**
-   ```bash
-   npm run build
-   ```
-3. **Desplegar en Vercel**
-   ```bash
-   npx vercel --prod
-   ```
-   > Requiere variables de entorno definidas (ver `docs/CONFIGURACION_ENTORNO.md`).
+### Vercel (Recomendado)
 
-La configuración `vercel.json` enruta `/api/*` a `server.js` (función serverless) y sirve el frontend desde `dist/`.
-- ✅ **Iconos:** Lucide React
+La aplicación está lista para desplegar en Vercel con configuración optimizada:
+
+#### Despliegue Rápido (< 5 minutos)
+
+1. **Conectar con Vercel**
+   - Ir a [vercel.com/new](https://vercel.com/new)
+   - Importar repositorio desde GitHub
+   - Vercel detectará automáticamente la configuración
+
+2. **Configurar Variables de Entorno**
+   ```
+   NOTION_TOKEN = ntn_XXXXXXXXXX
+   PARTES_DATOS_WEBHOOK_URL = https://hook.eu2.make.com/XXXXXXXXXX
+   NODE_ENV = production
+   CACHE_TTL_MS = 5000
+   ```
+
+3. **Deploy**
+   - Click en "Deploy"
+   - URL pública disponible en 2-3 minutos
+
+#### Dominio Personalizado
+
+Para configurar `gestionpartes.copuno.com`:
+
+1. En Vercel: Settings → Domains → Add `gestionpartes.copuno.com`
+2. Configurar DNS (CNAME): `cname.vercel-dns.com`
+3. Actualizar `ALLOWED_ORIGINS` en variables de entorno
+4. Re-desplegar
+
+📖 **Documentación completa**: [VERCEL_QUICK_START.md](VERCEL_QUICK_START.md) y [docs/DESPLIEGUE_VERCEL.md](docs/DESPLIEGUE_VERCEL.md)
+
+### Características de Producción
+
+- ✅ **HTTPS automático** con certificados Let's Encrypt
+- ✅ **Variables de entorno encriptadas**
+- ✅ **Headers de seguridad** (Helmet.js)
+- ✅ **Rate limiting** configurable
+- ✅ **CORS** configurado para dominios específicos
+- ✅ **Caché optimizado** (TTL 5s)
+- ✅ **Minificación y tree-shaking** automáticos
+- ✅ **Code splitting** para mejor performance
 
 ## 🚀 Instalación y Uso
 

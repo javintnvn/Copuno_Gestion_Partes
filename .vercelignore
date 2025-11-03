@@ -1,0 +1,43 @@
+# Archivos y directorios que Vercel debe ignorar
+.env
+.env.local
+.env.*.local
+env.example
+
+# Node modules (Vercel los instala automáticamente)
+node_modules/
+
+# Archivos de desarrollo
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Logs
+*.log
+copuno_server.log
+server.live.log
+server.log
+
+# Archivos temporales
+.DS_Store
+._*
+
+# Recursos de desarrollo
+Recursos Pre desarrollo/
+.gemini/
+
+# Tests
+test-*.js
+
+# Configuración de otros servicios
+netlify.toml
+
+# Documentación de desarrollo (opcional, descomentar si quieres incluirla)
+# docs/
+# README.md
+# CHANGELOG*.md
+
+# Archivos de git
+.git/
+.gitignore

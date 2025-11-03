@@ -38,8 +38,62 @@ Si un token se ha expuesto o quieres rotarlo:
 - Revoca/borra el token antiguo en Notion.
 - Reinicia el servidor.
 
+## Configuración en Vercel
+
+Para despliegues en Vercel, las variables de entorno se configuran desde el Dashboard:
+
+### Paso a paso:
+
+1. **Acceder al proyecto en Vercel**
+   - Ir a [vercel.com](https://vercel.com)
+   - Seleccionar tu proyecto
+
+2. **Configurar variables**
+   - Ir a **Settings** → **Environment Variables**
+   - Añadir cada variable con su valor
+   - Seleccionar los entornos: **Production**, **Preview**, **Development**
+
+### Variables requeridas en Vercel:
+
+```
+NOTION_TOKEN = ntn_XXXXXXXXXX
+PARTES_DATOS_WEBHOOK_URL = https://hook.eu2.make.com/XXXXXXXXXX
+NODE_ENV = production
+CACHE_TTL_MS = 5000
+```
+
+### Variables opcionales recomendadas:
+
+```
+ALLOWED_ORIGINS = https://gestionpartes.copuno.com
+RATE_LIMIT_WINDOW_MS = 900000
+RATE_LIMIT_MAX = 100
+PARTES_WEBHOOK_TIMEOUT_MS = 10000
+```
+
+### Desde la CLI de Vercel:
+
+```bash
+# Añadir variable
+vercel env add NOTION_TOKEN production
+
+# Listar variables
+vercel env ls
+
+# Eliminar variable
+vercel env rm NOTION_TOKEN production
+```
+
+**Importante**: Después de añadir o modificar variables de entorno en Vercel, es necesario re-desplegar:
+```bash
+vercel --prod
+```
+
 ## Buenas prácticas
 
 - Nunca publiques el token en commits, issues o documentación pública.
 - Mantén `.env` fuera del control de versiones (ya está incluido en `.gitignore`).
 - Usa `ALLOWED_ORIGINS` en producción para restringir CORS.
+- En Vercel, las variables de entorno están encriptadas y son seguras.
+- Configura siempre `ALLOWED_ORIGINS` cuando despliegues a un dominio personalizado.
+- Usa valores diferentes para Production, Preview y Development si es necesario.
