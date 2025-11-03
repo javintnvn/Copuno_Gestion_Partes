@@ -553,6 +553,8 @@ app.get('/api/partes-trabajo', async (req, res) => {
       ultimaEdicion: extractPropertyValue(page.properties['Última edición']),
       estado: extractPropertyValue(page.properties['Estado']),
       obra: extractPropertyValue(page.properties['AUX Obra']),
+      personaAutorizada: extractPropertyValue(page.properties['AUX Jefe de Obra']),
+      cliente: extractPropertyValue(page.properties['AUX Cliente - texto-']),
       rpHorasTotales: extractPropertyValue(page.properties['RP Horas totales']),
       horasOficial1: extractPropertyValue(page.properties['Horas Oficial 1ª']),
       horasOficial2: extractPropertyValue(page.properties['Horas Oficial 2ª ']),

@@ -431,6 +431,7 @@ function App() {
 					</div>
 				</div>
 			)}
+			<Footer />
 		</div>
 	)
 }
@@ -478,6 +479,8 @@ function PantallaPrincipal({ onNavigate }) {
 function ConsultaPartes({ datos, onVolver, estadoOptions, onRefrescarPartes }) {
 	const [filtroObra, setFiltroObra] = useState('')
 	const [filtroFecha, setFiltroFecha] = useState('')
+	const [filtroEstado, setFiltroEstado] = useState('')
+	const [filtroPersonaAutorizada, setFiltroPersonaAutorizada] = useState('')
 	const [fechaInput, setFechaInput] = useState(new Date().toISOString().split('T')[0])
 	const [parteSeleccionado, setParteSeleccionado] = useState(null)
 	const [detallesEmpleados, setDetallesEmpleados] = useState([])
@@ -1012,11 +1015,19 @@ function ConsultaPartes({ datos, onVolver, estadoOptions, onRefrescarPartes }) {
 	const partesFiltrados = datos.partesTrabajo.filter(parte => {
 		const cumpleObra = !filtroObra || parte.obra === filtroObra
 		const cumpleFecha = !filtroFecha || normalizarFecha(parte.fecha) === filtroFecha
-		return cumpleObra && cumpleFecha
+		const cumpleEstado = !filtroEstado || (parte.estado || 'Pendiente') === filtroEstado
+		const cumplePersonaAutorizada = !filtroPersonaAutorizada || parte.personaAutorizada === filtroPersonaAutorizada
+		return cumpleObra && cumpleFecha && cumpleEstado && cumplePersonaAutorizada
 	})
 
 	// Obtener obras únicas para el filtro - usar todas las obras disponibles
 	const obrasUnicas = datos.obras.map(obra => obra.nombre).filter(obra => obra)
+
+	// Obtener estados únicos para el filtro
+	const estadosUnicos = [...new Set(datos.partesTrabajo.map(parte => parte.estado || 'Pendiente'))].filter(estado => estado).sort()
+
+	// Obtener personas autorizadas únicas para el filtro
+	const personasAutorizadasUnicas = [...new Set(datos.partesTrabajo.map(parte => parte.personaAutorizada).filter(persona => persona))].sort()
 
 	// Obtener fechas únicas para debug
 	const fechasUnicas = [...new Set(datos.partesTrabajo.map(parte => normalizarFecha(parte.fecha)))].filter(fecha => fecha)
@@ -1596,7 +1607,7 @@ function ConsultaPartes({ datos, onVolver, estadoOptions, onRefrescarPartes }) {
 								<Search size={16} />
 								<span>Filtros</span>
 							</div>
-							<div className="grid grid-2">
+							<div className="grid">
 								<div className="form-group">
 									<label className="form-label">Filtrar por Obra:</label>
 									<select
@@ -1622,14 +1633,46 @@ function ConsultaPartes({ datos, onVolver, estadoOptions, onRefrescarPartes }) {
 										}}
 									/>
 								</div>
+								<div className="form-group">
+									<label className="form-label">Filtrar por Estado:</label>
+									<select
+										className="form-select"
+										value={filtroEstado}
+										onChange={(e) => setFiltroEstado(e.target.value)}
+									>
+										<option value="">Todos los estados</option>
+										{estadosUnicos.map(estado => (
+											<option key={estado} value={estado}>{estado}</option>
+										))}
+									</select>
+								</div>
+								<div className="form-group">
+									<label className="form-label">Filtrar por Persona Autorizada:</label>
+									<select
+										className="form-select"
+										value={filtroPersonaAutorizada}
+										onChange={(e) => setFiltroPersonaAutorizada(e.target.value)}
+									>
+										<option value="">Todas las personas autorizadas</option>
+										{personasAutorizadasUnicas.map(persona => (
+											<option key={persona} value={persona}>{persona}</option>
+										))}
+									</select>
+								</div>
 							</div>
-							{(filtroObra || filtroFecha) && (
+							{(filtroObra || filtroFecha || filtroEstado || filtroPersonaAutorizada) && (
 								<div className="filtros-activos">
 									{filtroObra && (
 										<span className="filtro-chip">Obra: {filtroObra}</span>
 									)}
 									{filtroFecha && (
 										<span className="filtro-chip">Fecha: {formatearFechaFiltro(filtroFecha)}</span>
+									)}
+									{filtroEstado && (
+										<span className="filtro-chip">Estado: {filtroEstado}</span>
+									)}
+									{filtroPersonaAutorizada && (
+										<span className="filtro-chip">Persona Autorizada: {filtroPersonaAutorizada}</span>
 									)}
 								</div>
 							)}
@@ -2270,6 +2313,28 @@ function CrearParte({ datos, estadoOptions, onParteCreado, onVolver }) {
 				)}
 			</div>
 		</div>
+	)
+}
+
+function Footer() {
+	const [showDate, setShowDate] = useState(false)
+	const version = '1.4.1' // Actualiza esto con cada nueva versión
+	const releaseDate = new Date('2025-07-26') // Actualiza esto con cada nueva versión
+
+	return (
+		<footer className="app-footer">
+			<div className="footer-content">
+				<p>Desarrollada por NotionVan</p>
+				<div className="version-info">
+					<p onClick={() => setShowDate(!showDate)}>
+						Versión {version}
+					</p>
+					{showDate && (
+						<p className="release-date">Fecha de lanzamiento: {releaseDate.toLocaleDateString()}</p>
+					)}
+				</div>
+			</div>
+		</footer>
 	)
 }
 

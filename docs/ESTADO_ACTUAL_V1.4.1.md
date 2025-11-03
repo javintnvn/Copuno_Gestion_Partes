@@ -1,6 +1,6 @@
-# 📊 Estado Actual del Proyecto - v1.4.0
+# 📊 Estado Actual del Proyecto - v1.4.1
 
-**Versión:** 1.4.0
+**Versión:** 1.4.1
 **Fecha:** 17 de Enero de 2025
 **Estado:** ✅ Funcional y Optimizado
 
@@ -8,7 +8,7 @@
 
 ## 🎯 Resumen Ejecutivo
 
-La versión 1.4.0 representa un **salto significativo en rendimiento y escalabilidad** mediante la implementación de un sistema de **Smart Polling adaptativo**. Esta actualización reduce la latencia de sincronización en un 50% cuando hay actividad, optimiza el consumo de la API de Notion en un 60% durante picos, y proporciona soporte robusto para 10+ usuarios concurrentes sin superar los límites de rate limiting.
+La versión 1.4.1 representa un **salto significativo en rendimiento y escalabilidad** mediante la implementación de un sistema de **Smart Polling adaptativo**. Esta actualización reduce la latencia de sincronización en un 50% cuando hay actividad, optimiza el consumo de la API de Notion en un 60% durante picos, y proporciona soporte robusto para 10+ usuarios concurrentes sin superar los límites de rate limiting.
 
 ### 🌟 Logros Principales
 
@@ -241,7 +241,7 @@ if (newInterval !== currentInterval) {
 |---------|-------------|--------|
 | [SMART_POLLING.md](SMART_POLLING.md) | Guía técnica completa del sistema | ✅ Nuevo |
 | [README.md](../README.md) | Documentación principal actualizada | ✅ Actualizado |
-| ESTADO_ACTUAL_V1.4.0.md | Este documento | ✅ Nuevo |
+| ESTADO_ACTUAL_V1.4.1.md | Este documento | ✅ Nuevo |
 | [GUIA_DESPLIEGUE.md](GUIA_DESPLIEGUE.md) | Guía de despliegue | 🔄 Pendiente |
 
 ### Contenido de SMART_POLLING.md
@@ -299,7 +299,7 @@ CACHE_TTL_MS=10000  # 10 segundos
 
 ## 🎯 Funcionalidades Completas
 
-### ✅ Implementadas en v1.4.0
+### ✅ Implementadas en v1.4.1
 
 1. **Smart Polling Adaptativo**
    - Tres niveles: rápido (3s), normal (8s), lento (15s)
@@ -457,7 +457,7 @@ Para problemas con Smart Polling:
 
 ## ✅ Conclusión
 
-La versión 1.4.0 representa un **hito significativo** en la evolución del proyecto Copuno. La implementación del Smart Polling ha transformado la aplicación de una herramienta con sincronización básica a un **sistema optimizado, escalable y responsive** que proporciona actualizaciones casi en tiempo real mientras respeta los límites de la API de Notion.
+La versión 1.4.1 representa un **hito significativo** en la evolución del proyecto Copuno. La implementación del Smart Polling ha transformado la aplicación de una herramienta con sincronización básica a un **sistema optimizado, escalable y responsive** que proporciona actualizaciones casi en tiempo real mientras respeta los límites de la API de Notion.
 
 **Logros clave:**
 - ✅ Latencia reducida 83% durante actividad

@@ -244,7 +244,7 @@ const calcularSumatoriosHoras = (detalles) => {
 
 ## 📊 Impacto en UX
 
-### Antes (v1.4.0)
+### Antes (v1.4.1)
 - Usuario debía sumar mentalmente las horas
 - No había visión rápida de la composición
 - Difícil detectar errores de carga

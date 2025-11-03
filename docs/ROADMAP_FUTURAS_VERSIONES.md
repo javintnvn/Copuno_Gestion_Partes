@@ -16,13 +16,13 @@
 - ✅ **Backwards compatibility:** Compatibilidad con versiones anteriores
 
 ### **Ciclo de Versiones**
-- **Versiones menores:** Nuevas funcionalidades (v1.4.0, v1.5.0)
+- **Versiones menores:** Nuevas funcionalidades (v1.4.1, v1.5.0)
 - **Versiones de parche:** Bug fixes y mejoras menores (v1.3.1, v1.3.2)
 - **Versiones mayores:** Cambios breaking (v2.0.0) - solo cuando sea necesario
 
 ---
 
-## 🚀 **VERSIÓN 1.4.0 - Eliminación y Exportación**
+## 🚀 **VERSIÓN 1.4.1 - Eliminación y Exportación**
 
 ### **🎯 Objetivos**
 - ✅ Implementar eliminación segura de partes

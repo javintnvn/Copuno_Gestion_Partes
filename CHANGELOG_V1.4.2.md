@@ -1,4 +1,4 @@
-# 📋 Changelog - Versión 1.4.0
+# 📋 Changelog - Versión 1.4.1
 
 **Fecha de Release**: 17 de Enero de 2025
 **Tipo**: Feature Update (Minor Version)
@@ -8,7 +8,7 @@
 
 ## 🎯 Resumen de Cambios
 
-La versión 1.4.0 introduce el **Smart Polling**: un sistema de sincronización adaptativo que ajusta automáticamente la frecuencia de actualización según la actividad detectada en Notion. Esta implementación representa una mejora significativa en rendimiento, escalabilidad y experiencia de usuario.
+La versión 1.4.1 introduce el **Smart Polling**: un sistema de sincronización adaptativo que ajusta automáticamente la frecuencia de actualización según la actividad detectada en Notion. Esta implementación representa una mejora significativa en rendimiento, escalabilidad y experiencia de usuario.
 
 ---
 
@@ -124,7 +124,7 @@ La versión 1.4.0 introduce el **Smart Polling**: un sistema de sincronización 
 
 ### Rendimiento
 
-| Métrica | v1.3.0 | v1.4.0 | Mejora |
+| Métrica | v1.3.0 | v1.4.1 | Mejora |
 |---------|--------|--------|--------|
 | Latencia con actividad | 30s | 3s | **90% más rápido** |
 | Latencia sin actividad | 30s | 15s | **50% más rápido** |
@@ -138,7 +138,7 @@ La versión 1.4.0 introduce el **Smart Polling**: un sistema de sincronización 
 - 5 usuarios → 3.0 req/s (límite alcanzado)
 - Riesgo de rate limiting con 6+ usuarios
 
-**Ahora (v1.4.0):**
+**Ahora (v1.4.1):**
 - 10 usuarios → 1.6 req/s (cómodo)
 - 15 usuarios → 2.4 req/s (seguro)
 - Sistema se autorregula en picos
@@ -156,13 +156,13 @@ La versión 1.4.0 introduce el **Smart Polling**: un sistema de sincronización 
    - Configuración y troubleshooting
    - Roadmap de mejoras futuras
 
-2. **[docs/ESTADO_ACTUAL_V1.4.0.md](docs/ESTADO_ACTUAL_V1.4.0.md)**
+2. **[docs/ESTADO_ACTUAL_V1.4.1.md](docs/ESTADO_ACTUAL_V1.4.1.md)**
    - Estado completo del proyecto (32 KB)
    - Arquitectura actualizada
    - Métricas de rendimiento
    - Guía de escalabilidad
 
-3. **CHANGELOG_V1.4.0.md** (este archivo)
+3. **CHANGELOG_V1.4.1.md** (este archivo)
    - Resumen de cambios
    - Guía de actualización
    - Breaking changes
@@ -171,14 +171,14 @@ La versión 1.4.0 introduce el **Smart Polling**: un sistema de sincronización 
 
 1. **[README.md](README.md)**
    - Sección de características actualizada
-   - Changelog con v1.4.0
+   - Changelog con v1.4.1
    - Link a documentación de Smart Polling
    - Roadmap ajustado (v1.5.0 → v1.6.0 → v1.7.0)
 
 2. **[docs/GUIA_DESPLIEGUE.md](docs/GUIA_DESPLIEGUE.md)**
    - Variable `CACHE_TTL_MS` actualizada a 5000ms
    - Checklist de verificación con indicadores visuales
-   - Notas sobre v1.4.0
+   - Notas sobre v1.4.1
 
 3. **[docs/CONFIGURACION_ENTORNO.md](docs/CONFIGURACION_ENTORNO.md)**
    - Nueva variable `CACHE_TTL_MS` documentada
@@ -204,7 +204,7 @@ npm install           # Actualizar dependencias si es necesario
 Añadir a tu archivo `.env`:
 
 ```bash
-# Nuevo en v1.4.0
+# Nuevo en v1.4.1
 CACHE_TTL_MS=5000  # Recomendado para Smart Polling
 ```
 
@@ -288,7 +288,7 @@ npm run server  # O redeploy a tu plataforma
 ### Documentación
 
 - **Smart Polling**: [docs/SMART_POLLING.md](docs/SMART_POLLING.md)
-- **Estado Actual**: [docs/ESTADO_ACTUAL_V1.4.0.md](docs/ESTADO_ACTUAL_V1.4.0.md)
+- **Estado Actual**: [docs/ESTADO_ACTUAL_V1.4.1.md](docs/ESTADO_ACTUAL_V1.4.1.md)
 - **Configuración**: [docs/CONFIGURACION_ENTORNO.md](docs/CONFIGURACION_ENTORNO.md)
 - **Despliegue**: [docs/GUIA_DESPLIEGUE.md](docs/GUIA_DESPLIEGUE.md)
 
@@ -329,7 +329,7 @@ npm run server  # O redeploy a tu plataforma
 
 **Desarrollado por:** Claude Code Assistant
 **Fecha:** 17 de Enero de 2025
-**Versión:** 1.4.0
+**Versión:** 1.4.1
 
 ---
 
