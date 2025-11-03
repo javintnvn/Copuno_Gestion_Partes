@@ -1,7 +1,7 @@
 # 🚀 Guía Completa de Despliegue - Copuno Gestión de Partes
 
 **Versión:** 1.0.0
-**Fecha:** 15 de Octubre de 2025
+**Fecha:** 3 de Noviembre de 2025
 **Aplicación:** Copuno - Sistema de Gestión de Partes de Trabajo
 
 ---
@@ -790,7 +790,7 @@ ALLOWED_ORIGINS=https://partes.CLIENTE.com,https://www.CLIENTE.com
 RATE_LIMIT_WINDOW_MS=900000  # 15 minutos
 RATE_LIMIT_MAX=100           # 100 requests
 
-# Cache TTL (optimizado en v1.4.1)
+# Cache TTL (optimizado en v1.0.0)
 CACHE_TTL_MS=5000  # 5 segundos (recomendado para Smart Polling)
 ```
 
@@ -842,7 +842,7 @@ curl https://partes.CLIENTE.com/api/health
 ✅ Página principal carga
 ✅ Navegación funciona
 ✅ No hay errores en consola
-✅ Indicador de sincronización visible en header (v1.4.1+)
+✅ Indicador de sincronización visible en header (v1.0.0+)
 ✅ Badge de modo de sync aparece ("RÁPIDO", "NORMAL", o "LENTO")
 
 # 3. Crear Parte

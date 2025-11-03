@@ -24,7 +24,7 @@ Este documento describe el plan completo de testing para la aplicación Copuno -
 - **Integración**: Webhook Make para flujo de firma
 
 ### Estado Actual
-- **Versión**: 1.4.1
+- **Versión**: 1.0.0
 - **Tests Automatizados**: ❌ No implementados
 - **Testing Manual**: ⚠️ Parcial
 - **Documentación**: ✅ Completa
@@ -1319,6 +1319,6 @@ Para dudas o problemas durante el testing, contactar a:
 
 ---
 
-**Última actualización**: 2025-10-31
-**Versión del documento**: 1.0
-**Versión de la aplicación**: 1.4.1
+**Última actualización**: 2025-11-03
+**Versión del documento**: 1.1
+**Versión de la aplicación**: 1.0.0

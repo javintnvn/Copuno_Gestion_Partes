@@ -288,10 +288,10 @@ npm run build
 - **Código fuente**: [src/App.jsx:581-616](../src/App.jsx#L581-L616)
 - **Componente visual**: [src/App.jsx:1435-1455](../src/App.jsx#L1435-L1455)
 - **Estilos**: [src/App.css:1178-1247](../src/App.css#L1178-L1247)
-- **Changelog**: [CHANGELOG_V1.4.1.md](../CHANGELOG_V1.4.1.md)
+- **Changelog**: [CHANGELOG_V1.0.0.md](../CHANGELOG_V1.0.0.md)
 
 ---
 
-**Documentado en:** v1.4.1
-**Fecha:** 31 de Octubre de 2025
+**Documentado en:** v1.0.0
+**Fecha:** 3 de Noviembre de 2025
 **Autor:** Claude Code Assistant

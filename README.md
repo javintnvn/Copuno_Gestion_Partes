@@ -2,6 +2,9 @@
 
 Aplicación web moderna para la gestión de partes de trabajo con backend en Notion. Diseñada con una interfaz minimalista y elegante, optimizada para usuarios de todos los niveles.
 
+> **Versión actual:** `1.0.0` (MVP listo para producción)
+> **Release:** 3 de noviembre de 2025 · [Changelog](./CHANGELOG_V1.0.0.md)
+
 ## ✨ Características
 
 ### 🔗 Conectividad Robusta
@@ -38,6 +41,26 @@ Aplicación web moderna para la gestión de partes de trabajo con backend en Not
 - ✅ **Backend:** Node.js + Express
 - ✅ **Base de datos:** Notion API
 - ✅ **Estilos:** CSS Variables + Diseño moderno
+
+---
+
+## 🚀 Despliegue Rápido (Vercel)
+
+1. **Instalar dependencias**
+   ```bash
+   npm install
+   ```
+2. **Generar build**
+   ```bash
+   npm run build
+   ```
+3. **Desplegar en Vercel**
+   ```bash
+   npx vercel --prod
+   ```
+   > Requiere variables de entorno definidas (ver `docs/CONFIGURACION_ENTORNO.md`).
+
+La configuración `vercel.json` enruta `/api/*` a `server.js` (función serverless) y sirve el frontend desde `dist/`.
 - ✅ **Iconos:** Lucide React
 
 ## 🚀 Instalación y Uso
@@ -274,25 +297,13 @@ NODE_ENV=production
 - ✅ **Interfaz profesional y moderna** - UX optimizada
 - ✅ **Documentación completa** - Estado actual y roadmap futuro
 
-### v1.2.0 - Pantalla Principal y Navegación Mejorada
-- ✅ Pantalla de bienvenida elegante
-- ✅ Navegación intuitiva y clara
-- ✅ Diseño centrado y profesional
-- ✅ Mejor experiencia de usuario
-- ✅ Accesibilidad mejorada
-
-### v1.1.0 - Mejoras de Interfaz
-- ✅ Interfaz minimalista y elegante
-- ✅ Modal de detalles funcional
-- ✅ Logo clickeable
-- ✅ Formato de fechas español
-- ✅ Filtros mejorados
-- ✅ Sistema de variables CSS
-
-### v1.0.0 - Versión Inicial
-- ✅ Conectividad con Notion
-- ✅ CRUD básico de partes
-- ✅ Interfaz funcional
+### v1.0.0 - MVP en Producción
+- ✅ Integración completa con Notion (datos reales)
+- ✅ Smart Polling + SSE para sincronización en vivo
+- ✅ Gestión integral de partes y empleados
+- ✅ Filtros avanzados y resumen de horas por categoría
+- ✅ UI corporativa Copuno con gradientes diferenciados
+- ✅ Documentación de despliegue en Vercel lista
 
 ## 📚 **Documentación Adicional**
 
@@ -303,22 +314,24 @@ NODE_ENV=production
 - **Guía de configuración** y troubleshooting
 
 ### **📋 Estado Actual del Proyecto**
-- **[ESTADO_ACTUAL_V1.3.0.md](docs/ESTADO_ACTUAL_V1.3.0.md)** - Documentación completa del estado actual
-- **Punto de referencia sólido** para futuras versiones
-- **Arquitectura detallada** y funcionalidades implementadas
+- **[ESTADO_ACTUAL_V1.0.0.md](docs/ESTADO_ACTUAL_V1.0.0.md)** - Panorama funcional y técnico del MVP
+- **[ESTADO_ACTUAL_V1.3.0.md](docs/ESTADO_ACTUAL_V1.3.0.md)** - Histórico previo a la refactorización
 
 ### **🗺️ Roadmap de Futuras Versiones**
-- **[ROADMAP_FUTURAS_VERSIONES.md](docs/ROADMAP_FUTURAS_VERSIONES.md)** - Planificación detallada
-- **Versión 1.5.0:** Eliminación y exportación de datos
-- **Versión 1.6.0:** Dashboard y analytics
-- **Versión 1.7.0:** Autenticación y seguridad
-- **Versión 2.0.0:** PWA y mobile
+- **[ROADMAP_FUTURAS_VERSIONES.md](docs/ROADMAP_FUTURAS_VERSIONES.md)** - Planificación a partir de la 1.0
+- **Versión 1.1.0:** Eliminación y exportación de datos
+- **Versión 1.2.0:** Dashboard y analytics
+- **Versión 1.3.0:** Autenticación y seguridad
+- **Versión 2.0.0:** Evolución PWA / mobile
 
 ### **🛠️ Comandos de Desarrollo**
 - **[COMANDOS_UTILES.md](docs/COMANDOS_UTILES.md)** - Guía completa de comandos
 - **Debugging y monitoreo** avanzado
 - **Testing y despliegue** automatizado
 - **Troubleshooting** común
+
+### **📝 Changelog**
+- **[CHANGELOG_V1.0.0.md](CHANGELOG_V1.0.0.md)** – Detalle del release MVP
 
 ### **⚙️ Operaciones Backend**
 - **[CONFIGURACION_ENTORNO.md](docs/CONFIGURACION_ENTORNO.md)** - Variables y buenas prácticas

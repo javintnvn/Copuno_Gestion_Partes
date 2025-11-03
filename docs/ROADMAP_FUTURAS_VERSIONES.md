@@ -1,7 +1,7 @@
 # 🗺️ ROADMAP - FUTURAS VERSIONES
 
-**Versión Base:** 1.3.0 - Funcionalidad de Edición y Gestión Avanzada
-**Fecha de Planificación:** $(date)
+**Versión Base:** 1.0.0 – MVP en producción
+**Fecha de Planificación:** 3 de noviembre de 2025
 **Estado Actual:** ✅ 100% funcional y estable
 
 ---
@@ -16,13 +16,13 @@
 - ✅ **Backwards compatibility:** Compatibilidad con versiones anteriores
 
 ### **Ciclo de Versiones**
-- **Versiones menores:** Nuevas funcionalidades (v1.4.1, v1.5.0)
-- **Versiones de parche:** Bug fixes y mejoras menores (v1.3.1, v1.3.2)
+- **Versiones menores:** Nuevas funcionalidades (v1.1.0, v1.2.0, …)
+- **Versiones de parche:** Bug fixes y mejoras menores (v1.0.1, v1.0.2)
 - **Versiones mayores:** Cambios breaking (v2.0.0) - solo cuando sea necesario
 
 ---
 
-## 🚀 **VERSIÓN 1.4.1 - Eliminación y Exportación**
+## 🚀 **VERSIÓN 1.1.0 - Eliminación y Exportación**
 
 ### **🎯 Objetivos**
 - ✅ Implementar eliminación segura de partes
@@ -67,7 +67,7 @@
 
 ---
 
-## 🚀 **VERSIÓN 1.5.0 - Dashboard y Analytics**
+## 🚀 **VERSIÓN 1.2.0 - Dashboard y Analytics**
 
 ### **🎯 Objetivos**
 - ✅ Implementar dashboard con métricas
@@ -106,7 +106,7 @@
 
 ---
 
-## 🚀 **VERSIÓN 1.6.0 - Autenticación y Seguridad**
+## 🚀 **VERSIÓN 1.3.0 - Autenticación y Seguridad**
 
 ### **🎯 Objetivos**
 - ✅ Implementar sistema de autenticación

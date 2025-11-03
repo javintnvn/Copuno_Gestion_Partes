@@ -2,7 +2,7 @@
 
 **Versión:** 2.0.0
 **Fecha:** 15 de Octubre de 2025
-**Estado Actual:** v1.4.1
+**Estado Actual:** v1.0.0
 
 ---
 
