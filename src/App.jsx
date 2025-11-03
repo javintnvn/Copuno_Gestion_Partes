@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react'
-import { Search, Plus, FileText, Calendar, Users, Building, Loader2, Wifi, WifiOff, Home, ArrowLeft, Clock, User, Send, PenSquare, RefreshCw } from 'lucide-react'
+import { Search, Plus, FileText, Calendar, Users, Building, Loader2, Wifi, WifiOff, Home, ArrowLeft, Clock, User, Send, PenSquare, RefreshCw, RotateCcw } from 'lucide-react'
 import { getDatosCompletos, crearParteTrabajo, actualizarParteTrabajo, checkConnectivity, retryOperation, getDetallesEmpleados, getEmpleadosObra, getDetallesCompletosParte, actualizarEstadoEmpleado, getOpcionesEstadoEmpleados, getPartesTrabajo, enviarDatosParte } from './services/notionService'
 import './App.css'
 
@@ -495,6 +495,15 @@ function ConsultaPartes({ datos, onVolver, estadoOptions, onRefrescarPartes }) {
 	// Estado local para reflejar selección de estado inmediatamente en UI
 	const [estadoLocal, setEstadoLocal] = useState({})
     const [enviandoParteId, setEnviandoParteId] = useState(null)
+
+	// Función para limpiar todos los filtros
+	const limpiarFiltros = () => {
+		setFiltroObra('')
+		setFiltroFecha('')
+		setFechaInput('')
+		setFiltroEstado('')
+		setFiltroPersonaAutorizada('')
+	}
 
 	// Mapea color de Notion a un color CSS visible
 	const mapNotionColorToHex = (color) => {
@@ -1634,8 +1643,20 @@ function ConsultaPartes({ datos, onVolver, estadoOptions, onRefrescarPartes }) {
 						{/* Filtros */}
 						<div className="filtros">
 							<div className="filtros-heading">
-								<Search size={16} />
-								<span>Filtros</span>
+								<div className="filtros-heading-left">
+									<Search size={16} />
+									<span>Filtros</span>
+								</div>
+								{(filtroObra || filtroFecha || filtroEstado || filtroPersonaAutorizada) && (
+									<button
+										className="btn-reset-filtros"
+										onClick={limpiarFiltros}
+										title="Restablecer filtros"
+									>
+										<RotateCcw size={16} />
+										<span>Limpiar</span>
+									</button>
+								)}
 							</div>
 							<div className="grid">
 								<div className="form-group">

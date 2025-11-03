@@ -513,6 +513,14 @@
 }
 
 .filtros-heading {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	padding-bottom: 4px;
+	border-bottom: 2px solid rgba(1, 20, 109, 0.1);
+}
+
+.filtros-heading-left {
 	display: inline-flex;
 	align-items: center;
 	gap: var(--spacing-xs);
@@ -521,13 +529,46 @@
 	letter-spacing: 0.12em;
 	text-transform: uppercase;
 	color: var(--primary-color);
-	padding-bottom: 4px;
-	border-bottom: 2px solid rgba(1, 20, 109, 0.1);
 }
 
 .filtros-heading svg {
 	width: 18px;
 	height: 18px;
+}
+
+.btn-reset-filtros {
+	display: inline-flex;
+	align-items: center;
+	gap: var(--spacing-xs);
+	padding: 8px 16px;
+	border-radius: 12px;
+	border: 1px solid rgba(1, 20, 109, 0.12);
+	background: var(--surface-muted);
+	color: var(--text-secondary);
+	font-size: var(--font-size-small);
+	font-weight: 600;
+	text-transform: uppercase;
+	letter-spacing: 0.08em;
+	cursor: pointer;
+	transition: all 0.2s ease;
+	touch-action: manipulation;
+	-webkit-tap-highlight-color: transparent;
+}
+
+.btn-reset-filtros:hover {
+	background: var(--primary-soft);
+	color: var(--primary-color);
+	border-color: var(--primary-color);
+	transform: translateY(-1px);
+}
+
+.btn-reset-filtros:active {
+	transform: scale(0.96);
+}
+
+.btn-reset-filtros svg {
+	width: 16px;
+	height: 16px;
 }
 
 .filtros .grid {
