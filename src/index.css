@@ -1,18 +1,22 @@
 :root {
 	/* Color palette */
-	--primary-color: #0a3d91;
-	--primary-hover: #082f73;
-	--secondary-color: #64748b;
+	--primary-color: #01146d;
+	--primary-hover: #14179a;
+	--secondary-color: #121e57;
 	--success-color: #059669;
 	--warning-color: #d97706;
-	--danger-color: #dc2626;
-	--background-color: #f6f8fc;
+	--danger-color: #b91c1c;
+	--background-color: #f3f5ff;
 	--surface-color: #ffffff;
-	--surface-muted: #f1f5f9;
-	--border-color: #e2e8f0;
-	--text-primary: #12223b;
-	--text-secondary: #5b6b82;
-	--text-tertiary: #94a3b8;
+	--surface-muted: #eaedff;
+	--border-color: #cfd5ff;
+	--text-primary: #050716;
+	--text-secondary: #3b4263;
+	--text-tertiary: #7c83a5;
+	--primary-soft: #e3e6ff;
+	--primary-soft-strong: #ccd2ff;
+	--primary-ring: rgba(1, 20, 109, 0.18);
+	--primary-shadow: rgba(1, 20, 109, 0.15);
 
 	/* Spacing scale */
 	--spacing-xs: 4px;
@@ -59,8 +63,8 @@ body {
 	-moz-osx-font-smoothing: grayscale;
 	background-color: var(--background-color);
 	background-image:
-		radial-gradient(1200px 400px at 110% -10%, rgba(11, 59, 140, 0.06), transparent 60%),
-		radial-gradient(800px 300px at -10% 0%, rgba(11, 106, 166, 0.05), transparent 60%);
+		radial-gradient(1200px 400px at 110% -10%, rgba(1, 20, 109, 0.08), transparent 60%),
+		radial-gradient(800px 300px at -10% 0%, rgba(20, 23, 154, 0.06), transparent 60%);
 	color: var(--text-primary);
 	line-height: var(--line-height-base);
 	font-size: clamp(16px, 1.2vw + 14px, 18px);
