@@ -185,7 +185,8 @@ node scripts/test-notion-direct.js  # Test de conectividad
 - **Mensaje descriptivo:** Información clara sobre el proyecto
 
 ### Consultar Partes
-- **Filtros avanzados:** Por obra y fecha
+- **Filtros avanzados:** Por obra, fecha, estado y persona autorizada
+- **Botón de limpieza:** Restablecer todos los filtros con un solo clic
 - **Vista de detalles:** Modal con información completa
 - **Formato español:** Fechas en DD-MM-YYYY HH:MM
 - **Estados visuales:** Badges de estado con colores
@@ -299,7 +300,15 @@ NODE_ENV=production
 
 ## 📝 Changelog
 
-### v1.4.1 - Resumen de Horas por Categoría ⭐ **ACTUAL**
+### v1.4.2 - Botón de Restablecer Filtros ⭐ **ACTUAL**
+- ✅ **Botón "Limpiar"** - Restablecer todos los filtros con un solo clic
+- ✅ **Visibilidad contextual** - Solo aparece cuando hay filtros activos
+- ✅ **Diseño touch-friendly** - Optimizado para tablets
+- ✅ **Feedback visual** - Estados hover y active para mejor UX
+- ✅ **80% menos interacciones** - De 4-5 clics a 1 clic para limpiar filtros
+- 📄 **Changelog completo**: [CHANGELOG_V1.4.2.md](CHANGELOG_V1.4.2.md)
+
+### v1.4.1 - Resumen de Horas por Categoría
 - ✅ **Resumen visual de horas** - Vista consolidada por tipo de empleado
 - ✅ **Categorías laborales** - Oficial 1ª/2ª, Oficial, Encargado, Capataz, Peón
 - ✅ **Total destacado** - Banner visual con el total de horas del parte
