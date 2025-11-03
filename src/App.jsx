@@ -843,18 +843,48 @@ function ConsultaPartes({ datos, onVolver, estadoOptions, onRefrescarPartes }) {
 
 	// Función para obtener empleados asignados al parte
 	const getEmpleadosAsignados = () => {
-		if (!editandoParte || !empleadosObra.length) return []
-		
+		if (!editandoParte) return []
+
 		const empleadosAsignados = editandoParte.empleados || []
-		const empleadosFiltrados = empleadosObra.filter(empleado => empleadosAsignados.includes(empleado.id))
-		
-		console.log('Debug empleados:', {
-			empleadosObra: empleadosObra.length,
-			empleadosAsignados: empleadosAsignados,
-			empleadosFiltrados: empleadosFiltrados.length
-		})
-		
-		return empleadosFiltrados
+		if (empleadosAsignados.length === 0) return []
+
+		const indice = new Map()
+		const registrarEmpleados = (lista) => {
+			;(lista || []).forEach(empleado => {
+				if (!empleado || !empleado.id) return
+				indice.set(empleado.id, empleado)
+			})
+		}
+
+		registrarEmpleados(datos.empleados)
+		registrarEmpleados(empleadosObra)
+
+		const detallesNormalizados = (detallesEmpleados || [])
+			.map(detalle => {
+				const relacion = Array.isArray(detalle.empleadoId)
+					? detalle.empleadoId[0]?.id
+					: detalle.empleadoId
+				if (!relacion) return null
+				return {
+					id: relacion,
+					nombre: detalle.empleadoNombre || 'Empleado sin nombre',
+					categoria: detalle.categoria || 'Sin categoría'
+				}
+			})
+			.filter(Boolean)
+
+		registrarEmpleados(detallesNormalizados)
+
+		return empleadosAsignados
+			.map(id => {
+				const empleado = indice.get(id)
+				if (empleado) return empleado
+				return {
+					id,
+					nombre: 'Empleado no disponible',
+					categoria: 'Sin categoría'
+				}
+			})
 	}
 
 	// Función para cancelar edición
