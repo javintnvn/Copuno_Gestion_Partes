@@ -3,6 +3,22 @@ import { Search, Plus, FileText, Calendar, Users, Building, Loader2, Wifi, WifiO
 import { getDatosCompletos, crearParteTrabajo, actualizarParteTrabajo, checkConnectivity, retryOperation, getDetallesEmpleados, getEmpleadosObra, getDetallesCompletosParte, actualizarEstadoEmpleado, getOpcionesEstadoEmpleados, getPartesTrabajo, enviarDatosParte } from './services/notionService'
 import './App.css'
 
+const formatearHorasTexto = (valor) => {
+	if (valor === undefined || valor === null) return 'Sin horas registradas'
+
+	if (typeof valor === 'number' && Number.isFinite(valor)) {
+		return `${valor} Horas`
+	}
+
+	const valorComoNumero = Number(String(valor).replace(',', '.'))
+	if (!Number.isNaN(valorComoNumero)) {
+		return `${valorComoNumero} Horas`
+	}
+
+	const textoLimpio = String(valor).replace(/\s*h\s*$/i, '').trim()
+	return textoLimpio || 'Sin horas registradas'
+}
+
 function App() {
 	const [activeSection, setActiveSection] = useState('main') // Forzar pantalla principal
 	const [datos, setDatos] = useState({
@@ -367,7 +383,16 @@ function App() {
 								) : activeSection === 'consulta' ? (
 									<ConsultaPartes datos={datos} onVolver={() => setActiveSection('main')} estadoOptions={estadoOptions} onRefrescarPartes={refrescarPartes} />
 								) : activeSection === 'crear' ? (
-									<CrearParte datos={datos} estadoOptions={estadoOptions} onParteCreado={cargarDatos} onVolver={() => setActiveSection('main')} />
+									<CrearParte
+									datos={datos}
+									estadoOptions={estadoOptions}
+									onParteCreado={cargarDatos}
+									onVolver={() => setActiveSection('main')}
+									onVerDetalles={(parte) => {
+										setActiveSection('consulta')
+										verDetalles(parte)
+									}}
+								/>
 								) : null}
 							</>
 						)}
@@ -647,7 +672,7 @@ function ConsultaPartes({ datos, onVolver, estadoOptions, onRefrescarPartes }) {
 		setEnviandoParteId(parte.id)
 		try {
 			const resultado = await enviarDatosParte(parte.id)
-			setMensajeUI({ tipo: 'success', texto: 'Datos enviados correctamente al webhook.' })
+			setMensajeUI({ tipo: 'success', texto: 'Datos del parte enviados a generar el documento correctamente' })
 
 			let partesActualizados = null
 			if (typeof onRefrescarPartes === 'function') {
@@ -1744,17 +1769,9 @@ function ConsultaPartes({ datos, onVolver, estadoOptions, onRefrescarPartes }) {
 
 						{/* Lista de partes */}
 						<div className="partes-lista">
-							{partesFiltrados.length === 0 ? (
+								{partesFiltrados.length === 0 ? (
 								<div className="no-partes">
 									<p className="text-large">No se encontraron partes con los filtros seleccionados</p>
-									<p className="text-small">
-										Obras disponibles: {obrasUnicas.join(', ')}
-									</p>
-									{fechasUnicas.length > 0 && (
-										<p className="text-small">
-											Fechas disponibles: {fechasUnicas.join(', ')}
-										</p>
-									)}
 								</div>
 							) : (
 								partesFiltrados.map((parte) => {
@@ -1766,8 +1783,7 @@ function ConsultaPartes({ datos, onVolver, estadoOptions, onRefrescarPartes }) {
 
 									const horasTotalesCalculadas = (() => {
 										if (parte.rpHorasTotales !== undefined && parte.rpHorasTotales !== null) {
-											const valor = Number(parte.rpHorasTotales)
-											return `${Number.isNaN(valor) ? parte.rpHorasTotales : valor} h`
+											return formatearHorasTexto(parte.rpHorasTotales)
 										}
 										const suma = [
 											parte.horasOficial1,
@@ -1778,7 +1794,7 @@ function ConsultaPartes({ datos, onVolver, estadoOptions, onRefrescarPartes }) {
 										]
 											.filter((h) => typeof h === 'number')
 											.reduce((sum, h) => sum + h, 0)
-										return `${suma} h`
+										return formatearHorasTexto(suma)
 									})()
 
 										return (
@@ -1871,7 +1887,7 @@ function ConsultaPartes({ datos, onVolver, estadoOptions, onRefrescarPartes }) {
 }
 
 // Componente para crear nuevo parte
-function CrearParte({ datos, estadoOptions, onParteCreado, onVolver }) {
+function CrearParte({ datos, estadoOptions, onParteCreado, onVolver, onVerDetalles }) {
 	// Función para obtener fecha y hora actual en formato YYYY-MM-DDTHH:MM
 	const getCurrentDateTime = () => {
 		const now = new Date()
@@ -2074,10 +2090,9 @@ function CrearParte({ datos, estadoOptions, onParteCreado, onVolver }) {
 
 	// Función para ver detalles del parte creado
 	const verDetallesParte = () => {
-		// Cambiar a la sección de consulta y mostrar detalles
-		// Esto requeriría pasar el parte creado a la sección de consulta
-		// Por ahora, simplemente volvemos al formulario
-		volverAFormulario()
+		if (parteCreado && onVerDetalles) {
+			onVerDetalles(parteCreado)
+		}
 	}
 
 	return (

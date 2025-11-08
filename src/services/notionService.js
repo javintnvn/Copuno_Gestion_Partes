@@ -106,6 +106,10 @@ const handleApiError = (error, operation) => {
 	const errorMessage = error.response?.data?.details || error.response?.data?.error || error.message
 	console.error(`Error en ${operation}:`, errorMessage)
 	
+	if (operation === 'obtener obras' && error.response?.status === 429) {
+		throw new Error('Error en obtener obras')
+	}
+	
 	if (error.response?.status === 0) {
 		throw new Error('No se puede conectar con el servidor. Verifica que el servidor esté ejecutándose.')
 	} else if (error.response?.status === 404) {
