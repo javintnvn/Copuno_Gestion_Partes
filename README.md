@@ -62,7 +62,7 @@ La aplicación está lista para desplegar en Vercel con configuración optimizad
    NOTION_TOKEN = ntn_XXXXXXXXXX
    PARTES_DATOS_WEBHOOK_URL = https://hook.eu2.make.com/XXXXXXXXXX
    NODE_ENV = production
-   CACHE_TTL_MS = 5000
+   CACHE_TTL_MS = 30000
    ```
 
 3. **Deploy**

@@ -383,16 +383,7 @@ function App() {
 								) : activeSection === 'consulta' ? (
 									<ConsultaPartes datos={datos} onVolver={() => setActiveSection('main')} estadoOptions={estadoOptions} onRefrescarPartes={refrescarPartes} />
 								) : activeSection === 'crear' ? (
-									<CrearParte
-									datos={datos}
-									estadoOptions={estadoOptions}
-									onParteCreado={cargarDatos}
-									onVolver={() => setActiveSection('main')}
-									onVerDetalles={(parte) => {
-										setActiveSection('consulta')
-										verDetalles(parte)
-									}}
-								/>
+									<CrearParte datos={datos} estadoOptions={estadoOptions} onParteCreado={cargarDatos} onVolver={() => setActiveSection('main')} />
 								) : null}
 							</>
 						)}
@@ -506,7 +497,7 @@ function ConsultaPartes({ datos, onVolver, estadoOptions, onRefrescarPartes }) {
 	const [filtroFecha, setFiltroFecha] = useState('')
 	const [filtroEstado, setFiltroEstado] = useState('')
 	const [filtroPersonaAutorizada, setFiltroPersonaAutorizada] = useState('')
-	const [fechaInput, setFechaInput] = useState(new Date().toISOString().split('T')[0])
+	const [fechaInput, setFechaInput] = useState('')
 	const [parteSeleccionado, setParteSeleccionado] = useState(null)
 	const [detallesEmpleados, setDetallesEmpleados] = useState([])
 	const [loadingDetalles, setLoadingDetalles] = useState(false)
@@ -1887,7 +1878,7 @@ function ConsultaPartes({ datos, onVolver, estadoOptions, onRefrescarPartes }) {
 }
 
 // Componente para crear nuevo parte
-function CrearParte({ datos, estadoOptions, onParteCreado, onVolver, onVerDetalles }) {
+function CrearParte({ datos, estadoOptions, onParteCreado, onVolver }) {
 	// Función para obtener fecha y hora actual en formato YYYY-MM-DDTHH:MM
 	const getCurrentDateTime = () => {
 		const now = new Date()
@@ -2090,9 +2081,10 @@ function CrearParte({ datos, estadoOptions, onParteCreado, onVolver, onVerDetall
 
 	// Función para ver detalles del parte creado
 	const verDetallesParte = () => {
-		if (parteCreado && onVerDetalles) {
-			onVerDetalles(parteCreado)
-		}
+		// Cambiar a la sección de consulta y mostrar detalles
+		// Esto requeriría pasar el parte creado a la sección de consulta
+		// Por ahora, simplemente volvemos al formulario
+		volverAFormulario()
 	}
 
 	return (
@@ -2385,18 +2377,26 @@ function CrearParte({ datos, estadoOptions, onParteCreado, onVolver, onVerDetall
 function Footer() {
 	const [showDate, setShowDate] = useState(false)
 	const version = '1.0.1' // Actualiza esto con cada nueva versión
-	const releaseDate = new Date('2025-11-03') // Actualiza esto con cada nueva versión
+	const deployDate = new Date(__BUILD_TIMESTAMP__) // Fecha automática del último build
 
 	return (
 		<footer className="app-footer">
 			<div className="footer-content">
 				<p>Desarrollada por NotionVan</p>
 				<div className="version-info">
-					<p onClick={() => setShowDate(!showDate)}>
+					<p onClick={() => setShowDate(!showDate)} style={{ cursor: 'pointer' }}>
 						Versión {version}
 					</p>
 					{showDate && (
-						<p className="release-date">Fecha de lanzamiento: {releaseDate.toLocaleDateString()}</p>
+						<p className="release-date">
+							Desplegado: {deployDate.toLocaleDateString('es-ES', {
+								year: 'numeric',
+								month: 'long',
+								day: 'numeric',
+								hour: '2-digit',
+								minute: '2-digit'
+							})}
+						</p>
 					)}
 				</div>
 			</div>

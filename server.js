@@ -95,7 +95,7 @@ const apiLimiter = rateLimit({
 app.use('/api', apiLimiter)
 
 // Cache simple en memoria para catálogos (TTL configurable)
-const CACHE_TTL_MS = Number(process.env.CACHE_TTL_MS || 5 * 1000) // Reducido de 60s a 5s para menor latencia
+const CACHE_TTL_MS = Number(process.env.CACHE_TTL_MS || 30 * 1000) // 30 segundos para reducir requests innecesarios a Notion
 const cache = new Map()
 const setCache = (key, data) => cache.set(key, { data, ts: Date.now() })
 const getCache = (key) => {

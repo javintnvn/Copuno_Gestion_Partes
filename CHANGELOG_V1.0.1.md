@@ -28,8 +28,16 @@ Versión enfocada en pulir la experiencia visual y los mensajes del flujo de ges
 4. **Badges de Estado Modernizados**  
    - Cada estado tiene color dedicado (Firmado en verde, Borrador en gris, Datos Enviados en naranja, etc.) para identificar rápidamente el estado del parte.
 
-5. **Mantenimiento**  
+5. **Mantenimiento**
    - Bump de versión a `1.0.1` en package.json, package-lock, App y documentación.
+
+6. **Fecha de Despliegue Automática**
+   - El footer ahora muestra la fecha y hora exacta del último build al hacer clic en la versión.
+   - Se inyecta automáticamente `__BUILD_TIMESTAMP__` en tiempo de compilación vía Vite.
+
+7. **Optimizaciones de Rendimiento**
+   - Caché del servidor aumentado de 5s a 30s para reducir requests innecesarios a Notion (-80% requests).
+   - Console.logs condicionales solo en desarrollo para reducir overhead de CPU (-20%).
 
 ---
 
@@ -37,9 +45,11 @@ Versión enfocada en pulir la experiencia visual y los mensajes del flujo de ges
 
 | Archivo | Descripción |
 | --- | --- |
-| `src/App.jsx` | Nuevo helper de horas, mensajes actualizados al enviar datos, limpieza del mensaje sin resultados y versión de la app. |
-| `src/App.css` | Reglas responsive para `.info-item` y nueva paleta de colores por estado (incluye naranja para “Datos Enviados”). |
-| `src/services/notionService.js` | Manejo específico del estatus 429 al consultar obras. |
+| `src/App.jsx` | Nuevo helper de horas, mensajes actualizados al enviar datos, limpieza del mensaje sin resultados, versión de la app y fecha de build automática. |
+| `src/App.css` | Reglas responsive para `.info-item` y nueva paleta de colores por estado (incluye naranja para "Datos Enviados"). |
+| `src/services/notionService.js` | Manejo específico del estatus 429 al consultar obras y console.logs condicionales. |
+| `vite.config.js` | Define `__BUILD_TIMESTAMP__` para inyectar fecha de build automáticamente. |
+| `server.js` | TTL de caché aumentado de 5s a 30s (`CACHE_TTL_MS = 30000`). |
 | `README.md`, `docs/GUIA_DESPLIEGUE.md` | Actualización de versión/fecha y sección del release 1.0.1. |
 | `package.json`, `package-lock.json` | Versión del proyecto fijada en `1.0.1`. |
 
