@@ -2384,7 +2384,7 @@ function CrearParte({ datos, estadoOptions, onParteCreado, onVolver, onVerDetall
 
 function Footer() {
 	const [showDate, setShowDate] = useState(false)
-	const version = '1.0.0' // Actualiza esto con cada nueva versión
+	const version = '1.0.1' // Actualiza esto con cada nueva versión
 	const releaseDate = new Date('2025-11-03') // Actualiza esto con cada nueva versión
 
 	return (

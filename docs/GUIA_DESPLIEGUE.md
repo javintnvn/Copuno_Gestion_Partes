@@ -1,7 +1,7 @@
 # 🚀 Guía Completa de Despliegue - Copuno Gestión de Partes
 
-**Versión:** 1.0.0
-**Fecha:** 3 de Noviembre de 2025
+**Versión:** 1.0.1
+**Fecha:** 8 de Noviembre de 2025
 **Aplicación:** Copuno - Sistema de Gestión de Partes de Trabajo
 
 ---
@@ -996,6 +996,6 @@ sudo certbot --nginx -d partes.CLIENTE.com --force-renewal
 
 ---
 
-**Documento creado:** 15 de Octubre de 2025
-**Versión:** 1.0.0
+**Documento actualizado:** 8 de Noviembre de 2025
+**Versión:** 1.0.1
 **Próxima revisión:** Según necesidad

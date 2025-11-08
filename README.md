@@ -2,8 +2,8 @@
 
 Aplicación web moderna para la gestión de partes de trabajo con backend en Notion. Diseñada con una interfaz minimalista y elegante, optimizada para usuarios de todos los niveles.
 
-> **Versión actual:** `1.0.0` (MVP listo para producción)
-> **Release:** 3 de noviembre de 2025 · [Changelog](./CHANGELOG_V1.0.0.md)
+> **Versión actual:** `1.0.1` (MVP listo para producción)
+> **Release:** 8 de noviembre de 2025 · [Changelog](./CHANGELOG_V1.0.1.md)
 
 ## ✨ Características
 
@@ -334,6 +334,13 @@ NODE_ENV=production
 - ✅ **Interfaz profesional y moderna** - UX optimizada
 - ✅ **Documentación completa** - Estado actual y roadmap futuro
 
+### v1.0.1 - Ajustes visuales y mensajería (8 de noviembre de 2025)
+- Nuevo formateador de horas para evitar duplicaciones y mejorar la legibilidad responsive.
+- Mensajería refinada en el flujo de envío de datos y errores de conectividad.
+- Badges de estado con colores diferenciados (firmado en verde, borrador en gris, etc.).
+- Limpieza de textos redundantes en la lista de partes (solo se muestra el mensaje principal sin listados largos).
+- Correcciones en textos (`Datos Enviados` en naranja) y mejoras menores de UI/UX.
+
 ### v1.0.0 - MVP en Producción
 - ✅ Integración completa con Notion (datos reales)
 - ✅ Smart Polling + SSE para sincronización en vivo
@@ -368,6 +375,7 @@ NODE_ENV=production
 - **Troubleshooting** común
 
 ### **📝 Changelog**
+- **[CHANGELOG_V1.0.1.md](CHANGELOG_V1.0.1.md)** – Ajustes visuales y mejoras de mensajes
 - **[CHANGELOG_V1.0.0.md](CHANGELOG_V1.0.0.md)** – Detalle del release MVP
 
 ### **⚙️ Operaciones Backend**
